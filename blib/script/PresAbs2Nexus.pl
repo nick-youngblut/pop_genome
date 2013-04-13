@@ -105,7 +105,7 @@ begin paup;
 	hsearch;
 	set maxtrees=100 increase=auto crit=parsimony;
 	hsearch;
-	savetrees root=yes brlens=yes file=PA_MP.nwk replace=yes;
+	savetrees root=yes brlens=yes file=PA_MP.tre replace=yes;
 	quit;
 end;	
 HERE
