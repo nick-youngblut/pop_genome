@@ -111,8 +111,8 @@ sub write_summary_table{
 	# header: dn, ds, ds/dn, dn/ds	
 	foreach my $file (keys %$summary_r){		
 		print OUT join("\t", $file, 
-			$summary_r->{$file}{"dn"},
 			$summary_r->{$file}{"ds"},
+			$summary_r->{$file}{"dn"},
 			$summary_r->{$file}{"ds/dn"},
 			$summary_r->{$file}{"dn/ds"}
 			), "\n";
