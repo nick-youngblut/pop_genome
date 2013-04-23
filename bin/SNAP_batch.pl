@@ -348,7 +348,7 @@ match the fasta names.
 =head3 PREFIX_summary.txt
 
 A summary for all comparisons in the alignment (excluding 'NA' values).
-The columns are: file, group1, group2, ds, dn, ds/dn, dn/ds
+The columns are: file, ds, dn, ds/dn, dn/ds
 
 =head3 PREFIX_by-group.txt
 
