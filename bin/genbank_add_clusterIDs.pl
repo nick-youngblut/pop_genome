@@ -85,7 +85,7 @@ sub add_clusterIDs{
 	my $peg_cnt = 0;
 	for my $feat (grep {$_->primary_tag eq "CDS"} $seqo->get_SeqFeatures){
 		$peg_cnt++;
-		die " ERROR: peg$peg_cnt not found!\n" unless exists $peg_clust_r->{$peg_cnt};
+		print STDERR " WARNING: peg$peg_cnt does not have a cluster ID!\n" unless exists $peg_clust_r->{$peg_cnt};
 		
 		$feat->add_tag_value("color", $peg_clust_r->{$peg_cnt}{$runID});
 		}
@@ -109,7 +109,7 @@ sub get_clusterIDs{
 	
 	# sanity check #
 	my $Nhits = scalar keys %peg_clust;
-	die " ERROR: number of pegs: $peg_cnt,  number of hits: $Nhits\n Are CRISPR spacers/repeats in the genbank file?\n"
+	print STDERR " WARNING: number of pegs: $peg_cnt,  number of hits: $Nhits\n Are CRISPR spacers/repeats in the genbank file?\n"
 		unless $Nhits == $peg_cnt;
 		
 	return \%peg_clust;
@@ -268,6 +268,8 @@ they are not merged. If not merged, use EMBOSS 'union' to merge.
 ITEP querying is done with 'db_getClustersContainingGenes.py'.
 
 Cluster IDs are added to each CDS entry with the tag: '/color='
+
+Output file names modifed from input "_cID.gbk".
 
 =head1 EXAMPLES
 

@@ -111,6 +111,7 @@ do{ my $x = [
          'quiet' => undef,
          'extra_compiler_flags' => [],
          'script_files' => [
+                             './bin/genbank_add_clusterIDs.pl',
                              './bin/SNAP_batch.pl',
                              './bin/PresAbs2Nexus.pl'
                            ],
