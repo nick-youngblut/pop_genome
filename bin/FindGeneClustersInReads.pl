@@ -61,9 +61,9 @@ foreach my $sam_file (keys %$index_r){
 		}
 	
 	# finding mapped reads #
-	my $itrees_r = load_interval_tree($sam_file);
+	my ($itrees_r, $reads_r) = load_interval_tree($sam_file);
 	reads_mapped_to_region($sam_file, $index_r->{$sam_file}, 
-			$gene_start_stop_r, $gene_extend, $itrees_r);
+			$gene_start_stop_r, $gene_extend, $itrees_r, $reads_r);
 			
 	# 
 	}
@@ -73,12 +73,17 @@ foreach my $sam_file (keys %$index_r){
 sub reads_mapped_to_region{
 # parsing out reads that mapped to each gene region #
 ## $gene_start_stop_r = fig=>cluster=>contig=>start/stop=>value
-	my ($sam_file, $fig, $gene_start_stop_r, $gene_extend, $itrees_r) = @_;
+## foreach gene (start-stop): find reads mapped to gene (from itree) 
+	my ($sam_file, $sam_fig, $gene_start_stop_r, 
+		$gene_extend, $itrees_r, $reads_r) = @_;
 
 	my %reads_mapped;		# reads mapped to a cluster region
 	foreach my $fig (keys %$gene_start_stop_r){				# FIG
+			#print Dumper "$fig -> $sam_fig";
+		next unless $fig == $sam_fig;						# skipping if gene in other genome
 		foreach my $cluster (keys %{$gene_start_stop_r->{$fig}}){		# gnee cluster
 			foreach my $contig (keys %{$gene_start_stop_r->{$fig}{$cluster}}){
+				# contig of gene in gene tree? #
 				unless(exists $itrees_r->{$contig}){
 					print STDERR "WARNING: no reads mapped to FIG:$fig -> CONTIG:$contig\n";
 					next;
@@ -86,20 +91,27 @@ sub reads_mapped_to_region{
 				
 				my $res = $itrees_r->{$contig}->fetch(
 						$gene_start_stop_r->{$fig}{$cluster}{$contig}{"start"} - $gene_extend,
-						$gene_start_stop_r->{$fig}{$cluster}{$contig}{"stop"} + $gene_extend);
+						$gene_start_stop_r->{$fig}{$cluster}{$contig}{"stop"} + $gene_extend
+						);
 				
 				unless(@$res){
-					print STDERR "\tWARNING: no reads mapped to $fig -> $contig->$cluster\n";
+					print STDERR "\tWARNING: no reads mapped to  FIG:$fig -> Contig:$contig -> cluster:$cluster\n";
 					next;
 					}
 				
 				# loading read names #
-				$reads_mapped{$fig}{$cluster} = $res;
+				foreach my $id (@$res){
+					#die " LOGIC ERROR: read does not exist: $id\n" unless
+					#	exists $reads_r->{$id};
+					#print Dumper $reads_r->{$contig}{$id};
+					foreach my $read (keys %$id){
+						$reads_mapped{$fig}{$cluster} = $res;	
+						}
+					}
 				}
 			}
 		}
-	
-	
+		exit;
 		#print Dumper %reads_mapped; exit;
 	return \%reads_mapped; 		# fig=>cluster=>[read_names]
 	}
@@ -112,7 +124,7 @@ sub load_interval_tree{
 	
 	# loading reads as hash #
 	open IN, $sam_file or die $!;
-	my %reads;
+	my %reads;			# contig ->  seq -> ID# -> category -> value
 	while(<IN>){
 		chomp;
 		next if /^@/; 	# skipping header
@@ -123,12 +135,17 @@ sub load_interval_tree{
 		## filtering ##
 		next if $line[3] eq "" || $line[3] == 0;		# if not mapped
 		
-		
 		## loading into hash ##
-		$reads{$line[2]}{$line[0]}{"start"} = $line[3];						# contig->seq->start
-		$reads{$line[2]}{$line[0]}{"stop"} = $line[3] + length $line[9];		
+		$reads{$line[2]}{$.}{$line[0]}{"start"} = $line[3];						# contig->seq->start
+		$reads{$line[2]}{$.}{$line[0]}{"stop"} = $line[3] + length $line[9];		
+		$reads{$line[2]}{$.}{$line[0]}{"nuc"} = $line[9];
 		
-			last if $. > 1000000;
+		### if paired read mapping ###		<-- skipping for now
+		#if($line[8] =~ /\d+/){
+		#	$reads{$line[2]}{$line[0]}{"pair_name"} = $line[9];
+		#	}		
+			
+		last if $. > 1000000;
 		}
 	close IN;
 	
@@ -138,14 +155,16 @@ sub load_interval_tree{
 		$itrees{$contig} = Set::IntervalTree->new;
 		
 		# inserting into interval trees #
-		foreach my $read (keys %{$reads{$contig}}){
-			$itrees{$contig}->insert($read, 
-							$reads{$contig}{$read}{"start"} - 1, 
-							$reads{$contig}{$read}{"stop"} + 1);
+		foreach my $read_id (keys %{$reads{$contig}}){
+			foreach my $read (keys %{$reads{$contig}{$read_id}}){
+				$itrees{$contig}->insert($read_id,
+							$reads{$contig}{$read_id}{$read}{"start"} - 1, 
+							$reads{$contig}{$read_id}{$read}{"stop"} + 1);
+				}
 			}
 		}
 	
-	return \%itrees;
+	return \%itrees, \%reads;
 	}
 
 sub load_index{
