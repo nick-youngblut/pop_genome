@@ -16,43 +16,28 @@ my ($verbose, @sam_in, $database_file, $runID, $index_in);
 my $gene_extend = 100;
 my $clusterID_col = 2;
 GetOptions(
-		#"db=s" => \$database_file,		# database location
-		#"sam=s{,}" => \@sam_in,			# all sam files for organisms of interest
 		"index=s" => \$index_in, 		# an index file of sam_file => FIG#
 		"column=i" => \$clusterID_col,
 		"runID=s" => \$runID,
 		"extend=i" => \$gene_extend,	# bp to extend beyond gene (5' & 3')
+		"pair=s" => \$pair_write, 		# just write paired-end reads? 
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
 
 ### I/O error & defaults
 die " ERROR: provide a run ID!\n" unless $runID;
-#die " ERROR: provide at least 1 sam file!\n" unless @sam_in;
-#map{ die " ERROR $_ not found!\n" unless -e $_ } @sam_in;
 die " ERROR: provide an index file!\n" unless $index_in;
 
 ### MAIN
-### Connect to DB
-#my %attr = (RaiseError => 0, PrintError=>0, AutoCommit=>0);
-#my $dbh = DBI->connect("dbi:SQLite:dbname=$database_file", '','', \%attr) 
-#	or die " Can't connect to $database_file!";
-
 # loading info from ITEP #
 my $clusterID_r = load_cluster_ids($clusterID_col);
 my $gene_start_stop_r = load_gene_info($clusterID_r, $runID);
 
-	#foreach my $fig (keys %$gene_start_stop_r){				# FIG
-	#	foreach my $cluster (keys %{$gene_start_stop_r->{$fig}}){	
-	#		foreach my $contig (keys %{$gene_start_stop_r->{$fig}{$cluster}}){
-	#			print $contig, "\n";
-	#			}
-	#		}
-	#	}
-	#exit;
-
 # pulling out reads mapping to each gene region #
 my $index_r = load_index($index_in);
+
+my %reads_mapped;
 foreach my $sam_file (keys %$index_r){
 	# checking for presence of genes in fig #
 	unless (exists $gene_start_stop_r->{$index_r->{$sam_file}}){
@@ -63,21 +48,38 @@ foreach my $sam_file (keys %$index_r){
 	# finding mapped reads #
 	my ($itrees_r, $reads_r) = load_interval_tree($sam_file);
 	reads_mapped_to_region($sam_file, $index_r->{$sam_file}, 
-			$gene_start_stop_r, $gene_extend, $itrees_r, $reads_r);
-			
-	# 
+			$gene_start_stop_r, $gene_extend, $itrees_r, $reads_r,
+			\%reads_mapped);	
 	}
 
+write_reads_mapped(\%reads_mapped);
 
-### Subroutines
+
+#---------- Subroutines -----------#
+sub write_reads_mapped{
+# writing out all reads mapped #
+	my ($reads_mapped_r) = @_;
+	
+	foreach my $cluster (keys %$reads_mapped_r){
+		(my $outfile = $cluster) =~ s/^/clust_mapped-reads_/;
+		open OUT, ">$outfile.fna" or die $!;
+		
+		foreach my $read (sort keys %{$reads_mapped_r->{$cluster}}){
+			foreach my $mapID (keys %{$reads_mapped_r->{$cluster}{$read}}){
+				print OUT join("\n", ">$read", $reads_mapped_r->{$cluster}{$read}{$mapID}), "\n";
+				}
+			}
+		close OUT;
+		}
+	}
+
 sub reads_mapped_to_region{
 # parsing out reads that mapped to each gene region #
 ## $gene_start_stop_r = fig=>cluster=>contig=>start/stop=>value
 ## foreach gene (start-stop): find reads mapped to gene (from itree) 
 	my ($sam_file, $sam_fig, $gene_start_stop_r, 
-		$gene_extend, $itrees_r, $reads_r) = @_;
+		$gene_extend, $itrees_r, $reads_r, $reads_mapped_r) = @_;
 
-	my %reads_mapped;		# reads mapped to a cluster region
 	foreach my $fig (keys %$gene_start_stop_r){				# FIG
 			#print Dumper "$fig -> $sam_fig";
 		next unless $fig == $sam_fig;						# skipping if gene in other genome
@@ -100,20 +102,13 @@ sub reads_mapped_to_region{
 					}
 				
 				# loading read names #
-				foreach my $id (@$res){
-					#die " LOGIC ERROR: read does not exist: $id\n" unless
-					#	exists $reads_r->{$id};
-					#print Dumper $reads_r->{$contig}{$id};
-					foreach my $read (keys %$id){
-						$reads_mapped{$fig}{$cluster} = $res;	
-						}
+				foreach my $id (@$res){		# read IDs
+					$reads_mapped_r->{$cluster}{$$id[0]}{$$id[1]} = $$id[2];		# cluster->FIG->read_ID->mapID->read
 					}
 				}
 			}
 		}
-		exit;
-		#print Dumper %reads_mapped; exit;
-	return \%reads_mapped; 		# fig=>cluster=>[read_names]
+		#print Dumper %$reads_mapped_r; exit;
 	}
 
 sub load_interval_tree{
@@ -124,7 +119,7 @@ sub load_interval_tree{
 	
 	# loading reads as hash #
 	open IN, $sam_file or die $!;
-	my %reads;			# contig ->  seq -> ID# -> category -> value
+	my %reads;			# contig ->  read_name -> map_ID -> category -> value
 	while(<IN>){
 		chomp;
 		next if /^@/; 	# skipping header
@@ -135,15 +130,14 @@ sub load_interval_tree{
 		## filtering ##
 		next if $line[3] eq "" || $line[3] == 0;		# if not mapped
 		
-		## loading into hash ##
-		$reads{$line[2]}{$.}{$line[0]}{"start"} = $line[3];						# contig->seq->start
-		$reads{$line[2]}{$.}{$line[0]}{"stop"} = $line[3] + length $line[9];		
-		$reads{$line[2]}{$.}{$line[0]}{"nuc"} = $line[9];
+		## paired end info added to read name ##
+		if($line[8] >= 0){ $line[0] .= " 1:"; }
+		else{ $line[0] .= " 2:"; }
 		
-		### if paired read mapping ###		<-- skipping for now
-		#if($line[8] =~ /\d+/){
-		#	$reads{$line[2]}{$line[0]}{"pair_name"} = $line[9];
-		#	}		
+		## loading into hash ##
+		$reads{$line[2]}{$line[0]}{$.}{"start"} = $line[3];						# contig->seq->start
+		$reads{$line[2]}{$line[0]}{$.}{"stop"} = $line[3] + length $line[9];		
+		$reads{$line[2]}{$line[0]}{$.}{"nuc"} = $line[9];	
 			
 		last if $. > 1000000;
 		}
@@ -155,11 +149,12 @@ sub load_interval_tree{
 		$itrees{$contig} = Set::IntervalTree->new;
 		
 		# inserting into interval trees #
-		foreach my $read_id (keys %{$reads{$contig}}){
-			foreach my $read (keys %{$reads{$contig}{$read_id}}){
-				$itrees{$contig}->insert($read_id,
-							$reads{$contig}{$read_id}{$read}{"start"} - 1, 
-							$reads{$contig}{$read_id}{$read}{"stop"} + 1);
+		foreach my $read (keys %{$reads{$contig}}){
+			foreach my $map_id (keys %{$reads{$contig}{$read}}){
+				$itrees{$contig}->insert(
+							[$read, $map_id, $reads{$contig}{$read}{$map_id}{"nuc"}],
+							$reads{$contig}{$read}{$map_id}{"start"} - 1, 
+							$reads{$contig}{$read}{$map_id}{"stop"} + 1);
 				}
 			}
 		}
@@ -238,22 +233,6 @@ sub load_gene_info{
 	return \%gene_start_stop;		# fig=>cluster=>contig=>start/stop=>value
 	}
 
-sub load_contigs{
-# loading 'contig' table into memory #
-	my ($dbh) = @_;
-	
-	my $q = "SELECT contig_mod, seq FROM contigs;";
-	my $contig_seq_r = $dbh->selectall_arrayref($q); 
-	
-	my %contigs;
-	foreach (@$contig_seq_r){
-		$contigs{$$_[0]} = $$_[1];
-		}
-	
-		#print Dumper %contigs; exit;
-	return \%contigs;		# contig_mod => contig_seq
-	}
-
 sub load_cluster_ids{
 # loading cluster_id file in 'ITEP' format #
 	my ($clusterID_col) = @_;
@@ -283,15 +262,33 @@ __END__
 
 =head1 NAME
 
-template.pl -- script template
+FindGeneClustersInReads.pl -- pulling out reads mapping to a gene cluster
 
 =head1 SYNOPSIS
 
-template.pl [options] < input > output
+FindGeneClustersInReads.pl [options] < clusterID_file.txt
 
 =head2 options
 
 =over
+
+=item -index
+
+Index file listing *sam files & FIG IDs.
+
+2 column (*txt): FILE.sam FIG
+
+=item -runID
+
+ITEP Run ID for the clusters of interest.
+
+=item -extend
+
+Number of base pairs to extend around the gene of interest (5' & 3'). [100]
+
+=item -column
+
+Cluster ID column (for pulling out clusters from ITEP). [2]
 
 =item -v	Verbose output
 
@@ -301,24 +298,22 @@ template.pl [options] < input > output
 
 =head2 For more information:
 
-perldoc template.pl
+perldoc FindGeneClustersInReads.pl
 
 =head1 DESCRIPTION
 
-The flow of execution is roughly:
-   1) Step 1
-   2) Step 2
-   3) Step 3
+Pull out all reads mapping to each gene (& region around the gene)
+in each gene cluster.
 
 =head1 EXAMPLES
 
 =head2 Usage method 1
 
-template.pl <read1.fastq> <read2.fastq> <output directory or basename>
+FindGeneClustersInReads.pl <read1.fastq> <read2.fastq> <output directory or basename>
 
 =head2 Usage method 2
 
-template.pl <library file> <output directory or basename>
+FindGeneClustersInReads.pl <library file> <output directory or basename>
 
 =head1 AUTHOR
 
