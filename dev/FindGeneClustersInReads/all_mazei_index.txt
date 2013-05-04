@@ -1,0 +1,8 @@
+./Methanosarcina_mazei_S6.sam	213585.5
+./Methanosarcina_mazei_LYC.sam	2209.20
+./Methanosarcina_mazei_C16.sam	2209.18
+./Methanosarcina_mazei_Go1.sam	192952.1
+./Methanosarcina_mazei_SarPi.sam	2209.19
+./Methanosarcina_mazei_WWM610.sam	2209.17
+./Methanosarcina_mazei_TMA.sam	2209.7
+
