@@ -114,6 +114,7 @@ do{ my $x = [
                              './bin/FindGeneClustersInReads.pl',
                              './bin/genbank_add_clusterIDs.pl',
                              './bin/SNAP_batch.pl',
+                             './bin/FGCIR_assemble.pl',
                              './bin/blast_UniqueGenesFromITEP.pl',
                              './bin/PresAbs2Nexus.pl'
                            ],

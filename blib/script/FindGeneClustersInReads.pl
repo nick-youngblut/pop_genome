@@ -9,6 +9,7 @@ use Getopt::Long;
 use File::Spec;
 use File::Path;
 use Set::IntervalTree;
+use threads;
 
 ### args/flags
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
@@ -16,6 +17,7 @@ pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 my ($verbose, @sam_in, $database_file, $runID, $index_in);
 my $gene_extend = 100;
 my $clusterID_col = 2;
+my $num_threads = 1;
 my $outdir_name = "Mapped2GeneCluster";
 GetOptions(
 		"index=s" => \$index_in, 		# an index file of sam_file => FIG#
@@ -23,6 +25,7 @@ GetOptions(
 		"runID=s" => \$runID,
 		"extend=i" => \$gene_extend,	# bp to extend beyond gene (5' & 3')
 		"outdir=s" => \$outdir_name, 	# name of output directory
+		"threads=i" => \$num_threads,	
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
@@ -39,8 +42,12 @@ my $gene_start_stop_r = load_gene_info($clusterID_r, $runID);
 # pulling out reads mapping to each gene region #
 my $index_r = load_index($index_in);
 
+## threading ##
+my @running;
+my @threads;
 my (%reads_mapped, %mapped_summary);
 foreach my $sam_file (keys %$index_r){
+	
 	# checking for presence of genes in fig #
 	unless (exists $gene_start_stop_r->{$index_r->{$sam_file}}){
 		print STDERR " WARNING: no genes for FIG->", $index_r->{$sam_file}, ", skipping\n";
