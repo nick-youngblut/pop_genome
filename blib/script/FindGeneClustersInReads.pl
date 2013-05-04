@@ -9,7 +9,8 @@ use Getopt::Long;
 use File::Spec;
 use File::Path;
 use Set::IntervalTree;
-use threads;
+use Storable;
+use Parallel::ForkManager;
 
 ### args/flags
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
@@ -17,7 +18,7 @@ pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 my ($verbose, @sam_in, $database_file, $runID, $index_in);
 my $gene_extend = 100;
 my $clusterID_col = 2;
-my $num_threads = 1;
+my $fork = 0;
 my $outdir_name = "Mapped2GeneCluster";
 GetOptions(
 		"index=s" => \$index_in, 		# an index file of sam_file => FIG#
@@ -25,7 +26,7 @@ GetOptions(
 		"runID=s" => \$runID,
 		"extend=i" => \$gene_extend,	# bp to extend beyond gene (5' & 3')
 		"outdir=s" => \$outdir_name, 	# name of output directory
-		"threads=i" => \$num_threads,	
+		"fork=i" => \$fork,	
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
@@ -42,11 +43,17 @@ my $gene_start_stop_r = load_gene_info($clusterID_r, $runID);
 # pulling out reads mapping to each gene region #
 my $index_r = load_index($index_in);
 
-## threading ##
-my @running;
-my @threads;
-my (%reads_mapped, %mapped_summary);
+# making tmp data directory #
+my $tmp_dir = "./temp_data/";
+rmtree($tmp_dir) if -d $tmp_dir;
+mkdir $tmp_dir or die $!;
+
+my $pm = new Parallel::ForkManager($fork);
 foreach my $sam_file (keys %$index_r){
+	my (%reads_mapped, %mapped_summary);
+	
+	# forking #
+	my $pid = $pm->start and next;
 	
 	# checking for presence of genes in fig #
 	unless (exists $gene_start_stop_r->{$index_r->{$sam_file}}){
@@ -59,11 +66,30 @@ foreach my $sam_file (keys %$index_r){
 	reads_mapped_to_region($sam_file, $index_r->{$sam_file}, 
 			$gene_start_stop_r, $gene_extend, $itrees_r, $reads_r,
 			\%reads_mapped, \%mapped_summary);	
+	
+	# saving data structures #
+	my @parts = File::Spec->splitpath($sam_file);
+	$parts[2] =~ s/\.[^.]+$//;
+	store(\%reads_mapped, "$tmp_dir/$parts[2]\_map");
+	store(\%mapped_summary, "$tmp_dir/$parts[2]\_sum");
+	
+	# end fork #
+	$pm->finish;
 	}
 
+$pm->wait_all_children;
+
+# merging hashes #
+my ($mapped_r, $summary_r) = merge_hashes($tmp_dir);
+
+# writing output #
 $outdir_name = make_outdir($outdir_name);
-write_reads_mapped(\%reads_mapped, $outdir_name);
-write_summary_table(\%mapped_summary, $outdir_name);
+write_reads_mapped($mapped_r, $outdir_name);
+write_summary_table($summary_r, $outdir_name);
+
+# cleaning up #
+rmtree($tmp_dir) if -d $tmp_dir;
+
 
 #---------- Subroutines -----------#
 sub write_summary_table{
@@ -137,6 +163,43 @@ sub make_outdir{
 	mkdir $outdir_name or die $!;
 	
 	return $outdir_name;
+	}
+
+sub merge_hashes{
+# merging mapped & summary hashes #
+	my ($tmp_dir) = @_;
+	
+	# status #
+	print STDERR "...merging hashes from forks\n" unless $verbose;
+	
+	# getting mapping files #
+	opendir IN, $tmp_dir or die $!;
+	my @map_files = grep(/_map/, readdir IN);
+	close IN;
+
+	# merging hashes #
+	my %mapped;
+	foreach my $infile (@map_files){
+		my $href = retrieve("$tmp_dir/$infile");
+		my %tmp = (%mapped, %$href);
+		%mapped = %tmp;
+		}	
+
+	# getting mapping files #
+	opendir IN, $tmp_dir or die $!;
+	my @sum_files = grep(/_sum/, readdir IN);
+	close IN;
+
+	# merging hashes #
+	my %summed;
+	foreach my $infile (@sum_files){
+		my $href = retrieve("$tmp_dir/$infile");
+		my %tmp = (%summed, %$href);
+		%summed = %tmp;
+		}		
+
+		#print Dumper %mapped; exit;
+	return \%mapped, \%summed;
 	}
 
 sub reads_mapped_to_region{
@@ -419,6 +482,10 @@ Number of base pairs to extend around the gene of interest (5' & 3'). [100]
 =item -column
 
 Cluster ID column in clusterID_file (starts at 1). [2]
+
+=item -fork
+
+Number of SAM files to process in parallel. [1]
 
 =item -v	Verbose output
 

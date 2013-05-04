@@ -155,6 +155,9 @@ Number of base pairs to extend around the gene of interest (5' & 3'). [100]
 .IP "\-column" 4
 .IX Item "-column"
 Cluster \s-1ID\s0 column in clusterID_file (starts at 1). [2]
+.IP "\-fork" 4
+.IX Item "-fork"
+Number of \s-1SAM\s0 files to process in parallel. [1]
 .IP "\-v	Verbose output" 4
 .IX Item "-v	Verbose output"
 .PD 0
