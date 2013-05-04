@@ -12,7 +12,7 @@ use Set::IntervalTree;
 ### args/flags
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
-my ($verbose, @sam_in, $database_file, $runID, $index_in);
+my ($verbose, @sam_in, $database_file, $runID, $index_in, $pair_write);
 my $gene_extend = 100;
 my $clusterID_col = 2;
 GetOptions(
@@ -20,7 +20,7 @@ GetOptions(
 		"column=i" => \$clusterID_col,
 		"runID=s" => \$runID,
 		"extend=i" => \$gene_extend,	# bp to extend beyond gene (5' & 3')
-		"pair=s" => \$pair_write, 		# just write paired-end reads? 
+		"pair" => \$pair_write, 		# just write paired-end reads? 
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
@@ -52,21 +52,27 @@ foreach my $sam_file (keys %$index_r){
 			\%reads_mapped);	
 	}
 
-write_reads_mapped(\%reads_mapped);
+write_reads_mapped(\%reads_mapped, $pair_write);
 
 
 #---------- Subroutines -----------#
 sub write_reads_mapped{
 # writing out all reads mapped #
-	my ($reads_mapped_r) = @_;
+	my ($reads_mapped_r, $pair_write) = @_;
 	
 	foreach my $cluster (keys %$reads_mapped_r){
 		(my $outfile = $cluster) =~ s/^/clust_mapped-reads_/;
 		open OUT, ">$outfile.fna" or die $!;
 		
-		foreach my $read (sort keys %{$reads_mapped_r->{$cluster}}){
-			foreach my $mapID (keys %{$reads_mapped_r->{$cluster}{$read}}){
-				print OUT join("\n", ">$read", $reads_mapped_r->{$cluster}{$read}{$mapID}), "\n";
+		foreach my $read (keys %{$reads_mapped_r->{$cluster}}){
+			if($pair_write){		# just writing out paired-end reads  that mapped #
+				if(! exists $reads_mapped_r->{$cluster}{$read}{1} || 
+					! exists $reads_mapped_r->{$cluster}{$read}{2}){ next; }
+				}
+			foreach my $pair (sort keys %{$reads_mapped_r->{$cluster}{$read}}){
+				foreach my $mapID (keys %{$reads_mapped_r->{$cluster}{$read}{$pair}}){
+					print OUT join("\n", ">$read $pair:", $reads_mapped_r->{$cluster}{$read}{$pair}{$mapID}), "\n";
+					}
 				}
 			}
 		close OUT;
@@ -81,7 +87,6 @@ sub reads_mapped_to_region{
 		$gene_extend, $itrees_r, $reads_r, $reads_mapped_r) = @_;
 
 	foreach my $fig (keys %$gene_start_stop_r){				# FIG
-			#print Dumper "$fig -> $sam_fig";
 		next unless $fig == $sam_fig;						# skipping if gene in other genome
 		foreach my $cluster (keys %{$gene_start_stop_r->{$fig}}){		# gnee cluster
 			foreach my $contig (keys %{$gene_start_stop_r->{$fig}{$cluster}}){
@@ -103,7 +108,7 @@ sub reads_mapped_to_region{
 				
 				# loading read names #
 				foreach my $id (@$res){		# read IDs
-					$reads_mapped_r->{$cluster}{$$id[0]}{$$id[1]} = $$id[2];		# cluster->FIG->read_ID->mapID->read
+					$reads_mapped_r->{$cluster}{$$id[0]}{$$id[1]}{$$id[2]} = $$id[3];		# cluster->read_ID->pair->mapID = read
 					}
 				}
 			}
@@ -131,13 +136,16 @@ sub load_interval_tree{
 		next if $line[3] eq "" || $line[3] == 0;		# if not mapped
 		
 		## paired end info added to read name ##
-		if($line[8] >= 0){ $line[0] .= " 1:"; }
-		else{ $line[0] .= " 2:"; }
+		#if($line[8] >= 0){ $line[0] .= " 1:"; }
+		#else{ $line[0] .= " 2:"; }
+		my $pair;
+		if($line[8] >= 0){ $pair = 1; }
+		else{ $pair = 2; }
 		
 		## loading into hash ##
-		$reads{$line[2]}{$line[0]}{$.}{"start"} = $line[3];						# contig->seq->start
-		$reads{$line[2]}{$line[0]}{$.}{"stop"} = $line[3] + length $line[9];		
-		$reads{$line[2]}{$line[0]}{$.}{"nuc"} = $line[9];	
+		$reads{$line[2]}{$line[0]}{$pair}{$.}{"start"} = $line[3];						# contig->seq->start
+		$reads{$line[2]}{$line[0]}{$pair}{$.}{"stop"} = $line[3] + length $line[9];		
+		$reads{$line[2]}{$line[0]}{$pair}{$.}{"nuc"} = $line[9];	
 			
 		last if $. > 1000000;
 		}
@@ -150,15 +158,16 @@ sub load_interval_tree{
 		
 		# inserting into interval trees #
 		foreach my $read (keys %{$reads{$contig}}){
-			foreach my $map_id (keys %{$reads{$contig}{$read}}){
-				$itrees{$contig}->insert(
-							[$read, $map_id, $reads{$contig}{$read}{$map_id}{"nuc"}],
-							$reads{$contig}{$read}{$map_id}{"start"} - 1, 
-							$reads{$contig}{$read}{$map_id}{"stop"} + 1);
+			foreach my $pair (keys %{$reads{$contig}{$read}}){
+				foreach my $map_id (keys %{$reads{$contig}{$read}{$pair}}){
+					$itrees{$contig}->insert(
+							[$read, $pair, $map_id, $reads{$contig}{$read}{$pair}{$map_id}{"nuc"}],
+							$reads{$contig}{$read}{$pair}{$map_id}{"start"} - 1, 
+							$reads{$contig}{$read}{$pair}{$map_id}{"stop"} + 1);
+					}
 				}
 			}
 		}
-	
 	return \%itrees, \%reads;
 	}
 
