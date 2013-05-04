@@ -1,0 +1,1120 @@
+Sat May  4 13:46:02 2013
+ velveth . 61 -fasta -short clust2349_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:46:12 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 15.207113
+Final graph has 1 nodes and n50 of 478, max 478, total 478, using 184/201 reads
+Sat May  4 13:50:49 2013
+ velveth . 61 -fasta -short clust686_A
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:50:49 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:30 2013
+ velveth . 61 -fasta -short clust686_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:30 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 18.361463
+Final graph has 1 nodes and n50 of 2050, max 2050, total 2050, using 955/1099 reads
+Sat May  4 13:51:47 2013
+ velveth . 61 -fasta -short clust686_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:47 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 18.361463
+Final graph has 1 nodes and n50 of 2050, max 2050, total 2050, using 955/1099 reads
+Sat May  4 13:51:47 2013
+ velveth . 61 -fasta -short clust834_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:47 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 19.198885
+Final graph has 1 nodes and n50 of 1076, max 1076, total 1076, using 523/607 reads
+Sat May  4 13:51:47 2013
+ velveth . 61 -fasta -short clust697_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:47 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 16.630787
+Final graph has 1 nodes and n50 of 864, max 864, total 864, using 365/413 reads
+Sat May  4 13:51:47 2013
+ velveth . 61 -fasta -short clust689_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:47 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 17.829181
+Final graph has 1 nodes and n50 of 843, max 843, total 843, using 381/419 reads
+Sat May  4 13:51:47 2013
+ velveth . 61 -fasta -short clust688_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:47 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 17.972746
+Final graph has 1 nodes and n50 of 954, max 954, total 954, using 434/477 reads
+Sat May  4 13:51:47 2013
+ velveth . 61 -fasta -short clust696_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:47 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 13.918591
+Final graph has 1 nodes and n50 of 823, max 823, total 823, using 290/329 reads
+Sat May  4 13:51:47 2013
+ velveth . 61 -fasta -short clust836_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:47 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 16.252516
+Final graph has 1 nodes and n50 of 1093, max 1093, total 1093, using 450/498 reads
+Sat May  4 13:51:47 2013
+ velveth . 61 -fasta -short clust2349_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:47 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 15.207113
+Final graph has 1 nodes and n50 of 478, max 478, total 478, using 184/201 reads
+Sat May  4 13:51:47 2013
+ velveth . 61 -fasta -short clust488_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:47 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 18.110651
+Final graph has 1 nodes and n50 of 1934, max 1934, total 1934, using 883/988 reads
+Sat May  4 13:51:47 2013
+ velveth . 61 -fasta -short clust835_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:47 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 15.375803
+Final graph has 1 nodes and n50 of 934, max 934, total 934, using 367/438 reads
+Sat May  4 13:51:48 2013
+ velveth . 61 -fasta -short clust2466_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:48 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 15.917782
+Final graph has 1 nodes and n50 of 1569, max 1569, total 1569, using 631/713 reads
+Sat May  4 13:51:48 2013
+ velveth . 61 -fasta -short clust691_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:48 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 18.235294
+Final graph has 1 nodes and n50 of 1615, max 1615, total 1615, using 747/835 reads
+Sat May  4 13:51:48 2013
+ velveth . 61 -fasta -short clust838_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:48 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 18.335564
+Final graph has 1 nodes and n50 of 1943, max 1943, total 1943, using 901/1000 reads
+Sat May  4 13:51:48 2013
+ velveth . 61 -fasta -short clust687_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:48 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 16.433945
+Final graph has 1 nodes and n50 of 1090, max 1090, total 1090, using 454/509 reads
+Sat May  4 13:51:48 2013
+ velveth . 61 -fasta -short clust833_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:48 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 15.094225
+Final graph has 1 nodes and n50 of 987, max 987, total 987, using 376/419 reads
+Sat May  4 13:51:48 2013
+ velveth . 61 -fasta -short clust489_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:51:48 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 17.904255
+Final graph has 1 nodes and n50 of 2068, max 2068, total 2068, using 932/1072 reads
+Sat May  4 13:52:00 2013
+ velveth . 61 -fasta -short clust686_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:52:00 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 18.361463
+Final graph has 1 nodes and n50 of 2050, max 2050, total 2050, using 955/1099 reads
+Sat May  4 13:52:00 2013
+ velveth . 61 -fasta -short clust834_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:52:00 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 19.198885
+Final graph has 1 nodes and n50 of 1076, max 1076, total 1076, using 523/607 reads
+Sat May  4 13:52:00 2013
+ velveth . 61 -fasta -short clust697_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:52:00 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 16.630787
+Final graph has 1 nodes and n50 of 864, max 864, total 864, using 365/413 reads
+Sat May  4 13:52:00 2013
+ velveth . 61 -fasta -short clust689_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:52:00 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 17.829181
+Final graph has 1 nodes and n50 of 843, max 843, total 843, using 381/419 reads
+Sat May  4 13:52:00 2013
+ velveth . 61 -fasta -short clust688_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:52:00 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 17.972746
+Final graph has 1 nodes and n50 of 954, max 954, total 954, using 434/477 reads
+Sat May  4 13:52:00 2013
+ velveth . 61 -fasta -short clust696_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:52:00 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 13.918591
+Final graph has 1 nodes and n50 of 823, max 823, total 823, using 290/329 reads
+Sat May  4 13:52:00 2013
+ velveth . 61 -fasta -short clust836_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:52:00 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 16.252516
+Final graph has 1 nodes and n50 of 1093, max 1093, total 1093, using 450/498 reads
+Sat May  4 13:52:00 2013
+ velveth . 61 -fasta -short clust2349_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:52:00 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 15.207113
+Final graph has 1 nodes and n50 of 478, max 478, total 478, using 184/201 reads
+Sat May  4 13:52:00 2013
+ velveth . 61 -fasta -short clust488_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:52:00 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 18.110651
+Final graph has 1 nodes and n50 of 1934, max 1934, total 1934, using 883/988 reads
+Sat May  4 13:52:01 2013
+ velveth . 61 -fasta -short clust835_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:52:01 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 15.375803
+Final graph has 1 nodes and n50 of 934, max 934, total 934, using 367/438 reads
+Sat May  4 13:52:01 2013
+ velveth . 61 -fasta -short clust2466_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:52:01 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 15.917782
+Final graph has 1 nodes and n50 of 1569, max 1569, total 1569, using 631/713 reads
+Sat May  4 13:52:01 2013
+ velveth . 61 -fasta -short clust691_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:52:01 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 18.235294
+Final graph has 1 nodes and n50 of 1615, max 1615, total 1615, using 747/835 reads
+Sat May  4 13:52:01 2013
+ velveth . 61 -fasta -short clust838_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:52:01 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 18.335564
+Final graph has 1 nodes and n50 of 1943, max 1943, total 1943, using 901/1000 reads
+Sat May  4 13:52:01 2013
+ velveth . 61 -fasta -short clust687_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:52:01 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 16.433945
+Final graph has 1 nodes and n50 of 1090, max 1090, total 1090, using 454/509 reads
+Sat May  4 13:52:01 2013
+ velveth . 61 -fasta -short clust833_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:52:01 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 15.094225
+Final graph has 1 nodes and n50 of 987, max 987, total 987, using 376/419 reads
+Sat May  4 13:52:01 2013
+ velveth . 61 -fasta -short clust489_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:52:01 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 17.904255
+Final graph has 1 nodes and n50 of 2068, max 2068, total 2068, using 932/1072 reads
+Sat May  4 13:54:29 2013
+ velveth . 61 -fasta -short clust686_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:54:29 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 18.361463
+Final graph has 1 nodes and n50 of 2050, max 2050, total 2050, using 955/1099 reads
+Sat May  4 13:54:29 2013
+ velveth . 61 -fasta -short clust834_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:54:29 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 19.198885
+Final graph has 1 nodes and n50 of 1076, max 1076, total 1076, using 523/607 reads
+Sat May  4 13:54:29 2013
+ velveth . 61 -fasta -short clust697_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:54:29 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 16.630787
+Final graph has 1 nodes and n50 of 864, max 864, total 864, using 365/413 reads
+Sat May  4 13:54:29 2013
+ velveth . 61 -fasta -short clust689_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:54:29 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 17.829181
+Final graph has 1 nodes and n50 of 843, max 843, total 843, using 381/419 reads
+Sat May  4 13:54:29 2013
+ velveth . 61 -fasta -short clust688_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:54:29 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 17.972746
+Final graph has 1 nodes and n50 of 954, max 954, total 954, using 434/477 reads
+Sat May  4 13:54:29 2013
+ velveth . 61 -fasta -short clust696_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:54:29 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 13.918591
+Final graph has 1 nodes and n50 of 823, max 823, total 823, using 290/329 reads
+Sat May  4 13:54:29 2013
+ velveth . 61 -fasta -short clust836_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:54:29 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 16.252516
+Final graph has 1 nodes and n50 of 1093, max 1093, total 1093, using 450/498 reads
+Sat May  4 13:54:29 2013
+ velveth . 61 -fasta -short clust2349_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:54:29 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 15.207113
+Final graph has 1 nodes and n50 of 478, max 478, total 478, using 184/201 reads
+Sat May  4 13:54:29 2013
+ velveth . 61 -fasta -short clust488_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:54:30 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 18.110651
+Final graph has 1 nodes and n50 of 1934, max 1934, total 1934, using 883/988 reads
+Sat May  4 13:54:30 2013
+ velveth . 61 -fasta -short clust835_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:54:30 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 15.375803
+Final graph has 1 nodes and n50 of 934, max 934, total 934, using 367/438 reads
+Sat May  4 13:54:30 2013
+ velveth . 61 -fasta -short clust2466_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:54:30 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 15.917782
+Final graph has 1 nodes and n50 of 1569, max 1569, total 1569, using 631/713 reads
+Sat May  4 13:54:30 2013
+ velveth . 61 -fasta -short clust691_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:54:30 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 18.235294
+Final graph has 1 nodes and n50 of 1615, max 1615, total 1615, using 747/835 reads
+Sat May  4 13:54:30 2013
+ velveth . 61 -fasta -short clust838_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:54:30 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 18.335564
+Final graph has 1 nodes and n50 of 1943, max 1943, total 1943, using 901/1000 reads
+Sat May  4 13:54:30 2013
+ velveth . 61 -fasta -short clust687_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:54:30 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 16.433945
+Final graph has 1 nodes and n50 of 1090, max 1090, total 1090, using 454/509 reads
+Sat May  4 13:54:30 2013
+ velveth . 61 -fasta -short clust833_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:54:30 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 15.094225
+Final graph has 1 nodes and n50 of 987, max 987, total 987, using 376/419 reads
+Sat May  4 13:54:30 2013
+ velveth . 61 -fasta -short clust489_A.fna
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Sat May  4 13:54:30 2013
+ velvetg . -cov_cutoff auto -exp_cov auto -ins_length 300 -ins_length_sd 100 -min_contig_lgth 100
+Version 1.2.07
+Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Compilation settings:
+CATEGORIES = 2
+MAXKMERLENGTH = 99
+
+Median coverage depth = 17.904255
+Final graph has 1 nodes and n50 of 2068, max 2068, total 2068, using 932/1072 reads
