@@ -133,13 +133,14 @@
 FGCIR_assemble.pl \-\- batch assembly of read files from FindGeneClustersInReads.pl
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-FGCIR_assemble.pl [options] > assembly_file_list.txt
-.SS "options"
-.IX Subsection "options"
+FGCIR_assemble.pl [flags] > assembly_file_list.txt
+.SS "Required flags"
+.IX Subsection "Required flags"
 .IP "\-directory" 4
 .IX Item "-directory"
-Directory with the mapped read files from FindGeneClustersInReads.pl.
-[./Mapped2GeneCluster/]
+Directory with the mapped read files from FindGeneClustersInReads.pl
+.SS "Optional flags"
+.IX Subsection "Optional flags"
 .IP "\-assembler" 4
 .IX Item "-assembler"
 The assembler used on each file of reads (idba_ud | velvet). [idba_ud]

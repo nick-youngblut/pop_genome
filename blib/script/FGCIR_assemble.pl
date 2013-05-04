@@ -13,7 +13,7 @@ pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
 my ($verbose, $params, $extra_params);
 my $assembler = "idba_ud";
-my $in_dir = "./Mapped2GeneCluster/";
+my $in_dir;
 GetOptions(
 	   "directory=s" => \$in_dir,				# input directory
 	   "assembler=s" => \$assembler, 	# assembler used
@@ -24,12 +24,14 @@ GetOptions(
 	   );
 
 ### I/O error & defaults
-$assembler = check_assembler_IO($assembler) unless $assembler eq "idba_ud";
-$params = load_params($assembler) unless $params;
-$params .= " $extra_params" if $extra_params;
+die " ERROR: provide a directory!\n" unless $in_dir;
 die " ERROR: $in_dir not found!\n" unless -d $in_dir;
 $in_dir = File::Spec->rel2abs($in_dir);
 chdir $in_dir or die $!;
+
+$assembler = check_assembler_IO($assembler) unless $assembler eq "idba_ud";
+$params = load_params($assembler) unless $params;
+$params .= " $extra_params" if $extra_params;
 
 ### MAIN
 my ($pair_files_r, $all_files_r) = find_read_files();
@@ -177,16 +179,21 @@ FGCIR_assemble.pl -- batch assembly of read files from FindGeneClustersInReads.p
 
 =head1 SYNOPSIS
 
-FGCIR_assemble.pl [options] > assembly_file_list.txt
+FGCIR_assemble.pl [flags] > assembly_file_list.txt
 
-=head2 options
+=head2 Required flags
 
 =over
 
 =item -directory
 
-Directory with the mapped read files from FindGeneClustersInReads.pl.
-[./Mapped2GeneCluster/]
+Directory with the mapped read files from FindGeneClustersInReads.pl
+
+=back
+
+=head2 Optional flags
+
+=over
 
 =item -assembler
 
