@@ -15,7 +15,7 @@ use Parallel::ForkManager;
 ### args/flags
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
-my ($verbose, @sam_in, $database_file, $runID, $index_in);
+my ($verbose, @sam_in, $database_file, $runID, $index_in, $rev_comp_bool);
 my $gene_extend = 100;
 my $clusterID_col = 2;
 my $fork = 0;
@@ -26,7 +26,8 @@ GetOptions(
 		"runID=s" => \$runID,
 		"extend=i" => \$gene_extend,	# bp to extend beyond gene (5' & 3')
 		"outdir=s" => \$outdir_name, 	# name of output directory
-		"fork=i" => \$fork,	
+		"fork=i" => \$fork,
+		"bitwise" => \$rev_comp_bool, 		# use SAM bit flag to rev/rev-comp reads? [FALSE]
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
@@ -114,7 +115,8 @@ sub write_summary_table{
 	
 	close OUT;
 	
-	print STDERR "...Summary file written: $outdir_name/mapped_summary.txt\n";
+	print STDERR "...summary file written: $outdir_name/mapped_summary.txt\n"
+		unless $verbose;
 	}
 
 sub write_reads_mapped{
@@ -122,7 +124,7 @@ sub write_reads_mapped{
 	my ($reads_mapped_r, $outdir_name) = @_;
 	
 	# status #
-	print STDERR "...writing out read files to $outdir_name\n";
+	print STDERR "...writing out read files to $outdir_name\n" unless $verbose;
 	
 	foreach my $cluster (keys %$reads_mapped_r){
 		(my $outfile = $cluster) =~ s/^/clust/;
@@ -167,6 +169,7 @@ sub make_outdir{
 
 sub merge_hashes{
 # merging mapped & summary hashes #
+# each hash has reads mapped to cluster for 1 FIG #
 	my ($tmp_dir) = @_;
 	
 	# status #
@@ -181,11 +184,23 @@ sub merge_hashes{
 	my %mapped;
 	foreach my $infile (@map_files){
 		my $href = retrieve("$tmp_dir/$infile");
-		my %tmp = (%mapped, %$href);
-		%mapped = %tmp;
+
+		foreach my $clust (keys %$href){
+			if(exists $mapped{$clust}){
+				# adding reads not already present in cluster #
+				foreach my $read (keys %{$href->{$clust}}){
+					foreach my $pair (keys %{$href->{$clust}{$read}}){
+						$mapped{$clust}{$read}{$pair} = $href->{$clust}{$read}{$pair}
+							unless exists $mapped{$clust}{$read}{$pair};
+						}
+					}
+				}
+			else{ $mapped{$clust} = $href->{$clust}; }		# adding whole cluster to mapped
+			}
 		}	
 
-	# getting mapping files #
+
+	# getting summary files #
 	opendir IN, $tmp_dir or die $!;
 	my @sum_files = grep(/_sum/, readdir IN);
 	close IN;
@@ -193,12 +208,20 @@ sub merge_hashes{
 	# merging hashes #
 	my %summed;
 	foreach my $infile (@sum_files){
-		my $href = retrieve("$tmp_dir/$infile");
-		my %tmp = (%summed, %$href);
-		%summed = %tmp;
+		my $href = retrieve("$tmp_dir/$infile");	#cluster->fig->cat->value
+		foreach my $clust (keys %$href){
+			if(exists $summed{$clust}){
+				# adding figs not already present in cluster #
+				foreach my $fig (keys %{$href->{$clust}}){
+					$summed{$clust}{$fig} = $href->{$clust}{$fig}
+						unless exists $summed{$clust}{$fig};
+					}
+				}
+			else{ $summed{$clust} = $href->{$clust}; }		# adding whole cluster to mapped
+			}
 		}		
 
-		#print Dumper %mapped; exit;
+		#print Dumper %mapped; #exit;
 	return \%mapped, \%summed;
 	}
 
@@ -209,6 +232,10 @@ sub reads_mapped_to_region{
 	my ($sam_file, $sam_fig, $gene_start_stop_r, 
 		$gene_extend, $itrees_r, $reads_r, 
 		$reads_mapped_r, $mapped_summary_r) = @_;
+
+	# status #
+	print STDERR "...finding reads mapped to genes in FIG$sam_fig\n"
+		unless $verbose;
 
 	my %warnings;
 	foreach my $fig (keys %$gene_start_stop_r){			# FIG
@@ -235,7 +262,7 @@ sub reads_mapped_to_region{
 				
 				# loading read names #
 				foreach my $id (@$res){		# read IDs
-					$reads_mapped_r->{$cluster}{$$id[0]}{$$id[1]}{$$id[2]} = $$id[3];		# cluster->read_ID->pair->mapID = read
+					$reads_mapped_r->{$cluster}{$$id[0]}{$$id[1]}{"$sam_fig\__$$id[2]"} = $$id[3];		# cluster->read_ID->pair->mapID = read
 					}
 					
 				# loading summary (summing number of reads per gene) #
@@ -244,17 +271,19 @@ sub reads_mapped_to_region{
 					($gene_start_stop_r->{$fig}{$cluster}{$contig}{"stop"} + $gene_extend) - 
 					($gene_start_stop_r->{$fig}{$cluster}{$contig}{"start"} - $gene_extend)
 					unless exists $mapped_summary_r->{$cluster}{$fig}{"length"};
+					# cluster->fig->cat->value
 				}
 			}
 		}
 		#print Dumper %$reads_mapped_r; exit;
+		#print Dumper %$mapped_summary_r; exit;
 	}
 
 sub load_interval_tree{
 	my ($sam_file) = @_;
 	
 	# status #
-	print STDERR "...loading $sam_file\n";
+	print STDERR "...loading $sam_file\n" unless $verbose;
 	
 	# loading reads as hash #
 	open IN, $sam_file or die $!;
@@ -275,8 +304,8 @@ sub load_interval_tree{
 			my @line2 = split /\t/, $line2;
 			
 			## check bitwise flag; read back to original orientation ##
-			check_bitwise(\@line);
-			check_bitwise(\@line2);
+			check_bitwise(\@line) if $rev_comp_bool;
+			check_bitwise(\@line2) if $rev_comp_bool;
 			
 			## loading into hash ##
 				# start & stop by + strand
@@ -290,7 +319,7 @@ sub load_interval_tree{
 			}	
 		else{ 
 			## check bitwise flag; read back to original orientation ##
-			check_bitwise(\@line);		
+			check_bitwise(\@line) if $rev_comp_bool;
 
 			## loading into hash ##
 			$reads{$line[2]}{$line[0]}{1}{$.}{"start"} = $line[3];						# contig->seq->start
@@ -370,7 +399,7 @@ sub load_gene_info{
 	my ($clusterID_r, $runID) = @_;
 	
 	# status #
-	print STDERR "...loading gene info from ITEP\n";
+	print STDERR "...loading gene info from ITEP\n" unless $verbose;
 	
 	# query ITEP #
 	my @q;
@@ -487,7 +516,11 @@ Cluster ID column in clusterID_file (starts at 1). [2]
 
 Number of SAM files to process in parallel. [1]
 
-=item -v	Verbose output
+=item -bitwise
+
+Use SAM bitwise flag to return read to original orientation (i.e. rev/rev-comp read)
+
+=item -v	Verbose output. [TRUE]
 
 =item -h	This help message
 
