@@ -140,7 +140,7 @@ FORAGer.pl [flags] < clusterID_file.txt
 .IX Item "-index"
 Index file listing *sam files & \s-1FIG\s0 IDs.
 .Sp
-2 column (*txt): \s-1FILE\s0.sam \s-1FIG\s0
+2 column format (*txt): 1st=/PATH_to_FILE/FILE.sam;  2nd=FIG
 .IP "\-runID" 4
 .IX Item "-runID"
 \&\s-1ITEP\s0 Run \s-1ID\s0 for the clusters of interest.
@@ -154,7 +154,7 @@ Output directory name (location of all mapped read files). [./Mapped2GeneCluster
 Number of base pairs to extend around the gene of interest (5' & 3'). [100]
 .IP "\-column" 4
 .IX Item "-column"
-Cluster \s-1ID\s0 column in clusterID_file (starts at 1). [2]
+Cluster \s-1ID\s0 column in clusterID_file (index from 1). [2]
 .IP "\-fork" 4
 .IX Item "-fork"
 Number of \s-1SAM\s0 files to process in parallel. [1]
@@ -174,15 +174,23 @@ perldoc FORAGer.pl
 .IX Header "DESCRIPTION"
 Pull out all reads mapping to each gene (& region around the gene)
 in each gene cluster.
-.SS "output files"
-.IX Subsection "output files"
-File prefix = 'clust#'
+.SS "Input"
+.IX Subsection "Input"
+\fIIndex file\fR
+.IX Subsection "Index file"
 .PP
-\&'_FR.fna' = Just paired-end reads that both mapped to the gene region
+2 column tab-delimited file for associating a \s-1SAM\s0 file to 
+the \s-1FIG\s0 \s-1ID\s0 of the reference genome used for mapping. 
+1st=/PATH_to_FILE/FILE.sam;  2nd=FIG
 .PP
-\&'_A.fna' = All reads that mapped to the gene region
-.SS "\s-1SAM\s0 files"
+\fIclusterID file (or piped in)\fR
+.IX Subsection "clusterID file (or piped in)"
+.PP
+A tab-delimited file containing the cluster IDs of interest.
+.PP
+\fI\s-1SAM\s0 files\fR
 .IX Subsection "SAM files"
+.PP
 Reads from a genome of interest (e.g. a draft genome) should be mapped
 onto all other genomes (producing the \s-1SAM\s0 files required).
 .PP
@@ -191,6 +199,15 @@ however, genes from any genomes lacking *sam files will be skipped (ie.
 no reads pulled out for those genes; less total reads for the local assembly)
 .PP
 Multiple mappings are allowed for the same file (e.g. bowtie2 with '\-k' flag).
+.SS "Output files"
+.IX Subsection "Output files"
+All files output to a directory (see '\-outdir').
+.PP
+File prefix = 'clust#'
+.PP
+\&'_FR.fna' = Just paired-end reads that both mapped to the gene region
+.PP
+\&'_A.fna' = All reads that mapped to the gene region
 .SS "Requires"
 .IX Subsection "Requires"
 \&\s-1ITEP\s0 must be setup so that it can be queried.

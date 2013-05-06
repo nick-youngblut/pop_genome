@@ -488,7 +488,7 @@ FORAGer.pl [flags] < clusterID_file.txt
 
 Index file listing *sam files & FIG IDs.
 
-2 column (*txt): FILE.sam FIG
+2 column format (*txt): 1st=/PATH_to_FILE/FILE.sam;  2nd=FIG
 
 =item -runID
 
@@ -510,7 +510,7 @@ Number of base pairs to extend around the gene of interest (5' & 3'). [100]
 
 =item -column
 
-Cluster ID column in clusterID_file (starts at 1). [2]
+Cluster ID column in clusterID_file (index from 1). [2]
 
 =item -fork
 
@@ -535,15 +535,19 @@ perldoc FORAGer.pl
 Pull out all reads mapping to each gene (& region around the gene)
 in each gene cluster.
 
-=head2 output files
+=head2 Input
 
-File prefix = 'clust#'
+=head3 Index file
 
-'_FR.fna' = Just paired-end reads that both mapped to the gene region
+2 column tab-delimited file for associating a SAM file to 
+the FIG ID of the reference genome used for mapping. 
+1st=/PATH_to_FILE/FILE.sam;  2nd=FIG
 
-'_A.fna' = All reads that mapped to the gene region
+=head3 clusterID file (or piped in)
 
-=head2 SAM files
+A tab-delimited file containing the cluster IDs of interest.
+
+=head3 SAM files
 
 Reads from a genome of interest (e.g. a draft genome) should be mapped
 onto all other genomes (producing the SAM files required).
@@ -553,6 +557,16 @@ however, genes from any genomes lacking *sam files will be skipped (ie.
 no reads pulled out for those genes; less total reads for the local assembly)
 
 Multiple mappings are allowed for the same file (e.g. bowtie2 with '-k' flag).
+
+=head2 Output files
+
+All files output to a directory (see '-outdir').
+
+File prefix = 'clust#'
+
+'_FR.fna' = Just paired-end reads that both mapped to the gene region
+
+'_A.fna' = All reads that mapped to the gene region
 
 =head2 Requires
 

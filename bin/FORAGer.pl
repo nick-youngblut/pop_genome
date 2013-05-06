@@ -22,8 +22,8 @@ my $fork = 0;
 my $outdir_name = "Mapped2GeneCluster";
 GetOptions(
 		"index=s" => \$index_in, 		# an index file of sam_file => FIG#
-		"column=i" => \$clusterID_col,
-		"runID=s" => \$runID,
+		#"column=i" => \$clusterID_col,
+		#"runID=s" => \$runID,
 		"extend=i" => \$gene_extend,	# bp to extend beyond gene (5' & 3')
 		"outdir=s" => \$outdir_name, 	# name of output directory
 		"fork=i" => \$fork,
@@ -38,8 +38,7 @@ die " ERROR: provide an index file!\n" unless $index_in;
 
 ### MAIN
 # loading info from ITEP #
-my $clusterID_r = load_cluster_ids($clusterID_col);
-my $gene_start_stop_r = load_gene_info($clusterID_r, $runID);
+my $gene_start_stop_r = load_gene_info();
 
 # pulling out reads mapping to each gene region #
 my $index_r = load_index($index_in);
@@ -385,6 +384,8 @@ sub load_index{
 		next if /^\s*$/;
 		
 		my @line = split /\t/;
+		$line[0] = File::Spec->rel2abs($line[0]);
+
 		die " ERROR: $line[0] does not exist!\n" unless -e $line[0];
 		$index{$line[0]} = $line[1];		# sam => fig
 		}
@@ -396,24 +397,10 @@ sub load_index{
 
 sub load_gene_info{
 # getting geneIDs for a cluster from ITEP #
-	my ($clusterID_r, $runID) = @_;
-	
-	# status #
-	print STDERR "...loading gene info from ITEP\n" unless $verbose;
-	
-	# query ITEP #
-	my @q;
-	foreach my $clusterID (keys %$clusterID_r){
-		push(@q, join("\\t", $runID, $clusterID));
-		}
-	my $q = join("\\n", @q);
-	
-	my $qq = "printf \"$q\" | db_getClusterGeneInformation.py |";
-	
+
 	# parsing ITEP output #
-	open PIPE, $qq or die $!;
 	my %gene_start_stop;
-	while(<PIPE>){
+	while(<>){
 		chomp;
 		next if /^\s*$/;
 		
@@ -433,8 +420,6 @@ sub load_gene_info{
 			}
 		else{ die " ERROR: 'strand' must be '+' or '-'\n"; }
 		}
-	
-	close PIPE;
 	
 	# sanity check #
 	die " ERROR: no gene information found for gene clusters!\n" if
@@ -478,7 +463,7 @@ FORAGer.pl -- Finding Orthologous Reads and Genes
 
 =head1 SYNOPSIS
 
-FORAGer.pl [flags] < clusterID_file.txt
+db_getClusterGeneInformation.py | FORAGer.pl [flags]
 
 =head2 Required flags
 
@@ -489,10 +474,6 @@ FORAGer.pl [flags] < clusterID_file.txt
 Index file listing *sam files & FIG IDs.
 
 2 column format (*txt): 1st=/PATH_to_FILE/FILE.sam;  2nd=FIG
-
-=item -runID
-
-ITEP Run ID for the clusters of interest.
 
 =back
 
@@ -507,10 +488,6 @@ Output directory name (location of all mapped read files). [./Mapped2GeneCluster
 =item -extend
 
 Number of base pairs to extend around the gene of interest (5' & 3'). [100]
-
-=item -column
-
-Cluster ID column in clusterID_file (index from 1). [2]
 
 =item -fork
 
@@ -543,9 +520,13 @@ in each gene cluster.
 the FIG ID of the reference genome used for mapping. 
 1st=/PATH_to_FILE/FILE.sam;  2nd=FIG
 
-=head3 clusterID file (or piped in)
+=head3 db_getClusterGeneInformation.py | 
 
-A tab-delimited file containing the cluster IDs of interest.
+Piped output from db_getClusterGeneInformation.py.
+
+Clusters should be from 1 cluster run!
+
+output from 
 
 =head3 SAM files
 
@@ -588,13 +569,10 @@ column2 = FIG ID
 
 =head2 Get some gene clusters of interest
 
-$ db_getAllClusterRuns.py | grep "mazei_I" | 
-db_getClustersWithAnnotation.py "methyl coenzyme M reductase" >
-mcr_clust.txt
-
-=head2 Finding reads that mapped to each gene in the gene clusters of interest
-
-FORAGer.pl -in index.txt -runID all_I_2.0_c_0.4_m_maxbit < mcr_clust.txt
+$ db_getAllClusterRuns.py | grep "mazei_I_2.0_c_0.4_m_maxbit" | 
+db_getClustersWithAnnotation.py "methyl coenzyme M reductase" |
+db_getClusterGeneInformation.py | FORAGer.pl -in index.txt 
+-runID all_I_2.0_c_0.4_m_maxbit
 
 =head1 AUTHOR
 
