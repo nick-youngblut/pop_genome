@@ -242,8 +242,6 @@ sub reads_mapped_to_region{
 		unless $verbose;
 
 	my %warnings;
-	#print STDERR " WARNING: $fig not found in provided gene clusters!\n" 
-	#	unless exists $gene_start_stop_r->{$fig};
 	
 	foreach my $cluster (keys %{$gene_start_stop_r->{$fig}}){					# gene clusters in FIG
 		foreach my $contig (keys %{$gene_start_stop_r->{$fig}{$cluster}}){
@@ -441,7 +439,7 @@ sub load_gene_info{
 	my %cnt;
 	foreach my $fig (values %$index_r){
 		print STDERR " ERROR: FIG $fig not found in provided gene cluster info!\n"
-			unless exists $gene_start_stop{$fig}; 
+			unless exists $gene_start_stop{$fig} || $warnings_bool; 
 		map{ $cnt{$_}=1 } keys %{$gene_start_stop{$fig}};
 		}
 	print STDERR "Number of clusters containing genes from provided FIGs: ", scalar keys %cnt, "\n"; exit
@@ -519,6 +517,8 @@ Number of SAM files to process in parallel. [1]
 Use SAM bitwise flag to return read to original orientation (i.e. rev/rev-comp read)
 
 =item -v	Verbose output. [TRUE]
+
+=item -w 	Warnings? [TRUE]
 
 =item -h	This help message
 
