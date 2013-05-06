@@ -474,11 +474,11 @@ __END__
 
 =head1 NAME
 
-FindGeneClustersInReads.pl -- pulling out reads mapping to a gene cluster
+FORAGer.pl -- Finding Orthologous Reads and Genes
 
 =head1 SYNOPSIS
 
-FindGeneClustersInReads.pl [flags] < clusterID_file.txt
+FORAGer.pl [flags] < clusterID_file.txt
 
 =head2 Required flags
 
@@ -528,7 +528,7 @@ Use SAM bitwise flag to return read to original orientation (i.e. rev/rev-comp r
 
 =head2 For more information:
 
-perldoc FindGeneClustersInReads.pl
+perldoc FORAGer.pl
 
 =head1 DESCRIPTION
 
@@ -580,7 +580,7 @@ mcr_clust.txt
 
 =head2 Finding reads that mapped to each gene in the gene clusters of interest
 
-FindGeneClustersInReads.pl -in index.txt -runID all_I_2.0_c_0.4_m_maxbit < mcr_clust.txt
+FORAGer.pl -in index.txt -runID all_I_2.0_c_0.4_m_maxbit < mcr_clust.txt
 
 =head1 AUTHOR
 

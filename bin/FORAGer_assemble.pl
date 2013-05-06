@@ -132,7 +132,7 @@ sub call_idba_ud{
 	}
 
 sub find_read_files{
-# finding the read files produced by FindGeneClustersInReads #
+# finding the read files produced by FORAGer.pl #
 	opendir IN, "." or die $!;
 	my @files = grep(/\.fna$/, readdir IN);
 	close IN;
@@ -175,11 +175,11 @@ __END__
 
 =head1 NAME
 
-FGCIR_assemble.pl -- batch assembly of read files from FindGeneClustersInReads.pl
+FORAGer_assemble.pl -- batch assembly of read files from FORAGer.pl
 
 =head1 SYNOPSIS
 
-FGCIR_assemble.pl [flags] > assembly_file_list.txt
+FORAGer_assemble.pl [flags] > assembly_file_list.txt
 
 =head2 Required flags
 
@@ -187,7 +187,7 @@ FGCIR_assemble.pl [flags] > assembly_file_list.txt
 
 =item -directory
 
-Directory with the mapped read files from FindGeneClustersInReads.pl
+Directory with the mapped read files from FORAGer.pl
 
 =back
 
@@ -215,11 +215,11 @@ Extra parameters appended to the default parameters.
 
 =head2 For more information:
 
-perldoc FGCIR_assemble.pl
+perldoc FORAGer_assemble.pl
 
 =head1 DESCRIPTION
 
-Batch assemby of the read files produced by FindGeneClustersInReads.pl.
+Batch assemby of the read files produced by FORAGer.pl.
 Each read file should contig all of the reads mapped to a gene cluster
 (or just mapped paired-end reads).
 
@@ -262,11 +262,11 @@ in the input file directory!
 
 =head2 Basic usage
 
-FGCIR_assemble.pl > assembly_file_list.txt 
+FORAGer_assemble.pl > assembly_file_list.txt 
 
 =head2 Using velvet
 
-FGCIR_assemble.pl -a velvet > assembly_file_list.txt 
+FORAGer_assemble.pl -a velvet > assembly_file_list.txt 
 
 =head1 AUTHOR
 
