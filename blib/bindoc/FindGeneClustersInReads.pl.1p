@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "FINDGENECLUSTERSINREADS 1"
-.TH FINDGENECLUSTERSINREADS 1 "2013-05-04" "perl v5.14.2" "User Contributed Perl Documentation"
+.TH FINDGENECLUSTERSINREADS 1 "2013-05-05" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -158,8 +158,11 @@ Cluster \s-1ID\s0 column in clusterID_file (starts at 1). [2]
 .IP "\-fork" 4
 .IX Item "-fork"
 Number of \s-1SAM\s0 files to process in parallel. [1]
-.IP "\-v	Verbose output" 4
-.IX Item "-v	Verbose output"
+.IP "\-bitwise" 4
+.IX Item "-bitwise"
+Use \s-1SAM\s0 bitwise flag to return read to original orientation (i.e. rev/rev\-comp read)
+.IP "\-v	Verbose output. [\s-1TRUE\s0]" 4
+.IX Item "-v	Verbose output. [TRUE]"
 .PD 0
 .IP "\-h	This help message" 4
 .IX Item "-h	This help message"
