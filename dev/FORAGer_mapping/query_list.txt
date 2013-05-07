@@ -1,0 +1,9 @@
+1.F.T.2.8	1.F.T.2.8_1m_F.fq	1.F.T.2.8_1m_R.fq
+1.H.A.2.2	1.H.A.2.2_1m_F.fq	1.H.A.2.2_1m_R.fq
+1.H.T.1A.1	1.H.T.1A.1_1m_F.fq	1.H.T.1A.1_1m_R.fq
+2.H.A.1B.4	2.H.A.1B.4_1m_F.fq	2.H.A.1B.4_1m_R.fq
+2.H.T.1A.15	2.H.T.1A.15_1m_F.fq	2.H.T.1A.15_1m_R.fq
+2.H.T.1A.3	2.H.T.1A.3_1m_F.fq	2.H.T.1A.3_1m_R.fq
+2.H.T.1A.6	2.H.T.1A.6_1m_F.fq	2.H.T.1A.6_1m_R.fq
+2.H.T.1A.8	2.H.T.1A.8_1m_F.fq	2.H.T.1A.8_1m_R.fq
+
