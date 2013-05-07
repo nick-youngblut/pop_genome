@@ -133,7 +133,7 @@
 FORAGer.pl \-\- Finding Orthologous Reads and Genes
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-FORAGer.pl [flags] < clusterID_file.txt
+db_getClusterGeneInformation.py | FORAGer.pl [flags]
 .SS "Required flags"
 .IX Subsection "Required flags"
 .IP "\-index" 4
@@ -141,9 +141,6 @@ FORAGer.pl [flags] < clusterID_file.txt
 Index file listing *sam files & \s-1FIG\s0 IDs.
 .Sp
 2 column format (*txt): 1st=/PATH_to_FILE/FILE.sam;  2nd=FIG
-.IP "\-runID" 4
-.IX Item "-runID"
-\&\s-1ITEP\s0 Run \s-1ID\s0 for the clusters of interest.
 .SS "Optional flags"
 .IX Subsection "Optional flags"
 .IP "\-outdir" 4
@@ -152,9 +149,6 @@ Output directory name (location of all mapped read files). [./Mapped2GeneCluster
 .IP "\-extend" 4
 .IX Item "-extend"
 Number of base pairs to extend around the gene of interest (5' & 3'). [100]
-.IP "\-column" 4
-.IX Item "-column"
-Cluster \s-1ID\s0 column in clusterID_file (index from 1). [2]
 .IP "\-fork" 4
 .IX Item "-fork"
 Number of \s-1SAM\s0 files to process in parallel. [1]
@@ -164,6 +158,8 @@ Use \s-1SAM\s0 bitwise flag to return read to original orientation (i.e. rev/rev
 .IP "\-v	Verbose output. [\s-1TRUE\s0]" 4
 .IX Item "-v	Verbose output. [TRUE]"
 .PD 0
+.IP "\-w 	Warnings? [\s-1TRUE\s0]" 4
+.IX Item "-w 	Warnings? [TRUE]"
 .IP "\-h	This help message" 4
 .IX Item "-h	This help message"
 .PD
@@ -183,10 +179,14 @@ in each gene cluster.
 the \s-1FIG\s0 \s-1ID\s0 of the reference genome used for mapping. 
 1st=/PATH_to_FILE/FILE.sam;  2nd=FIG
 .PP
-\fIclusterID file (or piped in)\fR
-.IX Subsection "clusterID file (or piped in)"
+\fIdb_getClusterGeneInformation.py |\fR
+.IX Subsection "db_getClusterGeneInformation.py |"
 .PP
-A tab-delimited file containing the cluster IDs of interest.
+Piped output from db_getClusterGeneInformation.py.
+.PP
+Clusters should be from 1 cluster run!
+.PP
+output from
 .PP
 \fI\s-1SAM\s0 files\fR
 .IX Subsection "SAM files"
@@ -225,12 +225,10 @@ column1 = *sam file location
 column2 = \s-1FIG\s0 \s-1ID\s0
 .SS "Get some gene clusters of interest"
 .IX Subsection "Get some gene clusters of interest"
-$ db_getAllClusterRuns.py | grep \*(L"mazei_I\*(R" | 
-db_getClustersWithAnnotation.py \*(L"methyl coenzyme M reductase\*(R" >
-mcr_clust.txt
-.SS "Finding reads that mapped to each gene in the gene clusters of interest"
-.IX Subsection "Finding reads that mapped to each gene in the gene clusters of interest"
-FORAGer.pl \-in index.txt \-runID all_I_2.0_c_0.4_m_maxbit < mcr_clust.txt
+$ db_getAllClusterRuns.py | grep \*(L"mazei_I_2.0_c_0.4_m_maxbit\*(R" | 
+db_getClustersWithAnnotation.py \*(L"methyl coenzyme M reductase\*(R" |
+db_getClusterGeneInformation.py | FORAGer.pl \-in index.txt 
+\&\-runID all_I_2.0_c_0.4_m_maxbit
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Nick Youngblut <nyoungb2@illinois.edu>

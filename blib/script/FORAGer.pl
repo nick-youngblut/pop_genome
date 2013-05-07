@@ -15,34 +15,30 @@ use Parallel::ForkManager;
 ### args/flags
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
-my ($verbose, @sam_in, $database_file, $runID, $index_in, $rev_comp_bool);
+my ($verbose, @sam_in, $index_in, $rev_comp_bool, $warnings_bool);
 my $gene_extend = 100;
-my $clusterID_col = 2;
 my $fork = 0;
 my $outdir_name = "Mapped2GeneCluster";
 GetOptions(
 		"index=s" => \$index_in, 		# an index file of sam_file => FIG#
-		"column=i" => \$clusterID_col,
-		"runID=s" => \$runID,
 		"extend=i" => \$gene_extend,	# bp to extend beyond gene (5' & 3')
 		"outdir=s" => \$outdir_name, 	# name of output directory
-		"fork=i" => \$fork,
+		"fork=i" => \$fork,				# number of forked processes
 		"bitwise" => \$rev_comp_bool, 		# use SAM bit flag to rev/rev-comp reads? [FALSE]
+		"warnings" => \$warnings_bool, 	# write warnings to STDERR? [TRUE]
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
 
 ### I/O error & defaults
-die " ERROR: provide a run ID!\n" unless $runID;
 die " ERROR: provide an index file!\n" unless $index_in;
 
 ### MAIN
-# loading info from ITEP #
-my $clusterID_r = load_cluster_ids($clusterID_col);
-my $gene_start_stop_r = load_gene_info($clusterID_r, $runID);
-
 # pulling out reads mapping to each gene region #
 my $index_r = load_index($index_in);
+
+# loading info from ITEP #
+my $gene_start_stop_r = load_gene_info($index_r);
 
 # making tmp data directory #
 my $tmp_dir = "./temp_data/";
@@ -105,11 +101,18 @@ sub write_summary_table{
 	# body #
 	foreach my $cluster (keys %$mapped_summary_r){
 		foreach my $fig (keys %{$mapped_summary_r->{$cluster}}){
+			# count / length #
+			my $frac;
+			if($mapped_summary_r->{$cluster}{$fig}{"length"}){
+				$frac = $mapped_summary_r->{$cluster}{$fig}{"count"} /
+					$mapped_summary_r->{$cluster}{$fig}{"length"};
+				}
+			else{ $frac = 0; }
+			# writing line #
 			print OUT join("\t", $cluster, $fig, 
 				$mapped_summary_r->{$cluster}{$fig}{"count"},
 				$mapped_summary_r->{$cluster}{$fig}{"length"},
-				$mapped_summary_r->{$cluster}{$fig}{"count"} /
-				$mapped_summary_r->{$cluster}{$fig}{"length"}), "\n"; 
+				$frac), "\n"; 
 			}
 		}
 	
@@ -229,52 +232,57 @@ sub reads_mapped_to_region{
 # parsing out reads that mapped to each gene region #
 ## $gene_start_stop_r = fig=>cluster=>contig=>start/stop=>value
 ## foreach gene (start-stop): find reads mapped to gene (from itree) 
-	my ($sam_file, $sam_fig, $gene_start_stop_r, 
+
+	my ($sam_file, $fig, $gene_start_stop_r, 
 		$gene_extend, $itrees_r, $reads_r, 
 		$reads_mapped_r, $mapped_summary_r) = @_;
 
 	# status #
-	print STDERR "...finding reads mapped to genes in FIG$sam_fig\n"
+	print STDERR "...finding reads mapped to genes in FIG$fig\n"
 		unless $verbose;
 
 	my %warnings;
-	foreach my $fig (keys %$gene_start_stop_r){			# FIG
-		next unless $fig == $sam_fig;					# just looking for reads mapped to the same genome
-		foreach my $cluster (keys %{$gene_start_stop_r->{$fig}}){		# gene cluster
-			foreach my $contig (keys %{$gene_start_stop_r->{$fig}{$cluster}}){
-				# contig of gene in gene tree? #
-				unless(exists $itrees_r->{$contig}){
-					print STDERR "WARNING: no reads mapped to FIG:$fig -> CONTIG:$contig\n"
-						unless exists $warnings{$contig};		
-					$warnings{$contig} = 1;				# so the warning only needs to be given once
-					next;
-					}
-				
-				my $res = $itrees_r->{$contig}->fetch(
-						$gene_start_stop_r->{$fig}{$cluster}{$contig}{"start"} - $gene_extend,
-						$gene_start_stop_r->{$fig}{$cluster}{$contig}{"stop"} + $gene_extend
-						);
-				
-				unless(@$res){
-					print STDERR "WARNING: no reads mapped to FIG:$fig -> Contig:$contig -> cluster:$cluster\n";
-					next;
-					}
-				
-				# loading read names #
-				foreach my $id (@$res){		# read IDs
-					$reads_mapped_r->{$cluster}{$$id[0]}{$$id[1]}{"$sam_fig\__$$id[2]"} = $$id[3];		# cluster->read_ID->pair->mapID = read
-					}
-					
-				# loading summary (summing number of reads per gene) #
-				$mapped_summary_r->{$cluster}{$fig}{"count"} += scalar @$res;
-				$mapped_summary_r->{$cluster}{$fig}{"length"} =
-					($gene_start_stop_r->{$fig}{$cluster}{$contig}{"stop"} + $gene_extend) - 
-					($gene_start_stop_r->{$fig}{$cluster}{$contig}{"start"} - $gene_extend)
-					unless exists $mapped_summary_r->{$cluster}{$fig}{"length"};
-					# cluster->fig->cat->value
+	
+	foreach my $cluster (keys %{$gene_start_stop_r->{$fig}}){					# gene clusters in FIG
+		foreach my $contig (keys %{$gene_start_stop_r->{$fig}{$cluster}}){
+			# contig of gene in gene tree? #
+			unless(exists $itrees_r->{$contig}){
+				print STDERR "WARNING: no reads mapped to FIG:$fig -> CONTIG:$contig\n"
+					unless $warnings_bool || exists $warnings{$fig}{$contig};		
+				$warnings{$fig}{$contig} = 1;				# so the warning only needs to be given once
+				next;
 				}
+			
+			# fetching reads spanning start-stop (reads only have to partially overlap the gene region)
+			my $res = $itrees_r->{$contig}->fetch(
+					$gene_start_stop_r->{$fig}{$cluster}{$contig}{"start"} - $gene_extend,
+					$gene_start_stop_r->{$fig}{$cluster}{$contig}{"stop"} + $gene_extend
+					);
+			
+			# if no reads found: #
+			unless(@$res){
+				print STDERR "WARNING: no reads mapped to FIG:$fig -> Contig:$contig -> cluster:$cluster\n"
+					unless $warnings_bool;
+				$mapped_summary_r->{$cluster}{$fig}{"count"} += scalar @$res;
+				$mapped_summary_r->{$cluster}{$fig}{"length"} = 0;
+				next;
+				}
+			
+			# loading read names #
+			foreach my $id (@$res){		# read IDs
+				$reads_mapped_r->{$cluster}{$$id[0]}{$$id[1]}{"$fig\__$$id[2]"} = $$id[3];		# cluster->read_ID->pair->mapID = read
+				}
+				
+			# loading summary (summing number of reads per gene) #
+			$mapped_summary_r->{$cluster}{$fig}{"count"} += scalar @$res;
+			$mapped_summary_r->{$cluster}{$fig}{"length"} =
+				($gene_start_stop_r->{$fig}{$cluster}{$contig}{"stop"} + $gene_extend) - 
+				($gene_start_stop_r->{$fig}{$cluster}{$contig}{"start"} - $gene_extend)
+				unless exists $mapped_summary_r->{$cluster}{$fig}{"length"};
+				# cluster->fig->cat->value
 			}
 		}
+		
 		#print Dumper %$reads_mapped_r; exit;
 		#print Dumper %$mapped_summary_r; exit;
 	}
@@ -385,6 +393,8 @@ sub load_index{
 		next if /^\s*$/;
 		
 		my @line = split /\t/;
+		$line[0] = File::Spec->rel2abs($line[0]);
+
 		die " ERROR: $line[0] does not exist!\n" unless -e $line[0];
 		$index{$line[0]} = $line[1];		# sam => fig
 		}
@@ -396,24 +406,11 @@ sub load_index{
 
 sub load_gene_info{
 # getting geneIDs for a cluster from ITEP #
-	my ($clusterID_r, $runID) = @_;
-	
-	# status #
-	print STDERR "...loading gene info from ITEP\n" unless $verbose;
-	
-	# query ITEP #
-	my @q;
-	foreach my $clusterID (keys %$clusterID_r){
-		push(@q, join("\\t", $runID, $clusterID));
-		}
-	my $q = join("\\n", @q);
-	
-	my $qq = "printf \"$q\" | db_getClusterGeneInformation.py |";
-	
+	my ($index_r) = @_;
+
 	# parsing ITEP output #
-	open PIPE, $qq or die $!;
 	my %gene_start_stop;
-	while(<PIPE>){
+	while(<>){
 		chomp;
 		next if /^\s*$/;
 		
@@ -424,7 +421,7 @@ sub load_gene_info{
 		(my $fig = $line[0]) =~ s/fig\||\.peg.+//g;			# FIG number
 		$line[4] =~ s/^$line[2]\.//;
 		if($line[7] eq "+"){
-			$gene_start_stop{$fig}{$line[13]}{$line[4]}{"start"} = $line[5];
+			$gene_start_stop{$fig}{$line[13]}{$line[4]}{"start"} = $line[5];	# fig->clust->contig->cat->value
 			$gene_start_stop{$fig}{$line[13]}{$line[4]}{"stop"} = $line[6];	
 			}
 		elsif($line[7] eq "-"){ 	# if neg strand, flipping
@@ -434,11 +431,18 @@ sub load_gene_info{
 		else{ die " ERROR: 'strand' must be '+' or '-'\n"; }
 		}
 	
-	close PIPE;
-	
 	# sanity check #
 	die " ERROR: no gene information found for gene clusters!\n" if
 		scalar keys %gene_start_stop == 0;
+	
+	# counting clusters (in provided FIGs) #
+	my %cnt;
+	foreach my $fig (values %$index_r){
+		print STDERR " ERROR: FIG $fig not found in provided gene cluster info!\n"
+			unless exists $gene_start_stop{$fig} || $warnings_bool; 
+		map{ $cnt{$_}=1 } keys %{$gene_start_stop{$fig}};
+		}
+	print STDERR "Number of clusters containing genes from provided FIGs: ", scalar keys %cnt, "\n"; exit
 	
 		#print Dumper %gene_start_stop; exit;
 	return \%gene_start_stop;		# fig=>cluster=>contig=>start/stop=>value
@@ -478,7 +482,7 @@ FORAGer.pl -- Finding Orthologous Reads and Genes
 
 =head1 SYNOPSIS
 
-FORAGer.pl [flags] < clusterID_file.txt
+db_getClusterGeneInformation.py | FORAGer.pl [flags]
 
 =head2 Required flags
 
@@ -489,10 +493,6 @@ FORAGer.pl [flags] < clusterID_file.txt
 Index file listing *sam files & FIG IDs.
 
 2 column format (*txt): 1st=/PATH_to_FILE/FILE.sam;  2nd=FIG
-
-=item -runID
-
-ITEP Run ID for the clusters of interest.
 
 =back
 
@@ -508,10 +508,6 @@ Output directory name (location of all mapped read files). [./Mapped2GeneCluster
 
 Number of base pairs to extend around the gene of interest (5' & 3'). [100]
 
-=item -column
-
-Cluster ID column in clusterID_file (index from 1). [2]
-
 =item -fork
 
 Number of SAM files to process in parallel. [1]
@@ -521,6 +517,8 @@ Number of SAM files to process in parallel. [1]
 Use SAM bitwise flag to return read to original orientation (i.e. rev/rev-comp read)
 
 =item -v	Verbose output. [TRUE]
+
+=item -w 	Warnings? [TRUE]
 
 =item -h	This help message
 
@@ -543,9 +541,13 @@ in each gene cluster.
 the FIG ID of the reference genome used for mapping. 
 1st=/PATH_to_FILE/FILE.sam;  2nd=FIG
 
-=head3 clusterID file (or piped in)
+=head3 db_getClusterGeneInformation.py | 
 
-A tab-delimited file containing the cluster IDs of interest.
+Piped output from db_getClusterGeneInformation.py.
+
+Clusters should be from 1 cluster run!
+
+output from 
 
 =head3 SAM files
 
@@ -588,13 +590,10 @@ column2 = FIG ID
 
 =head2 Get some gene clusters of interest
 
-$ db_getAllClusterRuns.py | grep "mazei_I" | 
-db_getClustersWithAnnotation.py "methyl coenzyme M reductase" >
-mcr_clust.txt
-
-=head2 Finding reads that mapped to each gene in the gene clusters of interest
-
-FORAGer.pl -in index.txt -runID all_I_2.0_c_0.4_m_maxbit < mcr_clust.txt
+$ db_getAllClusterRuns.py | grep "mazei_I_2.0_c_0.4_m_maxbit" | 
+db_getClustersWithAnnotation.py "methyl coenzyme M reductase" |
+db_getClusterGeneInformation.py | FORAGer.pl -in index.txt 
+-runID all_I_2.0_c_0.4_m_maxbit
 
 =head1 AUTHOR
 
