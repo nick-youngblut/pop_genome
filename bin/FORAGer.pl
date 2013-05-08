@@ -18,7 +18,7 @@ pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 my ($verbose, @sam_in, $index_in, $rev_comp_bool, $warnings_bool);
 my $gene_extend = 100;
 my $fork = 0;
-my $outdir_name = "Mapped2GeneCluster";
+my $outdir_name = "Mapped2Cluster";
 GetOptions(
 		"index=s" => \$index_in, 		# an index file of sam_file => FIG#
 		"extend=i" => \$gene_extend,	# bp to extend beyond gene (5' & 3')
@@ -40,52 +40,59 @@ my $index_r = load_index($index_in);
 # loading info from ITEP #
 my $gene_start_stop_r = load_gene_info($index_r);
 
-# making tmp data directory #
-my $tmp_dir = "./temp_data/";
-rmtree($tmp_dir) if -d $tmp_dir;
-mkdir $tmp_dir or die $!;
-
+# foreach query #
 my $pm = new Parallel::ForkManager($fork);
-foreach my $sam_file (keys %$index_r){
-	my (%reads_mapped, %mapped_summary);
+foreach my $query_reads (keys %$index_r){		# each query genome
+	print STDERR "### Processing SAM files with reads from: $query_reads ###\n"
+		unless $query_reads eq "SINGLE_QUERY";
+
+	# making tmp data directory #
+	my $tmp_dir = File::Spec->tmpdir();
+		#rmtree($tmp_dir) if -d $tmp_dir;
+		#mkdir $tmp_dir or die $!;
 	
-	# forking #
-	my $pid = $pm->start and next;
+	# foreach SAM file # 
+	foreach my $sam_file (keys %{$index_r->{$query_reads}}){
+		my (%reads_mapped, %mapped_summary);
 	
-	# checking for presence of genes in fig #
-	unless (exists $gene_start_stop_r->{$index_r->{$sam_file}}){
-		print STDERR " WARNING: no genes for FIG->", $index_r->{$sam_file}, ", skipping\n";
-		next;
-		}
+		# forking #
+		my $pid = $pm->start and next;
 	
-	# finding mapped reads #
-	my ($itrees_r, $reads_r) = load_interval_tree($sam_file);
-	reads_mapped_to_region($sam_file, $index_r->{$sam_file}, 
+		# checking for presence of genes in fig #
+		unless (exists $gene_start_stop_r->{$index_r->{$query_reads}{$sam_file}}){
+			print STDERR " WARNING: no genes for FIG->", $index_r->{$query_reads}{$sam_file}, ", skipping\n";
+			next;
+			}
+	
+		# finding mapped reads #
+		my ($itrees_r, $reads_r) = load_interval_tree($sam_file);
+		reads_mapped_to_region($sam_file, $index_r->{$query_reads}{$sam_file}, 
 			$gene_start_stop_r, $gene_extend, $itrees_r, $reads_r,
 			\%reads_mapped, \%mapped_summary);	
 	
-	# saving data structures #
-	my @parts = File::Spec->splitpath($sam_file);
-	$parts[2] =~ s/\.[^.]+$//;
-	store(\%reads_mapped, "$tmp_dir/$parts[2]\_map");
-	store(\%mapped_summary, "$tmp_dir/$parts[2]\_sum");
+		# saving data structures #
+		my @parts = File::Spec->splitpath($sam_file);
+		$parts[2] =~ s/\.[^.]+$//;
+		store(\%reads_mapped, "$tmp_dir/$parts[2]\_map");
+		store(\%mapped_summary, "$tmp_dir/$parts[2]\_sum");
 	
-	# end fork #
-	$pm->finish;
+		# end fork #
+		$pm->finish;
+		}
+
+	$pm->wait_all_children;		# waiting all children for query
+
+	# merging hashes #
+	my ($mapped_r, $summary_r) = merge_hashes($tmp_dir);
+
+	# writing output #
+	my $outdir_name_e = make_outdir($outdir_name, $query_reads);
+	write_reads_mapped($mapped_r, $outdir_name_e);
+	write_summary_table($summary_r, $outdir_name_e);
+
+	# cleaning up #
+		#rmtree($tmp_dir) if -d $tmp_dir;
 	}
-
-$pm->wait_all_children;
-
-# merging hashes #
-my ($mapped_r, $summary_r) = merge_hashes($tmp_dir);
-
-# writing output #
-$outdir_name = make_outdir($outdir_name);
-write_reads_mapped($mapped_r, $outdir_name);
-write_summary_table($summary_r, $outdir_name);
-
-# cleaning up #
-rmtree($tmp_dir) if -d $tmp_dir;
 
 
 #---------- Subroutines -----------#
@@ -160,7 +167,9 @@ sub write_reads_mapped{
 
 sub make_outdir{
 # making output directory #
-	my ($outdir_name) = @_;
+	my ($outdir_name, $query_reads) = @_;
+	
+	$outdir_name .= "_$query_reads" unless $query_reads eq "SINGLE_QUERY";
 	
 	$outdir_name = File::Spec->rel2abs($outdir_name);
 
@@ -181,7 +190,7 @@ sub merge_hashes{
 	# getting mapping files #
 	opendir IN, $tmp_dir or die $!;
 	my @map_files = grep(/_map/, readdir IN);
-	close IN;
+	closedir IN;
 
 	# merging hashes #
 	my %mapped;
@@ -297,6 +306,9 @@ sub load_interval_tree{
 	open IN, $sam_file or die $!;
 	my %reads;			# contig ->  read_name -> map_ID -> category -> value
 	while(<IN>){
+		
+			last if $. > 100000;
+		
 		chomp;
 		next if /^@/; 	# skipping header
 		next if /^\s*$/;	# skipping blank lines
@@ -396,7 +408,14 @@ sub load_index{
 		$line[0] = File::Spec->rel2abs($line[0]);
 
 		die " ERROR: $line[0] does not exist!\n" unless -e $line[0];
-		$index{$line[0]} = $line[1];		# sam => fig
+
+		# loading hash #
+		if($line[2]){	# if query name provided
+			$index{$line[2]}{$line[0]} = $line[1];	# outdir => sam => fig
+			}
+		else{
+			$index{"SINGLE_QUERY"}{$line[0]} = $line[1];		# outdir => sam => fig
+			}
 		}
 	close IN;
 
@@ -417,6 +436,9 @@ sub load_gene_info{
 		# parsing #
 		my @line = split /\t/;
 
+		die " ERROR: clustID column should be integers in the last row of the ClusterGeneInformation table\n"
+			unless $line[$#line] =~ /^\d+$/;
+
 		## loading start-stop ##
 		(my $fig = $line[0]) =~ s/fig\||\.peg.+//g;			# FIG number
 		$line[4] =~ s/^$line[2]\.//;
@@ -436,9 +458,17 @@ sub load_gene_info{
 		scalar keys %gene_start_stop == 0;
 	
 	# counting clusters (in provided FIGs) #
+	## getting all figs ##
+	my @figs;
+	foreach my $q (keys %$index_r){
+		foreach my $sam (keys %{$index_r->{$q}}){
+			push(@figs, $index_r->{$q}{$sam});
+			}
+		}
+
 	my %cnt;
-	foreach my $fig (values %$index_r){
-		print STDERR " ERROR: FIG $fig not found in provided gene cluster info!\n"
+	foreach my $fig (@figs){
+		print STDERR " WARNING: FIG $fig not found in provided gene cluster info!\n"
 			unless exists $gene_start_stop{$fig} || $warnings_bool; 
 		map{ $cnt{$_}=1 } keys %{$gene_start_stop{$fig}};
 		}
@@ -492,7 +522,7 @@ db_getClusterGeneInformation.py | FORAGer.pl [flags]
 
 Index file listing *sam files & FIG IDs.
 
-2 column format (*txt): 1st=/PATH_to_FILE/FILE.sam;  2nd=FIG
+2 column format (*txt): 1st=/PATH_to_FILE/FILE.sam; 2nd=FIG; (3rd=Query)
 
 =back
 
@@ -502,7 +532,9 @@ Index file listing *sam files & FIG IDs.
 
 =item -outdir
 
-Output directory name (location of all mapped read files). [./Mapped2GeneCluster/]
+Output directory name (location of all mapped read files). 
+For multiple queries, querie names will be appended to the directory
+name. [./Mapped2Cluster/]
 
 =item -extend
 
@@ -531,15 +563,19 @@ perldoc FORAGer.pl
 =head1 DESCRIPTION
 
 Pull out all reads mapping to each gene (& region around the gene)
-in each gene cluster.
+in each gene cluster. Multiple draft (query reads) and (almost)-closed
+genomes (reference genomes) can be used.
 
 =head2 Input
 
 =head3 Index file
 
-2 column tab-delimited file for associating a SAM file to 
-the FIG ID of the reference genome used for mapping. 
-1st=/PATH_to_FILE/FILE.sam;  2nd=FIG
+2 or 3 column tab-delimited file for associating a SAM file to 
+the FIG ID of the reference genome used for mapping. 'Query' (3rd column)
+is only needed if multiple query draft genomes were used for read
+mapping.
+
+1st=/PATH_to_FILE/FILE.sam;  2nd=FIG; (3rd=Query)
 
 =head3 db_getClusterGeneInformation.py | 
 
@@ -562,7 +598,7 @@ Multiple mappings are allowed for the same file (e.g. bowtie2 with '-k' flag).
 
 =head2 Output files
 
-All files output to a directory (see '-outdir').
+All files output to a directory(s). See '-outdir'.
 
 File prefix = 'clust#'
 
@@ -572,11 +608,11 @@ File prefix = 'clust#'
 
 =head2 Requires
 
-ITEP must be setup so that it can be queried. 
+ITEP must be set up, so that it can be queried. 
 
 =head1 EXAMPLES
 
-=head2 Mapping reads to genomes
+=head2 Mapping reads to a reference genome
 
 $ bowtie2-build genome1.fna genome1
 
