@@ -306,9 +306,6 @@ sub load_interval_tree{
 	open IN, $sam_file or die $!;
 	my %reads;			# contig ->  read_name -> map_ID -> category -> value
 	while(<IN>){
-		
-			last if $. > 100000;
-		
 		chomp;
 		next if /^@/; 	# skipping header
 		next if /^\s*$/;	# skipping blank lines
