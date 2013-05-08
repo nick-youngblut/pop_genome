@@ -215,7 +215,7 @@ sub merge_hashes{
 	# getting summary files #
 	opendir IN, $tmp_dir or die $!;
 	my @sum_files = grep(/_sum/, readdir IN);
-	close IN;
+	closedir IN;
 
 	# merging hashes #
 	my %summed;
