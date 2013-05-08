@@ -522,7 +522,7 @@ db_getClusterGeneInformation.py | FORAGer.pl [flags]
 
 Index file listing *sam files & FIG IDs.
 
-2 column format (*txt): 1st=/PATH_to_FILE/FILE.sam; 2nd=FIG; (3rd=Query)
+2 (or 3) column format (*txt): 1st=/PATH_to_FILE/FILE.sam; 2nd=FIG; (3rd=Query)
 
 =back
 
