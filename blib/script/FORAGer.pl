@@ -215,7 +215,7 @@ sub merge_hashes{
 	# getting summary files #
 	opendir IN, $tmp_dir or die $!;
 	my @sum_files = grep(/_sum/, readdir IN);
-	close IN;
+	closedir IN;
 
 	# merging hashes #
 	my %summed;
@@ -306,9 +306,6 @@ sub load_interval_tree{
 	open IN, $sam_file or die $!;
 	my %reads;			# contig ->  read_name -> map_ID -> category -> value
 	while(<IN>){
-		
-			last if $. > 100000;
-		
 		chomp;
 		next if /^@/; 	# skipping header
 		next if /^\s*$/;	# skipping blank lines
@@ -522,7 +519,7 @@ db_getClusterGeneInformation.py | FORAGer.pl [flags]
 
 Index file listing *sam files & FIG IDs.
 
-2 column format (*txt): 1st=/PATH_to_FILE/FILE.sam; 2nd=FIG; (3rd=Query)
+2 (or 3) column format (*txt): 1st=/PATH_to_FILE/FILE.sam; 2nd=FIG; (3rd=Query)
 
 =back
 
