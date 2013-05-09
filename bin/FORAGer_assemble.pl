@@ -12,7 +12,7 @@ use File::Spec;
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
 my ($verbose, $params, $extra_params);
-my $assembler = "idba_ud";
+my $assembler = "velvet";		# default assembler
 my $in_dir;
 GetOptions(
 	   "directory=s" => \$in_dir,				# input directory
@@ -29,7 +29,7 @@ die " ERROR: $in_dir not found!\n" unless -d $in_dir;
 $in_dir = File::Spec->rel2abs($in_dir);
 chdir $in_dir or die $!;
 
-$assembler = check_assembler_IO($assembler) unless $assembler eq "idba_ud";
+$assembler = check_assembler_IO($assembler) unless $assembler eq "velvet";
 $params = load_params($assembler) unless $params;
 $params .= " $extra_params" if $extra_params;
 
@@ -197,7 +197,7 @@ Directory with the mapped read files from FORAGer.pl
 
 =item -assembler
 
-The assembler used on each file of reads (idba_ud | velvet). [idba_ud]
+The assembler used on each file of reads (velvet | idba_ud). [velvet]
 
 =item -parameters
 
@@ -260,13 +260,13 @@ in the input file directory!
 
 =head1 EXAMPLES
 
-=head2 Basic usage
+=head2 Basic usage (velvet assemblies)
 
 FORAGer_assemble.pl > assembly_file_list.txt 
 
-=head2 Using velvet
+=head2 Using idba_ud
 
-FORAGer_assemble.pl -a velvet > assembly_file_list.txt 
+FORAGer_assemble.pl -a idba_ud > assembly_file_list.txt 
 
 =head1 AUTHOR
 
