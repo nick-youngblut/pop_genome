@@ -111,6 +111,7 @@ do{ my $x = [
          'quiet' => undef,
          'extra_compiler_flags' => [],
          'script_files' => [
+                             './bin/geneClusterInvariant.pl',
                              './bin/FORAGer_mapping.pl',
                              './bin/genbank_add_clusterIDs.pl',
                              './bin/SNAP_batch.pl',
