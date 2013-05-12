@@ -116,6 +116,7 @@ do{ my $x = [
                              './bin/genbank_add_clusterIDs.pl',
                              './bin/SNAP_batch.pl',
                              './bin/FORAGer.pl',
+                             './bin/FORAGer_screen.pl',
                              './bin/FORAGer_assemble.pl',
                              './bin/blast_UniqueGenesFromITEP.pl',
                              './bin/PresAbs2Nexus.pl'

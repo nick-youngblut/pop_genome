@@ -49,14 +49,14 @@ for my $i (0..$#clust_dirs){
 		my $tblastn_r = tblastn_cluster_contig($clust_file, $files_r->{$clust_file}, $clust_dir, $contig_dir);
 	
 		## blastp cluster vs cluster ##
-		#my $blastp_min_bit = blastp_cluster($clust_file, $clust_dir);
+		my $blastp_min_bit = blastp_cluster($clust_file, $clust_dir);
 	
 		# filtering #
 		## get stdev of cluster peg lengths ##
 		my $clust_stdev = get_len_stdev($clust_file, $clust_dir);
 	
 		## filtering by score and length ##
-		filter_blast($tblastn_r, $clust_stdev);
+		filter_blast($tblastn_r, $blastp_min_bit, $clust_stdev);
 	
 		$pm->finish;
 		}
@@ -66,14 +66,7 @@ $pm->wait_all_children;
 
 ### Subroutines
 sub filter_blast{
-# filtering the contigs by blast homology and length #
-	my ($tblastn_r, $clust_stdev) = @_;
-	
-	# filtering cutoff & bit score  #
-		# bit score cutoff = min bit of cluster - stdev of bitscores for cluster * coef
-			# allows for inclusion of 'outliers' but will not include everything
-			
-	
+# 
 	}
 
 sub get_len_stdev{
