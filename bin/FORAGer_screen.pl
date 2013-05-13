@@ -72,21 +72,14 @@ for my $i (0..$#clust_dirs){
 		# filtering #
 		my %summary;
 		## filtering by number of tblastn hits (each gene must hit the contig) ##
-		filter_by_Nhits(scalar keys %$clusters_r, $tblastn_r, \%summary);
+		filter_by_Nhits(scalar keys %$clusters_r, $contigs_r, $tblastn_r, \%summary);
 		
-		## filtering by length cutoff ##
-			### need to change to tblastn hit length ###
-			### need to change range to min-max * coef ##
-		
-		if($len_cutoff){				
-			my $clust_stdev = get_len_stdev($clusters_r);
-			filter_by_stdev($clust_stdev, $len_cutoff, $contigs_r, $tblastn_r, \%summary);
-			}	
+		## filtering by length cutoff ##	
+		my $clust_range_r = get_clust_len_range($clusters_r);
+		filter_by_length($clust_range_r, $len_cutoff, $contigs_r, $clusters_r, $tblastn_r, \%summary);	
 	
 		## filtering by score and length ##
-		if($bit_cutoff >= 0){
-			filter_by_bitscore($contigs_r, $tblastn_r, $bit_cutoff, \%summary);
-			}	
+		filter_by_bitscore($contigs_r, $tblastn_r, $bit_cutoff, \%summary);
 	
 		## writing out cluster fasta & PA table ##
 		write_PA_table($clust_file, \%summary);
@@ -135,7 +128,9 @@ sub write_PA_table{
 # writing out PA table to STDOUT #
 	my ($clust_file, $summary_r) = @_;
 
-	my @stats = qw/PA N_tblastn_hits_cutoff N_tblastn_hits length_cutoff length norm_bit_score min_bit_score/;
+	my @stats = qw/PA N_tblastn_hits_cutoff N_tblastn_hits length_cutoff hit_length_range norm_bit_score min_bit_score/;
+
+	# writing body #
 	foreach my $contig (keys %$summary_r){
 		print join("\t", $clust_file, $contig);
 		map{exists $summary_r->{$contig}{$_} ? print "\t$summary_r->{$contig}{$_}" : print "\tNA" } @stats;
@@ -148,7 +143,7 @@ sub filter_by_bitscore{
 	my ($contigs_r, $tblastn_r, $bit_cutoff, $summary_r) = @_;
 	
 	foreach my $subject (keys %$contigs_r){		# each contig
-		if(exists $tblastn_r->{$subject}){
+		if($bit_cutoff >= 0 && exists $tblastn_r->{$subject}){
 			my @norm_bits;
 			foreach my $query (keys %{$tblastn_r->{$subject}}){		# getting norm bit scores
 				push(@norm_bits, ${$tblastn_r->{$subject}{$query}}[3]);
@@ -166,70 +161,90 @@ sub filter_by_bitscore{
 			}
 		else{
 			$summary_r->{$subject}{"norm_bit_score"} = "NA";
-			$summary_r->{$subject}{"PA"} = 0;
 			$summary_r->{$subject}{"min_bit_score"} = "NA";
+			$summary_r->{$subject}{"PA"} = 0 if $bit_cutoff >= 0; 		# don't fail if not filtering by bit score
 			}
 		
+		# PRESENT if passed all filters (no '0' for 'PA') #
 		$summary_r->{$subject}{"PA"} = 1 unless exists $summary_r->{$subject}{"PA"};
 		}
 	
 		#print Dumper %$summary_r; 
 	}
 
-sub filter_by_stdev{
+sub filter_by_length{
 # filtering the contigs by length relative to cluster #
-	my ($clust_stdev, $len_cutoff, $contigs_r, $tblastn_r, $summary_r) = @_;
+	my ($clust_range_r, $len_cutoff, $contigs_r, $clusters_r, $tblastn_r, $summary_r) = @_;
 
-	foreach my $contig (keys %$contigs_r){ 
-		my $c_len = length $contigs_r->{$contig};
-		
-		if(exists $tblastn_r->{$contig}){			# if tblastn hit(s)
-			if($c_len >= $clust_stdev * $len_cutoff){		# if long enough 
+	foreach my $contig (keys %$contigs_r){ 	
+		if($len_cutoff && exists $tblastn_r->{$contig}){			# if tblastn hit(s)
+			# checking all tblastn hit lengths #
+			my $N_passed = 0;		# default = fail
+			my @hit_lens;
+			foreach my $query (keys %{$tblastn_r->{$contig}}){		# 1 hit per gene in cluster must meet length requirement
+				my $hit_len = abs(${$tblastn_r->{$contig}{$query}}[1] - ${$tblastn_r->{$contig}{$query}}[0]);		# length in AA 
+				$N_passed++ if $hit_len >= $$clust_range_r[0] - abs($$clust_range_r[0] - $$clust_range_r[0] * $len_cutoff)	# expanding negative range
+								&& $hit_len <= $$clust_range_r[1] * $len_cutoff;			# expanding positive range
+				push(@hit_lens, $hit_len);
+				}
+			## hit length range ##
+			my $hit_range = join(":", sprintf("%.0f", min(@hit_lens)), 
+									sprintf("%.0f", max(@hit_lens)));
+			
+			# pass/fail length cutoff #
+			if($N_passed == scalar keys %$clusters_r){		# all hits must pass
 				$summary_r->{$contig}{"length_cutoff"} = "PASSED";
 				}
 			else{
 				$summary_r->{$contig}{"PA"} = 0;
 				$summary_r->{$contig}{"length_cutoff"} = "FAILED";
 				}
+			$summary_r->{$contig}{"hit_length_range"} = $hit_range;
 			}
-		else{
+		else{					# no tblastn hits at all
 			$summary_r->{$contig}{"length_cutoff"} = "NA";
-			$summary_r->{$contig}{"PA"} = 0;
+			$summary_r->{$contig}{"hit_length_range"} = "NA";			
+			$summary_r->{$contig}{"PA"} = 0 if $len_cutoff; 		# no tblastn hits, so not PASSING
 			}
-			
-		$summary_r->{$contig}{"length"} = $c_len;		 # contig length
 		}
-		#print Dumper %$tblastn_r; exit;
+		#print Dumper $summary_r; exit;
 	}
 
 sub filter_by_Nhits{
 # contig must be hit (tblastn) by all genes in cluster #
-	my ($N_genes, $tblastn_r, $summary_r) = @_;
+	my ($N_genes, $contigs_r, $tblastn_r, $summary_r) = @_;
 	
-	foreach my $subject (keys %$tblastn_r){
-		my $N_hits = scalar keys %{$tblastn_r->{$subject}};
-		if($N_hits < $N_genes){
-			$summary_r->{$subject}{"PA"} = 0;
-			$summary_r->{$subject}{"N_tblastn_hits_cutoff"} = "FAILED";		
+	foreach my $contig (keys %$contigs_r){
+		if(exists $tblastn_r->{$contig}){			# if tblastn hit(s)
+			my $N_hits = scalar keys %{$tblastn_r->{$contig}};
+			if($N_hits < $N_genes){
+				$summary_r->{$contig}{"PA"} = 0;
+				$summary_r->{$contig}{"N_tblastn_hits_cutoff"} = "FAILED";		
+				}
+			else{
+				$summary_r->{$contig}{"N_tblastn_hits_cutoff"} = "PASSED";		
+				}
+			$summary_r->{$contig}{"N_tblastn_hits"} = $N_hits;		
 			}
 		else{
-			$summary_r->{$subject}{"N_tblastn_hits_cutoff"} = "PASSED";		
+			$summary_r->{$contig}{"PA"} = 0;
+			$summary_r->{$contig}{"N_tblastn_hits_cutoff"} = "FAILED";				
+			$summary_r->{$contig}{"N_tblastn_hits"} = 0;		
 			}
-		$summary_r->{$subject}{"N_tblastn_hits"} = $N_hits;		
 		}
 	}
 
-sub get_len_stdev{
+sub get_clust_len_range{
 	my ($clusters_r) = @_;
 	
 	# getting lengths #
 	my @lens;
-	map{ push(@lens, length $_) } values %$clusters_r;
+	map{ push(@lens, length($_) * 3) } values %$clusters_r;
 
 	# getting stdev of lengths #
 	my $N = scalar @lens;
-	if($N > 1){  return stdev(\@lens);  }		# if >1 peg in cluster
-	else{ return $lens[0]; }					# just length of the gene
+	if($N > 1){  return [min @lens,  max @lens]  }		# if >1 peg in cluster, max - min
+	else{ return [$lens[0] * 0.75, $lens[0] * 1.25]; }	# just length of the gene +/- 0.25%
 	}
 
 sub stdev{
@@ -425,11 +440,12 @@ FORAGer_screen.pl [flags] > pres-abs_summary.txt
 
 =item -bitscore
 
-Normalized bit score cutoff. [0.4]
+Normalized bit score cutoff (negative value to skip filtering). [0.4]
 
 =item -length
 
-Length range cutoff (+/- the gene cluster length stdev * '-length). [1]
+Length range cutoff (+/- the gene cluster length stdev * '-length). 
+'-length 0' skips filtering. [1]
 
 =item -fork
 
@@ -459,8 +475,13 @@ The cutoff should probably be the same as used for the original gene clustering.
 
 =head2 Length cutoff
 
-The length range is defined as the standard deviation of genes the target
-cluster +/-(stdev_gene_cluster * '-length'). Range is determined by tblastn range.
+The length range is defined as the min-max of gene lengths (bp) in the cluster.
+'-length' is a scaling factor for how much to expand or contract this range.
+By default, min-max length range values are used for the cutoff.
+
+=head2 STDOUT
+
+
 
 =head1 EXAMPLES
 
