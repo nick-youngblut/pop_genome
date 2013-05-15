@@ -14,12 +14,13 @@ use Bio::SeqFeature::Generic;
 ### args/flags
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
-my ($verbose, $organ_in, @genbank_in, $runID, $debug);
+my ($verbose, $organ_in, @genbank_in, $runID, $debug, $sanitize_names);
 GetOptions(
 	   "organisms=s" => \$organ_in,
 	   "genbank=s{,}" => \@genbank_in,
 	   "runID=s" => \$runID,
 	   "debug" => \$debug,
+	   "sanitize" => \$sanitize_names, 		#[TRUE]
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
@@ -184,6 +185,7 @@ sub get_figID{
 
 	foreach my $feat (grep {$_->primary_tag eq "source"} $seqo->get_SeqFeatures){
 		my @org = $feat->get_tag_values("organism");
+		$org[0] =~ s/\W/_/g unless $sanitize_names;
 		die " ERROR: no organism tag in $gen_in\n" unless @org;
 		die " ERROR: $org[0] not found in organism file!\n" unless exists $organ_r->{$org[0]};
 		return $organ_r->{$org[0]};
@@ -200,10 +202,12 @@ sub load_organisms{
 		chomp;
 		next if /^\s*$/;
 		my @line = split /\t+/;
+		$line[0] =~ s/\W/_/g unless $sanitize_names; 		# all punctuation to "_"
 		$organ{$line[0]} = $line[2];
 		}
 	close IN;
 	
+		#print Dumper %organ; exit;
 	return \%organ;
 	}
 
@@ -241,6 +245,10 @@ Clustering run ID. Use "db_getAllClusterRuns.py" to choose.
 =head2 optional flags
 
 =over
+
+=item -sanitize
+
+'Sanitize' organism names by changing all punctation to '_'  [TRUE]
 
 =item -debug
 

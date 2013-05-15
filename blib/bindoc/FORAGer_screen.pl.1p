@@ -123,69 +123,68 @@
 .rm #[ #] #H #V #F C
 .\" ========================================================================
 .\"
-.IX Title "GENECLUSTERINVARIANT 1"
-.TH GENECLUSTERINVARIANT 1 "2013-05-11" "perl v5.14.2" "User Contributed Perl Documentation"
+.IX Title "FORAGER_SCREEN 1"
+.TH FORAGER_SCREEN 1 "2013-05-15" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
 .nh
 .SH "NAME"
-geneClusterInvariant.pl \-\- determine whether genes in a cluster that are the 'same'
+FORAGer_screen.pl \-\- screening contigs to determine homology to the target gene cluster
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-.SS "If genes not aligned (using blast):"
-.IX Subsection "If genes not aligned (using blast):"
-geneClusterInvariant.pl [\-c] [\-n] [\-e] [\-f] *fasta > invar.txt
-.SS "If genes are aligned (counting variable core positions):"
-.IX Subsection "If genes are aligned (counting variable core positions):"
-geneClusterInvariant.pl [\-f] \-a *fasta > invar.txt
-.SS "options"
-.IX Subsection "options"
-.IP "\-cutoff <float>" 4
-.IX Item "-cutoff <float>"
-The sequence identity cutoff for calling two sequences the 'same'. [100]
-.IP "\-nucleotide <bool>" 4
-.IX Item "-nucleotide <bool>"
-blastn or blastp. [blastp]
-.IP "\-extra <char>" 4
-.IX Item "-extra <char>"
-Extra blast parameters. []
-.IP "\-fork <integer>" 4
-.IX Item "-fork <integer>"
-Number of parallel blast runs. [1]
-.IP "\-v	Verbose output" 4
-.IX Item "-v	Verbose output"
+FORAGer_screen.pl [flags] > pres\-abs_summary.txt
+.SS "Required flags"
+.IX Subsection "Required flags"
+.IP "\-contig" 4
+.IX Item "-contig"
+>=1 diretories of contig files produced by FORAGer_assemble.pl
+.IP "\-cluster" 4
+.IX Item "-cluster"
+>=1 diretories of cluster files produced by FORAGer.pl
+.SS "Optional flags"
+.IX Subsection "Optional flags"
+.IP "\-bitscore" 4
+.IX Item "-bitscore"
+Normalized bit score cutoff (negative value to skip filtering). [0.4]
+.IP "\-length" 4
+.IX Item "-length"
+Length range cutoff (+/\- the gene cluster length stdev * '\-length). 
+\&'\-length 0' skips filtering. [1]
+.IP "\-fork" 4
+.IX Item "-fork"
+Number of parallel cluster comparisons to perform. [1]
+.IP "\-v	Verbose output. [\s-1TRUE\s0]" 4
+.IX Item "-v	Verbose output. [TRUE]"
 .PD 0
 .IP "\-h	This help message" 4
 .IX Item "-h	This help message"
 .PD
 .SS "For more information:"
 .IX Subsection "For more information:"
-perldoc geneClusterInvariant.pl
+perldoc FORAGer_screen.pl
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-.SS "blast method"
-.IX Subsection "blast method"
-Use blast to determine how many genes in a fasta (nuc | \s-1AA\s0) are 
-the 'same'. By default 'same' = 100% sequence identity for 
-what blast.
-.PP
-Blast parameters used: \*(L"blast(p|n) \-subject \-query \-outfmt 6\*(R"
-.PP
-Output: file N_sequences N_'same' Percent_'same'
-.SS "aligned genes"
-.IX Subsection "aligned genes"
-Counting number of variable 'core' positions (no gaps \*(L"\-\*(R" at alignment position).
-.PP
-Output: file N_variable_positions
+Determine which contigs produced by FORAGer_assemble.pl actually
+should be included in the target gene cluster. Filtering is based on
+sequence length & homology.
+.SS "Normalized bit score cutoff"
+.IX Subsection "Normalized bit score cutoff"
+Normalized bit score = (tblastn_bit_score gene vs contig) / (blastp_bit_score gene vs gene).
+The contig must hit all genes in cluster with a normalized bit score >= the cutoff.
+The cutoff should probably be the same as used for the original gene clustering.
+.SS "Length cutoff"
+.IX Subsection "Length cutoff"
+The length range is defined as the min-max of gene lengths (bp) in the cluster.
+\&'\-length' is a scaling factor for how much to expand or contract this range.
+By default, min-max length range values are used for the cutoff.
+.SS "\s-1STDOUT\s0"
+.IX Subsection "STDOUT"
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
-.SS "Usage (4 parallel blastp)"
-.IX Subsection "Usage (4 parallel blastp)"
-find . \-name \*(L"*fasta\*(R" | geneClusterInvariant.pl \-f 4
-.SS "Usage: aligned genes"
-.IX Subsection "Usage: aligned genes"
-find . \-name \*(L"*fasta\*(R" | geneClusterInvariant.pl \-a
+.SS "Usage:"
+.IX Subsection "Usage:"
+FORAGer_screen.pl \-contig neg_contigs/ \-clust neg_clusters/ > pres\-abs_summary.txt
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Nick Youngblut <nyoungb2@illinois.edu>
@@ -196,3 +195,12 @@ sharchaea.life.uiuc.edu:/home/git/ITEP_PopGen/
 .IX Header "COPYRIGHT"
 Copyright 2010, 2011
 This software is licensed under the terms of the GPLv3
+.SH "POD ERRORS"
+.IX Header "POD ERRORS"
+Hey! \fBThe above document had some coding errors, which are explained below:\fR
+.IP "Around line 429:" 4
+.IX Item "Around line 429:"
+\&'=item' outside of any '=over'
+.IP "Around line 437:" 4
+.IX Item "Around line 437:"
+You forgot a '=back' before '=head2'
