@@ -14,8 +14,7 @@ use Bio::SeqFeature::Generic;
 ### args/flags
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
-my ($verbose, $organ_in, @genbank_in, $runID, $debug, $sanitize_names);
-my @org_columns = (1,3);
+my ($verbose, $organ_in, @genbank_in, $runID, $debug, $sanitize_names, @org_columns);
 GetOptions(
 	   "organisms=s" => \$organ_in,
 	   "genbank=s{,}" => \@genbank_in,
@@ -33,6 +32,9 @@ die " ERROR: provide >= genbank files!\n" unless @genbank_in;
 map{ die " ERROR: $_ not found!\n" unless -e $_ } @genbank_in;
 die " ERROR: provide a run ID!\n" unless $runID;
 
+
+@org_columns = (1,3) unless @org_columns;
+die " ERROR: '-columns' flag must have 2 values\n" unless scalar @org_columns == 2;
 map{ $_ = $_ - 1 } @org_columns;
 
 ### workflow ###

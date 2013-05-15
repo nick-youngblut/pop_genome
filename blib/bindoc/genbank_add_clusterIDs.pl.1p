@@ -147,6 +147,9 @@ genbank_add_clusterIDs.pl [flags]
 Clustering run \s-1ID\s0. Use \*(L"db_getAllClusterRuns.py\*(R" to choose.
 .SS "optional flags"
 .IX Subsection "optional flags"
+.IP "\-columns" 4
+.IX Item "-columns"
+Columns of the organim name and figID; index at 1; 2 values required. [1 3]
 .IP "\-sanitize" 4
 .IX Item "-sanitize"
 \&'Sanitize' organism names by changing all punctation to '_'  [\s-1TRUE\s0]
@@ -180,7 +183,7 @@ Output file names modifed from input \*(L"_cID.gbk\*(R".
 .IX Header "EXAMPLES"
 .SS "Usage:"
 .IX Subsection "Usage:"
-genbank_add_clusterIDs.pl \-org organisms \-g file_merged.gbk \-r mazei_isolates_I_2.0_c_0.4_m_maxbit
+genbank_add_clusterIDs.pl \-org organisms \-gen 2209.20_merged.gbk \-runID mazei_I_2.0_c_0.4_m_maxbit
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Nick Youngblut <nyoungb2@illinois.edu>

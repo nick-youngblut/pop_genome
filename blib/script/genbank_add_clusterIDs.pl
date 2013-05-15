@@ -15,12 +15,14 @@ use Bio::SeqFeature::Generic;
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
 my ($verbose, $organ_in, @genbank_in, $runID, $debug, $sanitize_names);
+my @org_columns = (1,3);
 GetOptions(
 	   "organisms=s" => \$organ_in,
 	   "genbank=s{,}" => \@genbank_in,
 	   "runID=s" => \$runID,
 	   "debug" => \$debug,
-	   "sanitize" => \$sanitize_names, 		#[TRUE]
+	   "sanitize" => \$sanitize_names, 		# [TRUE]
+	   "columns=i{,}" => \@org_columns,		# columns of org name & figID
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
@@ -31,6 +33,8 @@ die " ERROR: provide >= genbank files!\n" unless @genbank_in;
 map{ die " ERROR: $_ not found!\n" unless -e $_ } @genbank_in;
 die " ERROR: provide a run ID!\n" unless $runID;
 
+map{ $_ = $_ - 1 } @org_columns;
+
 ### workflow ###
 # get fig from "organisms" file 
 # echo "fig|1236903.88888.peg.17" | db_getClustersContainingGenes.py
@@ -38,7 +42,7 @@ die " ERROR: provide a run ID!\n" unless $runID;
 #------#
 # MAIN #
 ## loading organisms file ##
-my $organ_r = load_organisms($organ_in);
+my $organ_r = load_organisms($organ_in, \@org_columns);
 
 ## editing each genbank ##
 foreach my $gen_in (@genbank_in){
@@ -194,7 +198,7 @@ sub get_figID{
 
 sub load_organisms{
 # loading organisms file #
-	my ($organ_in) = @_;
+	my ($organ_in, $org_columns_r) = @_;
 	open IN, $organ_in or die $!;
 
 	my %organ;
@@ -202,8 +206,9 @@ sub load_organisms{
 		chomp;
 		next if /^\s*$/;
 		my @line = split /\t+/;
-		$line[0] =~ s/\W/_/g unless $sanitize_names; 		# all punctuation to "_"
-		$organ{$line[0]} = $line[2];
+		$line[$$org_columns_r[0]] =~ s/\W/_/g unless $sanitize_names; 		# all punctuation to "_"
+		die " ERROR: column $$org_columns_r[1] not found in organism file!\n" unless $line[$$org_columns_r[1]];
+		$organ{$line[$$org_columns_r[0]]} = $line[$$org_columns_r[1]];
 		}
 	close IN;
 	
@@ -246,6 +251,10 @@ Clustering run ID. Use "db_getAllClusterRuns.py" to choose.
 
 =over
 
+=item -columns
+
+Columns of the organim name and figID; index at 1; 2 values required. [1 3]
+
 =item -sanitize
 
 'Sanitize' organism names by changing all punctation to '_'  [TRUE]
@@ -283,7 +292,7 @@ Output file names modifed from input "_cID.gbk".
 
 =head2 Usage:
 
-genbank_add_clusterIDs.pl -org organisms -g file_merged.gbk -r mazei_isolates_I_2.0_c_0.4_m_maxbit
+genbank_add_clusterIDs.pl -org organisms -gen 2209.20_merged.gbk -runID mazei_I_2.0_c_0.4_m_maxbit
 
 =head1 AUTHOR
 
