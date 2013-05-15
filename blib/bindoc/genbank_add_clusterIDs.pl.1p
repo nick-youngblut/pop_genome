@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "GENBANK_ADD_CLUSTERIDS 1"
-.TH GENBANK_ADD_CLUSTERIDS 1 "2013-04-26" "perl v5.14.2" "User Contributed Perl Documentation"
+.TH GENBANK_ADD_CLUSTERIDS 1 "2013-05-15" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -147,6 +147,9 @@ genbank_add_clusterIDs.pl [flags]
 Clustering run \s-1ID\s0. Use \*(L"db_getAllClusterRuns.py\*(R" to choose.
 .SS "optional flags"
 .IX Subsection "optional flags"
+.IP "\-sanitize" 4
+.IX Item "-sanitize"
+\&'Sanitize' organism names by changing all punctation to '_'  [\s-1TRUE\s0]
 .IP "\-debug" 4
 .IX Item "-debug"
 Query \s-1ITEP\s0 one peg at a time to find pegs that do not return a hit 
