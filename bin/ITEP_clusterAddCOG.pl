@@ -119,8 +119,6 @@ sub load_cluster_table{
 		my @line = split /\t/;
 		
 		push( @{$cluster{$line[$peg_col]}}, \@line);
-		
-		last if $. > 1000;
 		}
 	close IN;
 		#print Dumper %cluster; exit;

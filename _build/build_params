@@ -111,13 +111,10 @@ do{ my $x = [
          'quiet' => undef,
          'extra_compiler_flags' => [],
          'script_files' => [
+                             './bin/ITEP_clusterAddCOG.pl',
                              './bin/geneClusterInvariant.pl',
-                             './bin/FORAGer_mapping.pl',
                              './bin/genbank_add_clusterIDs.pl',
                              './bin/SNAP_batch.pl',
-                             './bin/FORAGer.pl',
-                             './bin/FORAGer_screen.pl',
-                             './bin/FORAGer_assemble.pl',
                              './bin/blast_UniqueGenesFromITEP.pl',
                              './bin/PresAbs2Nexus.pl'
                            ],
