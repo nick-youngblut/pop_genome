@@ -14,7 +14,7 @@ pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
 my ($verbose, $replace);
 my ($db_file, $tree_meta_in, $node_in, $tree_in, $date);
-my (@DTL_cost, $run_date);
+my (@DTL_cost, $run_date, $include_leaves);
 my $ranger_runID;
 GetOptions(
 	   "db=s" => \$db_file,
@@ -24,6 +24,7 @@ GetOptions(
 	   "tree=s" => \$tree_in,
 	   "DTL_cost=i{3,3}" => \@DTL_cost,
 	   "date=s" => \$run_date,
+	   "leaf" => \$include_leaves,		# no
 	   "replace" => \$replace,
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
@@ -64,7 +65,6 @@ if($node_in){			# loading node, tree, & runID, & costs
 $dbh->commit;
 $dbh->disconnect();
 exit;
-
 
 
 ### Subroutines
@@ -113,6 +113,14 @@ sub load_node_table{
 		
 		my @line = split /\t/;
 		undef $line[4] unless $line[4];
+		
+		# skip leaves? #
+		print Dumper $line[3]; exit;
+		if($line[3] =~ /leaf/i){
+			next unless $include_leaves;
+			}
+		
+		# loading #
 		$sth->execute(($ranger_runID, @line));
 		if($DBI::err){
 			print STDERR "ERROR: $DBI::errstr in: loading line $. for node file\n";
