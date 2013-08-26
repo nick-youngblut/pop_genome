@@ -30,8 +30,8 @@ sub parse_ranger_dtl{
 # parsing output from ranger-dtl #
 
 	# making outfiles #
-	open my $recfh, ">$prefix\_node.txt" or die $!;
-	open my $sumfh, ">$prefix\_tree.txt" or die $!;
+	open my $recfh, ">$prefix\_rec.txt" or die $!;
+	open my $sumfh, ">$prefix\_summary.txt" or die $!;
 	
 	# parsing #
 	my %dtl;
@@ -198,14 +198,9 @@ perldoc ranger_dtl_parse.pl
 
 =head1 DESCRIPTION
 
-The output are 2 tab-delimited tables: "*_node.txt" & "*_tree.txt".
+The output are 2 tab-delimited tables: "*_rec.txt" & "*summary.txt"
 
-"*_node.txt" = reconcilliation detailed by node
-
-"*_tree.txt" = reconcilliation summed by tree
-
-
-=head2 Columns of "*_node.txt" output
+=head2 Columns of "*_rec.txt" output
 
 =over
 
@@ -221,7 +216,7 @@ The output are 2 tab-delimited tables: "*_node.txt" & "*_tree.txt".
 
 =back
 
-=head2 Columns of "*_tree.txt" output
+=head2 Columns of "*_summary.txt" output
 
 =over
 
@@ -249,7 +244,7 @@ Nick Youngblut <nyoungb2@illinois.edu>
 
 =head1 AVAILABILITY
 
-sharchaea.life.uiuc.edu:/home/git/ITEP_PopGen/
+sharchaea.life.uiuc.edu:/home/git/NY_misc_perl/
 
 =head1 COPYRIGHT
 

@@ -115,7 +115,9 @@ do{ my $x = [
                              './bin/geneClusterInvariant.pl',
                              './bin/genbank_add_clusterIDs.pl',
                              './bin/SNAP_batch.pl',
+                             './bin/ranger-dtl_parse_ITOL.pl',
                              './bin/blast_UniqueGenesFromITEP.pl',
+                             './bin/ranger-dtl_parse.pl',
                              './bin/PresAbs2Nexus.pl'
                            ],
          'build_script' => 'Build',
