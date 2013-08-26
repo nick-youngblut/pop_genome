@@ -13,12 +13,14 @@ use Bio::TreeIO;
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
 my ($verbose);
+my $prefix = "ranger-dtl_parse";
 GetOptions(
+	   "prefix=s" => \$prefix, 
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
 
-### I/O error & defaults
+### I/O error
 
 ### MAIN
 parse_ranger_dtl();
@@ -26,35 +28,47 @@ parse_ranger_dtl();
 ### Subroutines
 sub parse_ranger_dtl{
 # parsing output from ranger-dtl #
+
+	# making outfiles #
+	open my $recfh, ">$prefix\_rec.txt" or die $!;
+	open my $sumfh, ">$prefix\_summary.txt" or die $!;
+	
+	# parsing #
 	my %dtl;
 	my %lca;
 	my $tree_id;
 	while(<>){
 		chomp;
 		next if /^\s*$/;
-
 		if(/ Reconciliation for Gene Tree/){
 			($tree_id = $_) =~ s/.+Reconciliation for Gene Tree (\d+).+/$1/;
 			read_species_tree(\%lca) unless %lca;
 			}
 		elsif(/^Reconciliation:/){
-			parse_dtl_block(\%dtl, \%lca, $tree_id);
+			parse_dtl_block(\%dtl, \%lca, $tree_id, $recfh, $sumfh);
 			}
 		}
+		
+	close $recfh; close $sumfh;
 	}
 	
 sub parse_dtl_block{
 # parsing DTL portion of output #
-	my ($dtl_r, $lca_r, $tree_id) = @_;
+	my ($dtl_r, $lca_r, $tree_id, $recfh, $sumfh) = @_;
 	
 	while(<>){
 		chomp;
-		last if /^\s*$/;
-		
+		next if /^\s*$/;
+		if(/The minimum reconciliation cost/){
+			my @line = split /: /, $_, 2;
+			my @line2 = split / \(|, |: |\)/, $line[1];
+			print $sumfh join("\t", $tree_id, @line2[(0,2,4,6)]), "\n";
+			last;
+			}
 		if(/Leaf Node/){		# if leaf in gene tree
 			(my $line = $_) =~ s/: .+//;
 			#$dtl_r->{$tree_id}{"Leaf"} = [($line)];
-			print join("\t", $tree_id, $line, "", "Leaf", ""), "\n";
+			print $recfh join("\t", $tree_id, $line, "", "Leaf", ""), "\n";
 			}
 		else{					# if internal gene tree node
 			my @line = split/= +LCA\[|\]: +|, +| +--> +/;
@@ -75,15 +89,15 @@ sub parse_dtl_block{
 
 			# writing out LCA lines #
 			if(/Speciation/){
-				print join("\t", $tree_id, join("|", @line[1..2]),
+				print $recfh join("\t", $tree_id, join("|", @line[1..2]),
 							$mapping, $line[3], ""), "\n";
 				}
 			elsif(/Duplication/){
-				print join("\t", $tree_id, join("|", @line[1..2]),
+				print $recfh join("\t", $tree_id, join("|", @line[1..2]),
 							$mapping, $line[3], ""), "\n";
 				}
 			elsif(/Transfer/){
-				print join("\t", $tree_id, join("|", @line[1..2]),
+				print $recfh join("\t", $tree_id, join("|", @line[1..2]),
 							$mapping, $line[3], $recip), "\n";			
 				}
 			}
@@ -164,11 +178,15 @@ ranger_dtl_parse.pl -- parse ranger-dtl output into a *txt table
 
 =head1 SYNOPSIS
 
-ranger_dtl_parse.pl < ranger.dtl.out > ranger.dtl.out.txt
+ranger_dtl_parse.pl < ranger.dtl.out
 
 =head2 options
 
 =over
+
+=item -prefix
+
+Output file prefix. [ranger-dtl_parse]
 
 =item -h	This help message
 
@@ -180,9 +198,9 @@ perldoc ranger_dtl_parse.pl
 
 =head1 DESCRIPTION
 
-The output is a tab-delimited table. Blank value = not applicable.
+The output are 2 tab-delimited tables: "*_rec.txt" & "*summary.txt"
 
-=head2 Columns of output
+=head2 Columns of "*_rec.txt" output
 
 =over
 
@@ -198,11 +216,27 @@ The output is a tab-delimited table. Blank value = not applicable.
 
 =back
 
+=head2 Columns of "*_summary.txt" output
+
+=over
+
+=item * 	Tree ID (order in newick input to ranger-dtl)
+
+=item * 	Minimum reconciliation cost
+
+=item * 	Duplication count
+
+=item * 	Transfer count
+
+=item * 	Loss count
+
+=back
+
 =head1 EXAMPLES
 
 =head2 Usage: 
 
-ranger_dtl_parse.pl < ranger-dtl.out > ranger-dtl.out.txt
+ranger_dtl_parse.pl < ranger-dtl.out 
 
 =head1 AUTHOR
 
