@@ -57,10 +57,11 @@ DROP TABLE IF EXISTS Tree_meta;
 
 CREATE TABLE Tree_meta(
 TreeID	TEXT	NOT NULL,
-RunID	TEXT	NOT NULL,
+Cluster_runID	TEXT	NOT NULL,
 ClusterID	TEXT	NOT NULL,
+Core_var	TEXT,
 Date	Date,
-UNIQUE (TreeID, RunID)
+UNIQUE (TreeID, Cluster_runID)
 ON CONFLICT REPLACE
 );
 
@@ -71,12 +72,11 @@ DROP TABLE IF EXISTS Ranger_run;
 
 CREATE TABLE Ranger_run(
 Ranger_runID	TEXT	PRIMARY KEY,
-TreeID	TEXT	NOT NULL,
 D_cost	INTEGER	NOT NULL,
 T_cost	INTEGER NOT NULL,
 L_cost 	INTEGER	NOT NULL,
 Run_date	Date,
-UNIQUE (Ranger_runID, TreeID)
+UNIQUE (Ranger_runID)
 ON CONFLICT REPLACE
 );
 
