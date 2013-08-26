@@ -170,7 +170,7 @@ ranger_dtl_parse_ITOL.pl < ranger\-dtl_parsed.txt
 Nick Youngblut <nyoungb2@illinois.edu>
 .SH "AVAILABILITY"
 .IX Header "AVAILABILITY"
-sharchaea.life.uiuc.edu:/home/git/NY_misc_perl/
+sharchaea.life.uiuc.edu:/home/git/ITEP_PopGen/
 .SH "COPYRIGHT"
 .IX Header "COPYRIGHT"
 Copyright 2010, 2011

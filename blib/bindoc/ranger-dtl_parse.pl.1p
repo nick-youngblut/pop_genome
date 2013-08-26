@@ -146,10 +146,14 @@ Output file prefix. [ranger\-dtl_parse]
 perldoc ranger_dtl_parse.pl
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-The output are 2 tab-delimited tables: \*(L"*_rec.txt\*(R" & \*(L"*summary.txt\*(R"
-.ie n .SS "Columns of ""*_rec.txt"" output"
-.el .SS "Columns of ``*_rec.txt'' output"
-.IX Subsection "Columns of *_rec.txt output"
+The output are 2 tab-delimited tables: \*(L"*_node.txt\*(R" & \*(L"*_tree.txt\*(R".
+.PP
+\&\*(L"*_node.txt\*(R" = reconcilliation detailed by node
+.PP
+\&\*(L"*_tree.txt\*(R" = reconcilliation summed by tree
+.ie n .SS "Columns of ""*_node.txt"" output"
+.el .SS "Columns of ``*_node.txt'' output"
+.IX Subsection "Columns of *_node.txt output"
 .IP "\(bu" 4
 Tree \s-1ID\s0 (order in newick input to ranger-dtl)
 .IP "\(bu" 4
@@ -160,9 +164,9 @@ Species tree node name
 Category (Duplication, Transfer, Speciation, or Leaf)
 .IP "\(bu" 4
 Recipient (species tree node name)
-.ie n .SS "Columns of ""*_summary.txt"" output"
-.el .SS "Columns of ``*_summary.txt'' output"
-.IX Subsection "Columns of *_summary.txt output"
+.ie n .SS "Columns of ""*_tree.txt"" output"
+.el .SS "Columns of ``*_tree.txt'' output"
+.IX Subsection "Columns of *_tree.txt output"
 .IP "\(bu" 4
 Tree \s-1ID\s0 (order in newick input to ranger-dtl)
 .IP "\(bu" 4
@@ -183,7 +187,7 @@ ranger_dtl_parse.pl < ranger\-dtl.out
 Nick Youngblut <nyoungb2@illinois.edu>
 .SH "AVAILABILITY"
 .IX Header "AVAILABILITY"
-sharchaea.life.uiuc.edu:/home/git/NY_misc_perl/
+sharchaea.life.uiuc.edu:/home/git/ITEP_PopGen/
 .SH "COPYRIGHT"
 .IX Header "COPYRIGHT"
 Copyright 2010, 2011

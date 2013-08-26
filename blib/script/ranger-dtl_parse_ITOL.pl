@@ -231,7 +231,7 @@ Nick Youngblut <nyoungb2@illinois.edu>
 
 =head1 AVAILABILITY
 
-sharchaea.life.uiuc.edu:/home/git/NY_misc_perl/
+sharchaea.life.uiuc.edu:/home/git/ITEP_PopGen/
 
 =head1 COPYRIGHT
 

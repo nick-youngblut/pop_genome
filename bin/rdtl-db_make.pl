@@ -10,7 +10,7 @@ use File::Spec;
 use Bio::TreeIO;
 
 ### args/flags
-pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
+#pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
 my ($verbose, $replace);
 GetOptions(
@@ -20,10 +20,11 @@ GetOptions(
 	   );
 
 ### I/O error
+$ARGV[0] = "rdtl-db.sqlite" unless $ARGV[0];
 
 ### MAIN
-$sql_r = get_sql();
-make_db($sql_r, $ARGV[0], \@tables);
+my $sql_r = get_sql();
+make_db($sql_r, $ARGV[0]);
 
 ### Subroutines
 sub make_db{
@@ -31,7 +32,7 @@ sub make_db{
 	
 	# checking if tables specified exists, deleted if yes, dying if no #
 	if(-e $db_name){
-		die " ERROR: $db_name already exists! Use '-r' to replace\n" unless $replace
+		die " ERROR: $db_name already exists! Use '-r' to replace\n" unless $replace;
 		unlink $db_name;
 		}
 	
@@ -50,31 +51,65 @@ sub make_db{
 sub get_sql{
 	my %sql; 		# all tables individually 
 
-	$sql{"loci"} = <<HERE;
+	$sql{"Tree_meta"} = <<HERE;
 /* creating tables */
-DROP TABLE IF EXISTS Loci;
+DROP TABLE IF EXISTS Tree_meta;
 
-CREATE TABLE Loci (
-Locus_ID	INTEGER	PRIMARY KEY,
-Taxon_ID	TEXT	NOT NULL,
-Taxon_Name	TEXT	NOT NULL,
-Subtype	TEXT,
-Scaffold	TEXT	NOT NULL,
-Locus_Start	INTEGER	NOT NULL,
-Locus_End	INTEGER	NOT NULL,
-Operon_Start	INTEGER,
-Operon_End	INTEGER,
-CRISPR_Array_Start	INTEGER,
-CRISPR_Array_End	INTEGER,
-Operon_Status	TEXT	NOT NULL,
-CRISPR_Array_Status	TEXT	NOT NULL,
-Genbank	TEXT	NOT NULL,
-Array_File	TEXT,
-Scaffold_count	INTEGER,
-File_Creation_Date	TEXT,
-Author	TEXT	NOT NULL,
-UNIQUE (Taxon_ID, Taxon_name, Scaffold, Locus_Start, Locus_End)
-ON CONFLICT IGNORE
+CREATE TABLE Tree_meta(
+TreeID	TEXT	NOT NULL,
+RunID	TEXT	NOT NULL,
+ClusterID	TEXT	NOT NULL,
+Date	Date,
+UNIQUE (TreeID, RunID)
+ON CONFLICT REPLACE
+);
+
+HERE
+
+	$sql{"Ranger_run"} = <<HERE;
+DROP TABLE IF EXISTS Ranger_run;
+
+CREATE TABLE Ranger_run(
+Ranger_runID	TEXT	PRIMARY KEY,
+TreeID	TEXT	NOT NULL,
+D_cost	INTEGER	NOT NULL,
+T_cost	INTEGER NOT NULL,
+L_cost 	INTEGER	NOT NULL,
+Run_date	Date,
+UNIQUE (Ranger_runID, TreeID)
+ON CONFLICT REPLACE
+);
+
+HERE
+
+	$sql{"Node"} = <<HERE;
+DROP TABLE IF EXISTS Node;
+
+CREATE TABLE Node(
+Ranger_runID	TEXT	NOT NULL,
+TreeID	TEXT	NOT NULL,
+Category	TEXT	NOT NULL,
+Gene_NodeID	TEXT	NOT NULL,
+Species_NodeID	TEXT	NOT NULL,
+T_recipient	TEXT,
+UNIQUE (Ranger_runID, TreeID, Gene_NodeID)
+ON CONFLICT REPLACE
+);
+
+HERE
+
+	$sql{"Tree"} = <<HERE;
+DROP TABLE IF EXISTS Tree;
+
+CREATE TABLE Tree(
+Ranger_runID	TEXT	NOT NULL,
+TreeID	TEXT	NOT NULL,
+Min_rec_cost	INTEGER	NOT NULL,
+D_cnt	INTEGER	NOT NULL,
+T_cnt	INTEGER	NOT NULL,
+L_cnt	INTEGER	NOT NULL,
+UNIQUE (Ranger_runID, TreeID)
+ON CONFLICT REPLACE
 );
 
 HERE
@@ -88,19 +123,17 @@ __END__
 
 =head1 NAME
 
-ranger_dtl_parse.pl -- parse ranger-dtl output into a *txt table
+rdtl-db_make.pl -- make database tables for Ranger-DTL data
 
 =head1 SYNOPSIS
 
-ranger_dtl_parse.pl < ranger.dtl.out
+rdtl-db_make.pl [options] [DATABASE_NAME]
 
-=head2 options
+=head2 Options
 
 =over
 
-=item -prefix
-
-Output file prefix. [ranger-dtl_parse]
+=item -r 	Replace existing database. [FALSE]
 
 =item -h	This help message
 
@@ -108,49 +141,19 @@ Output file prefix. [ranger-dtl_parse]
 
 =head2 For more information:
 
-perldoc ranger_dtl_parse.pl
+perldoc rdtl-db_make.pl
 
 =head1 DESCRIPTION
 
-The output are 2 tab-delimited tables: "*_rec.txt" & "*summary.txt"
+Make all tables in the rdtl-db sqlite3 database.
 
-=head2 Columns of "*_rec.txt" output
-
-=over
-
-=item * 	Tree ID (order in newick input to ranger-dtl)
-
-=item * 	Gene tree node name
-
-=item * 	Species tree node name
-
-=item * 	Category (Duplication, Transfer, Speciation, or Leaf)
-
-=item * 	Recipient (species tree node name)
-
-=back
-
-=head2 Columns of "*_summary.txt" output
-
-=over
-
-=item * 	Tree ID (order in newick input to ranger-dtl)
-
-=item * 	Minimum reconciliation cost
-
-=item * 	Duplication count
-
-=item * 	Transfer count
-
-=item * 	Loss count
-
-=back
+The default database name is "rdtl-db.sqlite"
 
 =head1 EXAMPLES
 
 =head2 Usage: 
 
-ranger_dtl_parse.pl < ranger-dtl.out 
+rdtl-db_make.pl
 
 =head1 AUTHOR
 
