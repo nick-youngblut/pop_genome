@@ -149,7 +149,7 @@ sub load_metadata{
 	my ($dbh, $tree_meta_in) = @_;
 	
 	# sql #
-	my $sql = "INSERT INTO Tree_meta(TreeID,Cluster_runID,ClusterID,Core_var,Date) VALUES(?,?,?,?,?)";
+	my $sql = "INSERT INTO Tree_meta(Cluster_runID,ClusterID,TreeID,Core_var,Date) VALUES(?,?,?,?,?)";
 	my $sth = $dbh->prepare($sql);
 	
 	# reading in table; loading db #
@@ -309,11 +309,11 @@ from a Ranger-DTL run.
 
 =over
 
-=item * 	Tree ID (order in newick input to ranger-dtl)
-
 =item *		ITEP Cluster run ID
 
 =item * 	ITEP Cluster ID
+
+=item * 	Tree ID (order in newick input to ranger-dtl)
 
 =item * 	Core or variable gene tree (core|variable)
 
