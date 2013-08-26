@@ -115,7 +115,6 @@ sub load_node_table{
 		undef $line[4] unless $line[4];
 		
 		# skip leaves? #
-		print Dumper $line[3]; exit;
 		if($line[3] =~ /leaf/i){
 			next unless $include_leaves;
 			}
