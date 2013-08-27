@@ -14,7 +14,6 @@ pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 my ($verbose);
 my $peg_col = 1;
 GetOptions(
-	   "cluster=i" => \$peg_col, 
 	   "fig=i" => \$peg_col,
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
@@ -24,13 +23,48 @@ GetOptions(
 $peg_col--;
 
 ### MAIN
-my $cluster_r = load_cluster_table($ARGV[0], $peg_col);
-my $hit_index_r = get_external_hit_index($ARGV[0], $peg_col, $cluster_r);
-my $cog_r = get_cog_info($ARGV[0], $peg_col, $cluster_r);
+while(<>){
+	chomp;
+	next if /^\s*$/;
+	my @line = split /\t/;
+	
+	die " ERROR: PEG column not found!\n"
+		unless $line[$peg_col];
+	my $pegID = $line[$peg_col];
+	
+	my $cog_cat = get_external_hit($pegID);
+	print join("\t", @line, $cog_cat), "\n";
+	}
 
-join_tables($cluster_r, $hit_index_r, $cog_r);
+#--- old ---#
+#my $cluster_r = load_cluster_table($ARGV[0], $peg_col);
+#my $hit_index_r = get_external_hit_index($ARGV[0], $peg_col, $cluster_r);
+#my $cog_r = get_cog_info($ARGV[0], $peg_col, $cluster_r);
+
+#join_tables($cluster_r, $hit_index_r, $cog_r);
 
 #-----Subroutines-----#
+sub get_external_hit{
+	my ($pegID) = @_;
+	
+	$pegID = "fig|6666666.40865.peg.853";
+	my $cmd = "echo \"$pegID\" | db_getExternalClusterGroups.py -d COG | \
+	db_getExternalClustersById.py -c 13 ";
+	
+	my $out = `$cmd`;
+	my @out = split /\n|\r/, $out;
+	
+	# parsing hit #
+	my %cog_cat;
+	foreach (@out){
+		my @line = split /\t/;
+		(my $COG_cat = $line[3]) =~ s/.*\[|\].*//g;
+		$cog_cat{$COG_cat}++;
+		}
+		
+	return join(";", keys %cog_cat);
+	}
+
 sub join_tables{
 # 3 table join #
 	my ($cluster_r, $hit_index_r, $cog_r) = @_;
@@ -133,11 +167,11 @@ __END__
 
 =head1 NAME
 
-ITEP_clusterAddCOG.pl -- adding COG info to table containing PEG IDs
+ITEP_clusterAddCOG.pl -- adding COG info to table containing PEG IDs (e.g. geneInfoTable)
 
 =head1 SYNOPSIS
 
-ITEP_clusterAddCOG.pl [options] table.txt > table_cog.txt
+ITEP_clusterAddCOG.pl [options] < pegIDs.txt > pegIDs_COG.txt
 
 =head2 options
 
@@ -162,9 +196,9 @@ Uses db_getExternalClusterGroups.py & db_getExternalClustersById.py
 
 =head1 EXAMPLES
 
-=head2 Usage: basic
+=head2 Basic usage:
 
-ITEP_clusterAddCOG.pl geneInfoTable.txt > geneInfoTable_COG.txt
+ITEP_clusterAddCOG.pl < geneInfoTable.txt > geneInfoTable_COG.txt
 
 =head1 AUTHOR
 
