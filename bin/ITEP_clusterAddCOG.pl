@@ -62,7 +62,7 @@ sub get_external_hit{
 		}
 	
 	if(%cog_cat){ return join(";", keys %cog_cat); }
-	else{ return ""; }
+	else{ return "No COG hit"; }
 	}
 
 sub join_tables{

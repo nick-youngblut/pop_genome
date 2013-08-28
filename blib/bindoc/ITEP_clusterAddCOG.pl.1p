@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "ITEP_CLUSTERADDCOG 1"
-.TH ITEP_CLUSTERADDCOG 1 "2013-08-27" "perl v5.14.2" "User Contributed Perl Documentation"
+.TH ITEP_CLUSTERADDCOG 1 "2013-08-28" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -149,7 +149,9 @@ ITEP_clusterAddCOG.pl [options] < pegIDs.txt > pegIDs_COG.txt
 perldoc ITEP_clusterAddCOG.pl
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-Use \s-1ITEP\s0 to add \s-1COG\s0 info to a table containing \s-1FIG_PEG\s0 IDs.
+Use \s-1ITEP\s0 to appending \s-1COG\s0 functional categories onto the end of the
+provided list/table.
+.PP
 Uses db_getExternalClusterGroups.py & db_getExternalClustersById.py
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"

@@ -47,7 +47,6 @@ while(<>){
 sub get_external_hit{
 	my ($pegID) = @_;
 	
-	$pegID = "fig|6666666.40865.peg.853";
 	my $cmd = "echo \"$pegID\" | db_getExternalClusterGroups.py -d COG | \
 	db_getExternalClustersById.py -c 13 ";
 	
@@ -61,8 +60,9 @@ sub get_external_hit{
 		(my $COG_cat = $line[3]) =~ s/.*\[|\].*//g;
 		$cog_cat{$COG_cat}++;
 		}
-		
-	return join(";", keys %cog_cat);
+	
+	if(%cog_cat){ return join(";", keys %cog_cat); }
+	else{ return ""; }
 	}
 
 sub join_tables{
@@ -191,7 +191,9 @@ perldoc ITEP_clusterAddCOG.pl
 
 =head1 DESCRIPTION
 
-Use ITEP to add COG info to a table containing FIG_PEG IDs.
+Use ITEP to appending COG functional categories onto the end of the
+provided list/table.
+
 Uses db_getExternalClusterGroups.py & db_getExternalClustersById.py
 
 =head1 EXAMPLES
