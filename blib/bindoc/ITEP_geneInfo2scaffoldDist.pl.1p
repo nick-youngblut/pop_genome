@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "ITEP_GENEINFO2SCAFFOLDDIST 1"
-.TH ITEP_GENEINFO2SCAFFOLDDIST 1 "2013-09-04" "perl v5.14.2" "User Contributed Perl Documentation"
+.TH ITEP_GENEINFO2SCAFFOLDDIST 1 "2013-09-20" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -157,7 +157,7 @@ Determine minimum distance (bp) between genes found
 in the same taxon on the same scaffold.
 .SS "Output"
 .IX Subsection "Output"
-The 1st column is minimum distance (bp)
+The 1st column is minimum absolute distance (bp)
 The following columns are the original rows 
 for both genes appended together.
 .SH "EXAMPLES"

@@ -46,6 +46,7 @@ sub find_distance{
 						@{$info_r->{$taxon_name}{$fig[$i]}},
 						@{$info_r->{$taxon_name}{$fig[$ii]}}), "\n"
 						if $write_NA;
+					next;
 					}
 				
 				# start - end #

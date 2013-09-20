@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "RANGER-DTL_PARSE_ITOL 1"
-.TH RANGER-DTL_PARSE_ITOL 1 "2013-08-26" "perl v5.14.2" "User Contributed Perl Documentation"
+.TH RANGER-DTL_PARSE_ITOL 1 "2013-09-20" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -140,14 +140,16 @@ ranger_dtl_parse_ITOL.pl < ranger_dtl_parsed.txt
 .el .IP "\-p 	Output file prefix. [``ranger\-dtl_parse'']" 4
 .IX Item "-p 	Output file prefix. [ranger-dtl_parse]"
 .PD 0
-.IP "\-t 	Cutoff for fraction of trees predicting transfer at a node. [0.025]" 4
-.IX Item "-t 	Cutoff for fraction of trees predicting transfer at a node. [0.025]"
+.IP "\-t 	Cutoff for fraction of trees predicting transfer at a node (>=). [0.025]" 4
+.IX Item "-t 	Cutoff for fraction of trees predicting transfer at a node (>=). [0.025]"
+.IP "\-r 	Number of digits to round the transfer statistics to. [5]" 4
+.IX Item "-r 	Number of digits to round the transfer statistics to. [5]"
 .IP "\-h	This help message" 4
 .IX Item "-h	This help message"
 .PD
 .SS "For more information:"
 .IX Subsection "For more information:"
-perldoc ranger_dtl_parse.pl
+perldoc ranger_dtl_parse_ITOL.pl
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
 Make an \s-1ITOL\s0 metadata table of duplications and also
@@ -157,14 +159,20 @@ min number of trees supporting the \s-1HGT\s0 to the max
 (range is defined after applying the cutoff, so
 it is just the range of the HGTs plotted).
 .PP
-For the duplication-loss table, the radius ('R#')
+For the duplication table, the radius ('R#')
 column is defined relative to the node with the
 max number of trees supporting the duplication.
+.PP
+Use the transfer stats output to adjust the 
+transfer cutoff '\-t' so that only the major
+transfers are written.
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
 .SS "Usage:"
 .IX Subsection "Usage:"
-ranger_dtl_parse_ITOL.pl < ranger\-dtl_parsed.txt
+$ ranger_dtl_parse.pl < ranger_out.dtl
+.PP
+$ ranger_dtl_parse_ITOL.pl < ranger\-dtl_parse_node.txt
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Nick Youngblut <nyoungb2@illinois.edu>

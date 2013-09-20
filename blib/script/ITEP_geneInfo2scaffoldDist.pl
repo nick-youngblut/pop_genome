@@ -36,7 +36,7 @@ sub find_distance{
 		my @fig = keys %{$info_r->{$taxon_name}};
 		for my $i (0..$#fig){
 			for my $ii (0..$#fig){
-				next if $ii <= $i;
+				next if $i >= $ii;
 				
 				# same scaffold? #
 				if(${$info_r->{$taxon_name}{$fig[$i]}}[4] ne 
@@ -87,6 +87,8 @@ sub load_gene_info_table{
 		next if /^\s*$/;
 		
 		my @line = split /\t/;
+		die " ERROR: $line[1] -> $line[0] is duplicated in table!\n"
+			if exists $info{$line[1]}{$line[0]};
 		$info{$line[1]}{$line[0]} = \@line;
 		}
 
@@ -136,7 +138,7 @@ in the same taxon on the same scaffold.
 
 =head2 Output
 
-The 1st column is minimum distance (bp)
+The 1st column is minimum absolute distance (bp)
 The following columns are the original rows 
 for both genes appended together.
 

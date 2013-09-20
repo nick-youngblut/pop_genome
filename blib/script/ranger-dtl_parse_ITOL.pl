@@ -8,6 +8,7 @@ use Data::Dumper;
 use Getopt::Long;
 use File::Spec;
 use Bio::TreeIO;
+use Statistics::Descriptive;
 use List::Util qw/min max/;
 
 ### args/flags
@@ -16,20 +17,25 @@ pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 my ($verbose);
 my $prefix = "ranger-dtl_parse";
 my $trans_cutoff = 0.025;
+my $round = 5;
 GetOptions(
 	   "prefix=s" => \$prefix,
 	   "transfer=f" => \$trans_cutoff,
+	   "round=i" => \$round,
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
 
 ### I/O error & defaults
+$round = join("", "%.", $round, "f");
+
 
 ### MAIN
 # load table #
 my ($trans_r, $dl_r, $Ntrees) = load_dtl_parsed();
 
 # removing low-abundant transfers #
+get_trans_cutoff_stats($trans_r, $trans_cutoff, $Ntrees);
 apply_trans_cutoff($trans_r, $trans_cutoff, $Ntrees);
 
 # making ITOL tables #
@@ -50,7 +56,7 @@ sub make_dl_table{
 
 
 	# output FH #
-	open OUT, ">$prefix\_Dup-Loss.txt", or die $!;
+	open OUT, ">$prefix\_Dup.txt", or die $!;
 
 	# header #
 	print OUT join("\t", qw/LABELS duplications/), "\n";
@@ -104,12 +110,31 @@ sub make_hgt_table{
 	close OUT;
 	}
 
+sub get_trans_cutoff_stats{
+	my ($trans_r, $trans_cutoff, $Ntrees) = @_;
+
+	print STDERR "Number of trees: $Ntrees\n";
+	print STDERR "Total number of transfers (summed by node): ", scalar keys %$trans_r, "\n";
+
+	
+	my $stat = Statistics::Descriptive::Full->new();
+	map{ $stat->add_data( $trans_r->{$_} / $Ntrees ) } keys %$trans_r;        
+
+	print STDERR "## STATS oin fraction of trees supporting any particular transfer ##\n";
+    print STDERR join("\t", "min", sprintf($round, $stat->min()) ), "\n";
+    print STDERR join("\t", "Q1", sprintf($round, $stat->percentile(25)) ), "\n";
+    print STDERR join("\t", "mean", sprintf($round, $stat->mean()) ), "\n";
+    print STDERR join("\t", "median", sprintf($round, $stat->median()) ), "\n";
+    print STDERR join("\t", "Q3", sprintf($round, $stat->percentile(75)) ), "\n";
+    print STDERR join("\t", "max", sprintf($round, $stat->max()) ), "\n";
+    print STDERR join("\t", "stdev", sprintf($round, $stat->standard_deviation()) ), "\n\n";
+
+	}
+
 sub apply_trans_cutoff{
 # removing low abundant transfers #
 ## fraction of trees that predict transfer at a node ##
 	my ($trans_r, $trans_cutoff, $Ntrees) = @_;
-	print STDERR "Number of trees: $Ntrees\n";
-	print STDERR "Total number of transfers (summed by node): ", scalar keys %$trans_r, "\n";
 	
 	#my $trans_sum = 0;
 	#map{ $trans_sum += $_ } values %$trans_r;
@@ -139,6 +164,7 @@ sub load_dtl_parsed{
 		chomp;
 		
 		my @line = split /\t/;		# treeID, genetree_node, species_node, cat, recipient
+		
 		if($line[3] =~ /transfer/i){
 			$transfers{join("\t", $line[2], $line[4])}++;
 			}
@@ -148,7 +174,7 @@ sub load_dtl_parsed{
 			
 		$trees{$line[0]} = 1;
 		}
-		print Dumper %transfers; exit;
+		#print Dumper %transfers; exit;
 	return \%transfers, \%dl, scalar keys %trees;
 	}
 
@@ -177,6 +203,32 @@ sub heatmap_colors{
 	return \@index;
 	}
 
+sub average{
+        my($data) = @_;
+        if (not @$data) {
+                die("Empty array\n");
+        }
+        my $total = 0;
+        foreach (@$data) {
+                $total += $_;
+        }
+        my $average = $total / @$data;
+        return $average;
+	}
+	
+sub stdev{
+        my($data) = @_;
+        if(@$data == 1){
+                return 0;
+        }
+        my $average = &average($data);
+        my $sqtotal = 0;
+        foreach(@$data) {
+                $sqtotal += ($average-$_) ** 2;
+        }
+        my $std = ($sqtotal / (@$data-1)) ** 0.5;
+        return $std;
+	}
 
 __END__
 
@@ -196,7 +248,9 @@ ranger_dtl_parse_ITOL.pl < ranger_dtl_parsed.txt
 
 =item -p 	Output file prefix. ["ranger-dtl_parse"]
 
-=item -t 	Cutoff for fraction of trees predicting transfer at a node. [0.025]
+=item -t 	Cutoff for fraction of trees predicting transfer at a node (>=). [0.025]
+
+=item -r 	Number of digits to round the transfer statistics to. [5]
 
 =item -h	This help message
 
@@ -204,7 +258,7 @@ ranger_dtl_parse_ITOL.pl < ranger_dtl_parsed.txt
 
 =head2 For more information:
 
-perldoc ranger_dtl_parse.pl
+perldoc ranger_dtl_parse_ITOL.pl
 
 =head1 DESCRIPTION
 
@@ -215,15 +269,21 @@ min number of trees supporting the HGT to the max
 (range is defined after applying the cutoff, so
 it is just the range of the HGTs plotted).
 
-For the duplication-loss table, the radius ('R#')
+For the duplication table, the radius ('R#')
 column is defined relative to the node with the
 max number of trees supporting the duplication.
+
+Use the transfer stats output to adjust the 
+transfer cutoff '-t' so that only the major
+transfers are written.
 
 =head1 EXAMPLES
 
 =head2 Usage: 
 
-ranger_dtl_parse_ITOL.pl < ranger-dtl_parsed.txt
+$ ranger_dtl_parse.pl < ranger_out.dtl
+
+$ ranger_dtl_parse_ITOL.pl < ranger-dtl_parse_node.txt
 
 =head1 AUTHOR
 
