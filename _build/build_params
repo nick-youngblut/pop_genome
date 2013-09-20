@@ -113,6 +113,7 @@ do{ my $x = [
          'script_files' => [
                              './bin/ITEP_clusterAddCOG.pl',
                              './bin/geneClusterInvariant.pl',
+                             './bin/ITEP_geneInfo2scaffoldDist.pl',
                              './bin/genbank_add_clusterIDs.pl',
                              './bin/SNAP_batch.pl',
                              './bin/rdtl-db_make.pl',
