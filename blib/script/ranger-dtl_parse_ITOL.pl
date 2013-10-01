@@ -56,7 +56,7 @@ sub make_dl_table{
 
 
 	# output FH #
-	open OUT, ">$prefix\_Dup.txt", or die $!;
+	open OUT, ">$prefix\_dups.meta", or die $!;
 
 	# header #
 	print OUT join("\t", qw/LABELS duplications/), "\n";
