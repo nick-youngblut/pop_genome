@@ -34,6 +34,7 @@ sub find_distance{
 		
 		# figs on same scaffold in same taxon #
 		my @fig = keys %{$info_r->{$taxon_name}};
+		
 		for my $i (0..$#fig){
 			for my $ii (0..$#fig){
 				next if $i >= $ii;

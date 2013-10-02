@@ -113,6 +113,18 @@ ON CONFLICT REPLACE
 );
 
 HERE
+
+	$sql{"Node_clade"} = <<HERE;
+DROP TABLE IF EXISTS Node_clade;
+
+CREATE TABLE Node_clade(
+Species_NodeID	TEXT	NOT NULL,
+CladeID	TEXT,
+UNIQUE (Species_NodeID)
+ON CONFLICT REPLACE
+);
+
+HERE
 	
 	return \%sql;
 	}
