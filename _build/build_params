@@ -120,6 +120,7 @@ do{ my $x = [
                              './bin/ranger-dtl_parse_ITOL.pl',
                              './bin/blast_UniqueGenesFromITEP.pl',
                              './bin/rdtl-db_load.pl',
+                             './bin/rdtl-db_loadNodeClade.pl',
                              './bin/ranger-dtl_parse.pl',
                              './bin/PresAbs2Nexus.pl'
                            ],

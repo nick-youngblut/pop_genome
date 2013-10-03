@@ -125,6 +125,42 @@ ON CONFLICT REPLACE
 );
 
 HERE
+
+	$sql{"Bootstrap"} = <<HERE;
+DROP TABLE IF EXISTS Bootstrap;
+
+CREATE TABLE Bootstrap(
+ClusterID	TEXT	NOT NULL,
+Min	REAL,
+Q1	REAL,
+Mean	REAL,
+Median	REAL,
+Q3	REAL,
+Max	REAL,
+Stdev	REAL,
+UNIQUE (ClusterID)
+ON CONFLICT REPLACE
+);
+
+HERE
+
+	$sql{"pdistance"} = <<HERE;
+DROP TABLE IF EXISTS pdistance;
+
+CREATE TABLE pdistance(
+ClusterID	TEXT	NOT NULL,
+Min	REAL,
+Q1	REAL,
+Mean	REAL,
+Median	REAL,
+Q3	REAL,
+Max	REAL,
+Stdev	REAL,
+UNIQUE (ClusterID)
+ON CONFLICT REPLACE
+);
+
+HERE
 	
 	return \%sql;
 	}

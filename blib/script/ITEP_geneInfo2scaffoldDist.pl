@@ -34,6 +34,7 @@ sub find_distance{
 		
 		# figs on same scaffold in same taxon #
 		my @fig = keys %{$info_r->{$taxon_name}};
+		
 		for my $i (0..$#fig){
 			for my $ii (0..$#fig){
 				next if $i >= $ii;
@@ -139,7 +140,8 @@ in the same taxon on the same scaffold.
 
 =head2 Output
 
-The 1st column is minimum absolute distance (bp)
+The 1st column is minimum absolute distance (bp) between genes
+(ie. number of intervening base pairs).
 The following columns are the original rows 
 for both genes appended together.
 

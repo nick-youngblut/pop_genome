@@ -123,38 +123,55 @@
 .rm #[ #] #H #V #F C
 .\" ========================================================================
 .\"
-.IX Title "RDTL-DB_MAKE 1"
-.TH RDTL-DB_MAKE 1 "2013-10-02" "perl v5.14.2" "User Contributed Perl Documentation"
+.IX Title "RDTL-DB_LOADNODECLADE 1"
+.TH RDTL-DB_LOADNODECLADE 1 "2013-10-02" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
 .nh
 .SH "NAME"
-rdtl\-db_make.pl \-\- make database tables for Ranger\-DTL data
+rdtl\-db_loadNodeClade.pl \-\- loading clade IDs for nodes in rdtl\-db
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-rdtl\-db_make.pl [options] [\s-1DATABASE_NAME\s0]
-.SS "Options"
-.IX Subsection "Options"
-.IP "\-r 	Replace existing database. [\s-1FALSE\s0]" 4
-.IX Item "-r 	Replace existing database. [FALSE]"
-.PD 0
+rdtl\-db_loadNodeClade.pl [flags]
+.SS "Required flags"
+.IX Subsection "Required flags"
+.IP "\-database  <char>" 4
+.IX Item "-database  <char>"
+rdtl-db database file.
+.IP "\-taxa  <char>" 4
+.IX Item "-taxa  <char>"
+taxa-clade list file (tab-delimited; 2 column: taxon, clade).
+.SS "Optional flags"
+.IX Subsection "Optional flags"
+.IP "\-delimiter  <char>" 4
+.IX Item "-delimiter  <char>"
+Delimiter for parsing taxa-clade list into 2 columns. ['_\|_']
 .IP "\-h	This help message" 4
 .IX Item "-h	This help message"
-.PD
 .SS "For more information:"
 .IX Subsection "For more information:"
-perldoc rdtl\-db_make.pl
+perldoc rdtl\-db_loadNodeClade.pl
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-Make all tables in the rdtl-db sqlite3 database.
+Load cladeIDs for nodes (both internal & external)
+into rdtl-db. Clade IDs are determine from a list
+of extant taxa (tree leaves) and which clade they 
+fall into. rename_addCladeName.pl can be used to make
+the list. Internal nodes are classified by clade
+based on their extant child nodes. Nodes polyphyletic
+to the clades specified will have \s-1NULL\s0 cladeIDs.
 .PP
-The default database name is \*(L"rdtl\-db.sqlite\*(R"
+The node-clade list should be based off of the 
+species tree used for the ranger-dtl runs.
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
-.SS "Usage:"
-.IX Subsection "Usage:"
-rdtl\-db_make.pl
+.SS "Method for making node-clade list table"
+.IX Subsection "Method for making node-clade list table"
+rename_addCladeName.pl <(nw_labels \-I species.nwk) \-t species.nwk \-r 1 10 11 \-n clade1 clade2 > taxa_clade.txt
+.SS "Loading database"
+.IX Subsection "Loading database"
+rdtl\-db_makeNodeClade.pl \-da rdtl\-db.sqlite \-t taxa_clade.txt
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Nick Youngblut <nyoungb2@illinois.edu>
