@@ -123,38 +123,58 @@
 .rm #[ #] #H #V #F C
 .\" ========================================================================
 .\"
-.IX Title "RDTL-DB_MAKE 1"
-.TH RDTL-DB_MAKE 1 "2013-10-03" "perl v5.14.2" "User Contributed Perl Documentation"
+.IX Title "RDTL-DB_LOADPDISTANCE 1"
+.TH RDTL-DB_LOADPDISTANCE 1 "2013-10-03" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
 .nh
 .SH "NAME"
-rdtl\-db_make.pl \-\- make database tables for Ranger\-DTL data
+rdtl\-db_loadPdistance.pl \-\- loading Pdistance stats trees of gene clusters
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-rdtl\-db_make.pl [options] [\s-1DATABASE_NAME\s0]
-.SS "Options"
-.IX Subsection "Options"
-.IP "\-r 	Replace existing database. [\s-1FALSE\s0]" 4
-.IX Item "-r 	Replace existing database. [FALSE]"
-.PD 0
+rdtl\-db_loadPdistance.pl [flags]
+.SS "Required flags"
+.IX Subsection "Required flags"
+.IP "\-database  <char>" 4
+.IX Item "-database  <char>"
+rdtl-db database file.
+.IP "\-align  <char>" 4
+.IX Item "-align  <char>"
+File with list of alignment files (1 per line; fasta format).
+.IP "\-cluster  <char>" 4
+.IX Item "-cluster  <char>"
+File with list of clusters (1 per line; same order as '\-align' list)
+.SS "Optional flags"
+.IX Subsection "Optional flags"
+.IP "\-mothur  <char>" 4
+.IX Item "-mothur  <char>"
+Mothur dist.seqs paramters. [\*(L"calc=onegap\*(R"]
+.IP "\-processors  <int>" 4
+.IX Item "-processors  <int>"
+Number of processors used by mothur. [1]
+.IP "\-verbose  <bool>" 4
+.IX Item "-verbose  <bool>"
+Verbose output. [\s-1FALSE\s0]
 .IP "\-h	This help message" 4
 .IX Item "-h	This help message"
-.PD
 .SS "For more information:"
 .IX Subsection "For more information:"
-perldoc rdtl\-db_make.pl
+perldoc rdtl\-db_loadPdistance.pl
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-Make all tables in the rdtl-db sqlite3 database.
+Load stats for Pdistance values of alignments
+used for making trees, which were
+used for the ranger-dtl run(s) in rdtl-db.
 .PP
-The default database name is \*(L"rdtl\-db.sqlite\*(R"
+Provide a list of alignments and cluster IDs (same 
+as in rdtl-db). The order of alignment files and 
+clusterID must match!
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
-.SS "Usage:"
-.IX Subsection "Usage:"
-rdtl\-db_make.pl
+.SS "Basic usage"
+.IX Subsection "Basic usage"
+rdtl\-db_loadPdistance.pl \-da rdtl\-db.sqlite \-t aln_file_list.txt \-c clusterID_list.txt
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Nick Youngblut <nyoungb2@illinois.edu>
