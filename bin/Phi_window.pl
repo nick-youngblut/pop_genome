@@ -88,10 +88,6 @@ sub phi_by_lcb{
 				
 			$lcb_len = length $l[6];
 			
-			# eof #
-			 if(eof IN){
-			 	
-			 	}
 			}
 		elsif(/^\s*$/ ){		# end of LCB; calling phi; resetting;  			
 			$skip = 0;
@@ -100,8 +96,6 @@ sub phi_by_lcb{
 			# calling phi #
 			call_phi(\%lcb_seq, $lcb_cnt, $lcb_len, $dirname);
 			
-			# resetting #
-			$lcb_len = 0;
 			%lcb_seq = ();
 			}
 		}
@@ -226,6 +220,8 @@ Run Phi from PhiPack using a sliding window.
 
 "NA" for pvalue indicates that there was not
 enough phylogenetic information in the window.
+
+Alignment positions indexed by 1.
 
 =head1 EXAMPLES
 
