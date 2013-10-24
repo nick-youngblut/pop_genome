@@ -130,6 +130,7 @@ sub call_phi{
 				my $cmd = "Phi -f $tmp_file -w $phi_window";
 				$cmd .= " -p $phi_perm" if $phi_perm;
 				$cmd .= " -o" if $all_tests;
+				$cmd .= " 2>/dev/null" unless $verbose;
 			
 				my $out = `$cmd`;
 				my @res = grep(/^(NSS|Max Chi|PHI)/, split /[\n\r]/, $out);

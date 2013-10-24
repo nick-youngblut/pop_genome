@@ -8,7 +8,7 @@ use Data::Dumper;
 use Getopt::Long;
 use File::Spec;
 use File::Temp qw/ tempfile tempdir /;
-use Parallel::ForkManager;
+#use Parallel::ForkManager;
 
 ### args/flags
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
@@ -20,7 +20,7 @@ my $phi_perm = 1000;
 my $window = 1000;
 my $step = 100;
 my $mult = 0;
-my $fork = 0;
+my $fork = 1;
 GetOptions(
 	   "maf=s" => \$maf_in,
 	   "n=i" => \$window,
@@ -88,10 +88,6 @@ sub phi_by_lcb{
 				
 			$lcb_len = length $l[6];
 			
-			# eof #
-			 if(eof IN){
-			 	
-			 	}
 			}
 		elsif(/^\s*$/ ){		# end of LCB; calling phi; resetting;  			
 			$skip = 0;
@@ -100,8 +96,6 @@ sub phi_by_lcb{
 			# calling phi #
 			call_phi(\%lcb_seq, $lcb_cnt, $lcb_len, $dirname);
 			
-			# resetting #
-			$lcb_len = 0;
 			%lcb_seq = ();
 			}
 		}
@@ -113,52 +107,71 @@ sub call_phi{
 	my ($seqs_r, $lcb_cnt, $lcb_len, $dirname) = @_;
 	
 	# forking #
-	my $pm = new Parallel::ForkManager($fork);
+	use Forks::Super;
 	
+	my %res_all;
 	for (my $i=0; $i<=($lcb_len-1); $i+=$step){
-		$pm->start and next;
-		
-		# writing out temporary file #
-		my $tmp_file = "$dirname/tmp$i.fasta";
-		open OUT, ">$tmp_file" or die $!;
-		foreach my $taxon (keys %$seqs_r){
-			print OUT join("\n", ">$taxon", substr $seqs_r->{$taxon}, $i, $window), "\n";
-			}
-		close OUT;
-		
-		# calling phi #
-		my $cmd = "Phi -f $tmp_file -w $phi_window";
-		$cmd .= " -p $phi_perm" if $phi_perm;
-		$cmd .= " -o" if $all_tests;
-		
-		my $out = `$cmd`;
-		my @res = grep(/^(NSS|Max Chi|PHI)/, split /[\n\r]/, $out);
-		
-		if(@res){
-			foreach (@res){
-				s/://;
-				s/ (C|\()/_$1/;
-				my @l = split / +/;
+	#for (my $i=0; $i<=10000; $i+=$step){
+		#$pm->start and next;
+		my $job = fork {
+			max_proc => $fork,
+			share => [ \%res_all ],
+			sub => sub {
+				#push @res, "here";
+				# writing out temporary file #
+				my $tmp_file = "$dirname/tmp$i.fasta";
+				open OUT, ">$tmp_file" or die $!;
+				foreach my $taxon (keys %$seqs_r){
+					print OUT join("\n", ">$taxon", substr $seqs_r->{$taxon}, $i, $window), "\n";
+					}
+				close OUT;
 			
-				print join("\t", $lcb_cnt, $i+1, $i+$window, @l[0..1]), "\n"; 
-				}
-			}
-		else{
-			print join("\t", $lcb_cnt, $i+1, $i+$window, "PHI_(Normal)", 'NA'), "\n"; 
-			if($all_tests){
-				foreach my $q ("NSS", "Max_Chi^2"){
-					print join("\t", $lcb_cnt, $i+1, $i+$window, $q, 'NA'), "\n"; 
+				# calling phi #
+				my $cmd = "Phi -f $tmp_file -w $phi_window";
+				$cmd .= " -p $phi_perm" if $phi_perm;
+				$cmd .= " -o" if $all_tests;
+				$cmd .= " 2>/dev/null" unless $verbose;
+			
+				my $out = `$cmd`;
+				my @res = grep(/^(NSS|Max Chi|PHI)/, split /[\n\r]/, $out);
+			
+				if(@res){			# tests found in output
+					foreach (@res) {
+						s/://;
+						s/ (C|\()/_$1/;					
+						my @l = split / +/;
+				
+						#push @res_all, [$lcb_cnt, $i+1, $i+$window, @l[0..1]]; 
+						$res_all{$i+1}{$l[0]} = $l[1]; 
+						}
+					}
+				else{
+						#push @res_all, [$lcb_cnt, $i+1, $i+$window, "PHI_(Normal)", 'NA'];
+					$res_all{$i+1}{"PHI_(Normal)"} = 'NA';
+					if($all_tests){
+						foreach my $q ("NSS", "Max_Chi^2"){
+								#push @res_all, [$lcb_cnt, $i+1, $i+$window, $q, 'NA'];
+							$res_all{$i+1}{$q} = 'NA';
+							}
+						}
+					if($phi_perm){
+							#push @res_all, [$lcb_cnt, $i+1, $i+$window, "PHI_(Permutation)", 'NA'];
+						$res_all{$i+1}{"PHI_(Permutation)"} = 'NA';
+						}
 					}
 				}
-			if($phi_perm){
-				print join("\t", $lcb_cnt, $i+1, $i+$window, "PHI_(Permutation)", 'NA'), "\n"; 			
-				}
-			}
-			
-		$pm->finish; # do the exit in the child process
+			};
 		}
-	$pm->wait_all_children;
+	waitall;
+
+	# writing table #
+	foreach my $start (sort{$a<=>$b} keys %res_all){
+		foreach my $test (sort keys %{$res_all{$start}}){
+			print join("\t", $lcb_cnt, $start, $start+$window, $test, $res_all{$start}{$test}), "\n";
+			}
+		}
 	}
+
 
 __END__
 
@@ -227,6 +240,8 @@ Run Phi from PhiPack using a sliding window.
 "NA" for pvalue indicates that there was not
 enough phylogenetic information in the window.
 
+Alignment positions indexed by 1.
+
 =head1 EXAMPLES
 
 =head2 Basic usage
@@ -243,7 +258,7 @@ Nick Youngblut <nyoungb2@illinois.edu>
 
 =head1 AVAILABILITY
 
-sharchaea.life.uiuc.edu:/home/git/
+sharchaea.life.uiuc.edu:/home/git/ITEP_PopGen/
 
 =head1 COPYRIGHT
 

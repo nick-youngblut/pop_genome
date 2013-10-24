@@ -123,31 +123,19 @@
 .rm #[ #] #H #V #F C
 .\" ========================================================================
 .\"
-.IX Title "PHI_WINDOW 1"
-.TH PHI_WINDOW 1 "2013-10-14" "perl v5.14.2" "User Contributed Perl Documentation"
+.IX Title "PHI_GENE_BATCH 1"
+.TH PHI_GENE_BATCH 1 "2013-10-14" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
 .nh
 .SH "NAME"
-Phi_window.pl \-\- Run Phi (PhiPack) along a sliding window
+Phi_gene_batch.pl \-\- Run Phi (PhiPack) on 1 or more nucleotide alignments (fasta format)
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-Phi_window.pl [options] \-maf file.maf > phi_out.txt
+Phi_gene_batch.pl [options] *fasta > phi_res.txt
 .SS "options"
 .IX Subsection "options"
-.IP "\-maf  <char>" 4
-.IX Item "-maf  <char>"
-maf file name.
-.IP "\-mult  <int>" 4
-.IX Item "-mult  <int>"
-LCBs with < '\-mult' taxa will be skipped. [0]
-.IP "\-n  <int>" 4
-.IX Item "-n  <int>"
-Window size (bp). [1000]
-.IP "\-s  <int>" 4
-.IX Item "-s  <int>"
-Step size (bp). [100]
 .IP "\-o  <bool>" 4
 .IX Item "-o  <bool>"
 All Phi tests (Phi, \s-1NSS\s0, Max Chi^2). [\s-1TRUE\s0]
@@ -160,7 +148,7 @@ Phi window size ('\-w' in Phi). [100]
 Phi permutation number ('\-p' in Phi). [1000]
 .IP "\-f  <int>" 4
 .IX Item "-f  <int>"
-Number of parallel calls of Phi. [1]
+Number of alignments to process in parallel. [1]
 .IP "\-v  <bool>" 4
 .IX Item "-v  <bool>"
 Verbose output. [\s-1FALSE\s0]
@@ -168,23 +156,26 @@ Verbose output. [\s-1FALSE\s0]
 .IX Item "-h	This help message"
 .SS "For more information:"
 .IX Subsection "For more information:"
-perldoc Phi_window.pl
+perldoc Phi_gene_batch.pl
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-Run Phi from PhiPack using a sliding window.
+Run Phi from PhiPack on >= 1 alignment in fasta format.
 .PP
 \&\*(L"\s-1NA\s0\*(R" for pvalue indicates that there was not
 enough phylogenetic information in the window.
 .PP
-Alignment positions indexed by 1.
+Max Chi^2 and \s-1NSS\s0 can be run by using '\-o'.
+.PP
+\&\*(L"start\*(R" and \*(L"end\*(R" in the output are just placeholders
+needed for downstream analysis.
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
 .SS "Basic usage"
 .IX Subsection "Basic usage"
-Phi_window.pl \-maf file.maf > phi_out.txt
+Phi_gene_batch.pl *fasta > phi_out.txt
 .SS "Using 24 CPUs"
 .IX Subsection "Using 24 CPUs"
-Phi_window.pl \-f 24 \-maf file.maf > phi_out.txt
+Phi_gene_batch.pl \-f 24 *fasta > phi_out.txt
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Nick Youngblut <nyoungb2@illinois.edu>
