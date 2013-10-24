@@ -116,6 +116,7 @@ do{ my $x = [
                              './bin/ITEP_geneInfo2scaffoldDist.pl',
                              './bin/Phi_window.pl',
                              './bin/genbank_add_clusterIDs.pl',
+                             './bin/ITEP_PAfixed.pl',
                              './bin/SNAP_batch.pl',
                              './bin/rdtl-db_loadPdistance.pl',
                              './bin/rdtl-db_make.pl',
