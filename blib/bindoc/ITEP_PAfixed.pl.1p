@@ -130,34 +130,63 @@
 .if n .ad l
 .nh
 .SH "NAME"
-ITEP_clusterAddCOG.pl \-\- adding COG info to table containing PEG IDs (e.g. geneInfoTable)
+ITEP_PAfixed.pl \-\- determining gene clusters found in (~)all of 1 clade, but not in other clades
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-ITEP_clusterAddCOG.pl [options] < pegIDs.txt > pegIDs_COG.txt
+ITEP_PAfixed.pl [flags]< ITEP_pres\-abs.txt > ITEP_pres\-abs_fixed.txt
+.SS "required flags"
+.IX Subsection "required flags"
+.IP "\-clades  <char>" 4
+.IX Item "-clades  <char>"
+File designating clades (2\-column; tab-delim; taxon\etclade).
 .SS "options"
 .IX Subsection "options"
-.IP "\-p 	\s-1PEG\s0 (geneID) column (indexed by 1). [1]" 4
-.IX Item "-p 	PEG (geneID) column (indexed by 1). [1]"
-.PD 0
+.IP "\-tree  <char>" 4
+.IX Item "-tree  <char>"
+Tree file for determining subclades (newick or nexus).
+.IP "\-format  <char>" 4
+.IX Item "-format  <char>"
+Tree file format (newick or nexus). [newick]
+.IP "\-brlen  <float>" 4
+.IX Item "-brlen  <float>"
+Subclades defined as any clades where max branch length from any leaf to \s-1LCA\s0 is < '\-brlen'.
+.IP "\-absent  <float>" 4
+.IX Item "-absent  <float>"
+Number of taxa in a clade that can be missing a gene in cluster (if < 1, fraction of cluster). [0]
+.IP "\-subclade  <float>" 4
+.IX Item "-subclade  <float>"
+Fraction of taxa in subclade that must have cluster (eg. 0.51 for majority rules). [0]
 .IP "\-v	Verbose output" 4
 .IX Item "-v	Verbose output"
+.PD 0
 .IP "\-h	This help message" 4
 .IX Item "-h	This help message"
 .PD
 .SS "For more information:"
 .IX Subsection "For more information:"
-perldoc ITEP_clusterAddCOG.pl
+perldoc ITEP_PAfixed.pl
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-Use \s-1ITEP\s0 to appending \s-1COG\s0 functional categories onto the end of the
-provided list/table.
-.PP
-Uses db_getExternalClusterGroups.py & db_getExternalClustersById.py
+Add a column (4th column) which indicates gene cluster 'fixation' 
+among clades. The cutoffs can help if the genomes are draft
+and so some taxa may be artificially missing the gene cluster.
+.SS "Fixation definition"
+.IX Subsection "Fixation definition"
+The gene cluster must be found in enough taxa (after accounting
+for absences in all taxa in clade or in subclades) to be considered
+present throughout the clade.
+Also, the cluster must be absent in all other clades.
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
-.SS "Basic usage:"
-.IX Subsection "Basic usage:"
-ITEP_clusterAddCOG.pl < geneInfoTable.txt > geneInfoTable_COG.txt
+.SS "No subclades defined:"
+.IX Subsection "No subclades defined:"
+ITEP_PAfixed.pl \-c clades.txt < ITEP_pres\-abs.txt > ITEP_pres\-abs_fixed.txt
+.SS "Defining subclades (collapsing tree w/ brlen cutoff of 0.001)"
+.IX Subsection "Defining subclades (collapsing tree w/ brlen cutoff of 0.001)"
+ITEP_PAfixed.pl \-t tree.nwk \-b 0.001 \-c clades.txt < ITEP_pres\-abs.txt > ITEP_pres\-abs_fixed.txt
+.SS "Majority rule for subclades"
+.IX Subsection "Majority rule for subclades"
+ITEP_PAfixed.pl \-t tree.nwk \-b 0.001 \-s 0.51 \-c clades.txt < ITEP_pres\-abs.txt > ITEP_pres\-abs_fixed.txt
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Nick Youngblut <nyoungb2@illinois.edu>

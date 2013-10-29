@@ -24,8 +24,8 @@ GetOptions(
 		"format=s" => \$tformat,				# tree formate
 		"clades=s" => \$clades_in, 			# 2-column table: taxon\tclade
 		"brlen=f" => \$brlen_cut, 			# brlen for cutoff
-		"absent=f" => \$absent_cut, 		# number of taxa that can be missing a gene in cluster (if < 1, fraction)
-		"subclade=f" => \$subclade_cut, 	# subclade cutoff (fraction of subclade that has it)
+		"absent=f" => \$absent_cut, 		# number of taxa that can be missing a gene in cluster (if < 1, fraction) [<=]
+		"subclade=f" => \$subclade_cut, 	# subclade cutoff (fraction of subclade that must have cluster) [>=]
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
@@ -122,13 +122,12 @@ sub load_PA_table{
 		my %clade_cnt;
 		foreach my $subclade (keys %subclade_cnt){
 			# applying subclade cutoff #
-				#print Dumper $subclade_cnt{$subclade}{'count'};
 			if($subclade_cnt{$subclade}{'count'} / $subclade_cnt{$subclade}{'total'}
 				>= $subclade_cut){			# gene presence in >= fraction of subclde than cutoff
 				$clade_cnt{$cs_index_r->{$subclade}}{'count'} += $subclade_cnt{$subclade}{'count'};
 				}
 			else{			
-				$clade_cnt{$cs_index_r->{$subclade}}{'count'} += 0 ;
+				$clade_cnt{$cs_index_r->{$subclade}}{'count'} += 0;
 				}
 			$clade_cnt{$cs_index_r->{$subclade}}{'total'}++;
 			}
@@ -136,7 +135,6 @@ sub load_PA_table{
 		# determining if cluster found in enough taxa to be called 'present in ~all members' #
 		my %clade_PA;
 		foreach my $clade (keys %clade_cnt){
-
 			if($absent_cut >= 1){		# cutoff as number of abencenses allowed
 				if($clade_cnt{$clade}{'total'} - $clade_cnt{$clade}{'count'} 
 					<= $absent_cut){
@@ -144,9 +142,9 @@ sub load_PA_table{
 					}
 				else{ $clade_PA{$clade} = 0; }
 				}
-			else{		# cutoff in fractino
+			else{		# cutoff in fraction (number subclades present/total nunmber subclades)
 				if( ($clade_cnt{$clade}{'total'} - $clade_cnt{$clade}{'count'}) / $clade_cnt{$clade}{'total'} 
-					<= $absent_cut){
+					<= $absent_cut){		
 					$clade_PA{$clade} = 1;
 					}
 				else{ $clade_PA{$clade} = 0; }		
@@ -239,7 +237,7 @@ sub get_subclades{
 		# removing taxa w/ height < brlen cutoff #
 		unless($node->is_Leaf){
 			next unless exists $brlen_r->{$node_id};
-			next if $brlen_r->{$node_id} >= $brlen_cut;		# node closer to tip then cutoff
+			next if $brlen_r->{$node_id} > $brlen_cut;		# node closer to tip then cutoff
 			}
 		
 		#print Dumper $node_id;
@@ -249,7 +247,7 @@ sub get_subclades{
 		# getting ancestor and seeing if it has brlen >= cutoff, if so calling this a subclade #
 		my $anc = $node->ancestor;
 		next unless exists $brlen_r->{$anc->description};
-		next unless $brlen_r->{$anc->description} >= $brlen_cut;	
+		next unless $brlen_r->{$anc->description} > $brlen_cut;	
 
 		# subclade found; getting leaves #
 		## all descendents in subclade ##
@@ -269,10 +267,11 @@ sub get_subclades{
 		}
 	
 	# printing clade distribution #
+	print STDERR join("\t", qw/taxon subcladeID/), "\n";
 	foreach my $taxon (sort {$subclades_r->{$a}<=>$subclades_r->{$b}} keys %$subclades_r){
 		print STDERR join("\t", $taxon, $subclades_r->{$taxon}), "\n";
 		}
-	print STDERR "bug warning: root probably not included in a subclade!\n"; 
+	print STDERR "\nbug warning: root probably not included in a subclade!\n\n"; 
 	
 		#print Dumper %$subclades_r; exit;
 	}
@@ -336,17 +335,45 @@ __END__
 
 =head1 NAME
 
-ITEP_clusterAddCOG.pl -- adding COG info to table containing PEG IDs (e.g. geneInfoTable)
+ITEP_PAfixed.pl -- determining gene clusters found in (~)all of 1 clade, but not in other clades
 
 =head1 SYNOPSIS
 
-ITEP_clusterAddCOG.pl [options] < pegIDs.txt > pegIDs_COG.txt
+ITEP_PAfixed.pl [flags]< ITEP_pres-abs.txt > ITEP_pres-abs_fixed.txt
+
+=head2 required flags
+
+=over
+
+=item -clades  <char>
+
+File designating clades (2-column; tab-delim; taxon\tclade).
+
+=back 
 
 =head2 options
 
 =over
 
-=item -p 	PEG (geneID) column (indexed by 1). [1]
+=item -tree  <char>
+
+Tree file for determining subclades (newick or nexus).
+
+=item -format  <char>
+
+Tree file format (newick or nexus). [newick]
+
+=item -brlen  <float>
+
+Subclades defined as any clades where max branch length from any leaf to LCA is < '-brlen'.
+
+=item -absent  <float>
+
+Number of taxa in a clade that can be missing a gene in cluster (if < 1, fraction of cluster). [0]
+
+=item -subclade  <float>
+
+Fraction of taxa in subclade that must have cluster (eg. 0.51 for majority rules). [0]
 
 =item -v	Verbose output
 
@@ -356,20 +383,35 @@ ITEP_clusterAddCOG.pl [options] < pegIDs.txt > pegIDs_COG.txt
 
 =head2 For more information:
 
-perldoc ITEP_clusterAddCOG.pl
+perldoc ITEP_PAfixed.pl
 
 =head1 DESCRIPTION
 
-Use ITEP to appending COG functional categories onto the end of the
-provided list/table.
+Add a column (4th column) which indicates gene cluster 'fixation' 
+among clades. The cutoffs can help if the genomes are draft
+and so some taxa may be artificially missing the gene cluster.
 
-Uses db_getExternalClusterGroups.py & db_getExternalClustersById.py
+=head2 Fixation definition
+
+The gene cluster must be found in enough taxa (after accounting
+for absences in all taxa in clade or in subclades) to be considered
+present throughout the clade.
+Also, the cluster must be absent in all other clades.
+
 
 =head1 EXAMPLES
 
-=head2 Basic usage:
+=head2 No subclades defined:
 
-ITEP_clusterAddCOG.pl < geneInfoTable.txt > geneInfoTable_COG.txt
+ITEP_PAfixed.pl -c clades.txt < ITEP_pres-abs.txt > ITEP_pres-abs_fixed.txt
+
+=head2 Defining subclades (collapsing tree w/ brlen cutoff of 0.001)
+
+ITEP_PAfixed.pl -t tree.nwk -b 0.001 -c clades.txt < ITEP_pres-abs.txt > ITEP_pres-abs_fixed.txt
+
+=head2 Majority rule for subclades
+
+ITEP_PAfixed.pl -t tree.nwk -b 0.001 -s 0.51 -c clades.txt < ITEP_pres-abs.txt > ITEP_pres-abs_fixed.txt
 
 =head1 AUTHOR
 
