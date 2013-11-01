@@ -119,6 +119,7 @@ do{ my $x = [
                              './bin/ITEP_PAfixed.pl',
                              './bin/SNAP_batch.pl',
                              './bin/rdtl-db_loadPdistance.pl',
+                             './bin/ITEP_geneInfo2ITOL.pl',
                              './bin/rdtl-db_make.pl',
                              './bin/rdtl-db_loadBootstrap.pl',
                              './bin/ranger-dtl_parse_ITOL.pl',
