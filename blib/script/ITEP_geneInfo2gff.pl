@@ -45,6 +45,7 @@ sub geneInfo2gff{
 			}
 		
 		# editing values #
+		$l[4] =~ s/^\d+\.\d+\.//;		# removing taxon_id
 		$l[1] =~ s/ /_/g;
 		
 		# prining line #
