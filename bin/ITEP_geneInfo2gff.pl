@@ -12,7 +12,7 @@ use File::Spec;
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
 my ($verbose);
-my @atts = ("14,note");
+my @atts = ("14,note", "10,product", "1,name");
 GetOptions(
 		"attribute=s{,}" => \@atts,
 	   "verbose" => \$verbose,
