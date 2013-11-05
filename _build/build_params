@@ -111,6 +111,7 @@ do{ my $x = [
          'quiet' => undef,
          'extra_compiler_flags' => [],
          'script_files' => [
+                             './bin/ITEP_geneInfoMedianCoords.pl',
                              './bin/ITEP_clusterAddCOG.pl',
                              './bin/geneClusterInvariant.pl',
                              './bin/ITEP_geneInfo2scaffoldDist.pl',
@@ -119,6 +120,7 @@ do{ my $x = [
                              './bin/ITEP_PAfixed.pl',
                              './bin/ITEP_geneInfo2gff.pl',
                              './bin/SNAP_batch.pl',
+                             './bin/ITEP_align-tree.pl',
                              './bin/rdtl-db_loadPdistance.pl',
                              './bin/ITEP_geneInfo2ITOL.pl',
                              './bin/rdtl-db_make.pl',

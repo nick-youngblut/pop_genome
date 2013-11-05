@@ -17,14 +17,12 @@ my ($verbose, $rename_b, $clusters_in);
 my $threads = 1;
 my $fork = 0;
 my $prefix = "clusters";
-my $raxml_prog = "raxmlHPC-PTHREADS-SSE3";
 GetOptions(
 	   "rename" => \$rename_b, 			# call replaceOrgWithAbbrev? [TRUE]
 	   "threads=i" => \$threads, 		# number of threads to cal
 	   "fork=i" => \$fork, 				# number of parallel files to process
 	   "prefix=s" => \$prefix, 			# output dir prefix
 	   "clusters=s" => \$clusters_in, 	# cluster list
-	   "raxml=s" => \$raxml_prog, 		# which raxml do use?
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
@@ -56,7 +54,7 @@ foreach my $cluster (@$fasta_r){
 	# pal2nal #
 	call_pal2nal($cluster, $curdir, $prefix, $align_dir, $pal2nal_dir, $rename_b);	
 	# phylip & raxml #
-	phy2raxml($cluster, $curdir, $prefix, $pal2nal_dir, $ML_dir, $threads, $raxml_prog);
+	phy2raxml($cluster, $curdir, $prefix, $pal2nal_dir, $ML_dir, $threads);
 	$pm->finish;	#end fork
 	}
 $pm->wait_all_children;	
@@ -64,7 +62,7 @@ $pm->wait_all_children;
 
 ### subroutines
 sub phy2raxml{
-	my ($cluster, $curdir, $prefix, $pal2nal_dir, $ML_dir, $threads, $raxml_prog) = @_;
+	my ($cluster, $curdir, $prefix, $pal2nal_dir, $ML_dir, $threads) = @_;
 	
 	# convert to phylip #
 	my $cmd = "alignIO.py $pal2nal_dir/$cluster $ML_dir/$cluster.phy";
@@ -74,7 +72,7 @@ sub phy2raxml{
 	chdir $ML_dir or die $!;
 	
 	# calling raxml #
-	$cmd = "raxml_prog -f a -x 0319 -p 0911 -# 100 -m GTRGAMMA -s $cluster.phy -n $cluster\_ML -T $threads";
+	$cmd = "raxmlHPC-PTHREADS-SSE3 -f a -x 0319 -p 0911 -# 100 -m GTRGAMMA -s $cluster.phy -n $cluster\_ML -T $threads";
 	print STDERR `$cmd`;
 	
 	# ladderizing tree #
@@ -191,10 +189,6 @@ Number of threads to run for mafft & raxml. [1]
 =item -fork  <int>
 
 Number of clusters to process in parallel. [1]
-
-=item -raxml  <char>
-
-Which raxml to use? [raxmlHPC-PTHREADS-SSE3]
 
 =item -h	This help message
 
