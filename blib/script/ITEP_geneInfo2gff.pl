@@ -12,7 +12,7 @@ use File::Spec;
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
 my ($verbose);
-my @atts = ("14,note");
+my @atts = ("14,note", "10,product", "1,name");
 GetOptions(
 		"attribute=s{,}" => \@atts,
 	   "verbose" => \$verbose,
@@ -45,7 +45,6 @@ sub geneInfo2gff{
 			}
 		
 		# editing values #
-		$l[4] =~ s/^\d+\.\d+\.//;		# removing taxon_id
 		$l[1] =~ s/ /_/g;
 		
 		# prining line #

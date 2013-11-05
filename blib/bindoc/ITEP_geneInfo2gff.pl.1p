@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "ITEP_GENEINFO2GFF 1"
-.TH ITEP_GENEINFO2GFF 1 "2013-11-01" "perl v5.14.2" "User Contributed Perl Documentation"
+.TH ITEP_GENEINFO2GFF 1 "2013-11-04" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
