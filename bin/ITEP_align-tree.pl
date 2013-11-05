@@ -74,14 +74,17 @@ sub phy2raxml{
 	chdir $ML_dir or die $!;
 	
 	# calling raxml #
-	$cmd = "raxml_prog -f a -x 0319 -p 0911 -# 100 -m GTRGAMMA -s $cluster.phy -n $cluster\_ML -T $threads";
+	print STDERR "Starting RAxML inference on: '$cluster'\n";
+	$cmd = "$raxml_prog -f a -x 0319 -p 0911 -# 100 -m GTRGAMMA -s $cluster.phy -n $cluster\_ML -T $threads";
 	print STDERR `$cmd`;
 	
 	# ladderizing tree #
 	rename("RAxML_bipartitions.$cluster\_ML", "$cluster\_ML.nwk") or die $!;
 	$cmd = "ladderize.r -t $cluster\_ML.nwk";
 	print STDERR `$cmd`;
-	exit;
+	
+	# moving back to current directory #
+	chdir $curdir or die $!;
 	}
 
 sub call_pal2nal{
