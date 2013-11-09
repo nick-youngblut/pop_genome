@@ -40,12 +40,8 @@ sub get_min_dist2scaffold_end{
 	foreach my $orgID (keys %$gi_r){
 		foreach my $line (@{$gi_r->{$orgID}}){
 			# getting min distanct between any gap or scaffold start-end #
-			my @dists;
-			foreach my $loc (@{$contig_r->{$$line[4]}}){
-				push @dists, abs($$line[5] - $loc);
-				push @dists, abs($$line[6] - $loc);
-				}
-			print join("\t", @$line, min @dists ), "\n";
+			my $min = min (@{$line}[5..6], $contig_r->{$$line[4]});
+			print join("\t", @$line, $min), "\n";
 			}
 		}
 	}

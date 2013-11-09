@@ -123,50 +123,42 @@
 .rm #[ #] #H #V #F C
 .\" ========================================================================
 .\"
-.IX Title "ITEP_GENEINFO2ITOL 1"
-.TH ITEP_GENEINFO2ITOL 1 "2013-11-09" "perl v5.14.2" "User Contributed Perl Documentation"
+.IX Title "ITEP_GENEINFODIST2CONTIGEND 1"
+.TH ITEP_GENEINFODIST2CONTIGEND 1 "2013-11-09" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
 .nh
 .SH "NAME"
-ITEP_geneInfo2ITOL.pl \-\- ITEP gene info table to an ITEP metadata table
+ITEP_geneInfoDist2ContigEnd.pl \-\- determine the minimum distince between a gene and a contig end
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-ITEP_geneInfo2ITOL.pl [options] < ITEPgeneInfo.txt > \s-1ITOL\s0.meta
-.SS "Options"
-.IX Subsection "Options"
-.IP "\-tree  <char>" 4
-.IX Item "-tree  <char>"
-Tree file (newick or nexus).
-.IP "\-format  <char>" 4
-.IX Item "-format  <char>"
-Tree format (newick or nexus). [newick]
-.IP "\-normalize  <bool>" 4
-.IX Item "-normalize  <bool>"
-Normalize by cluster? [\s-1FALSE\s0]
-.IP "\-v	Verbose output" 4
-.IX Item "-v	Verbose output"
-.PD 0
+ITEP_geneInfoDist2ContigEnd.pl [options] < geneInfo.txt > geneInfo_minDist.txt
+.SS "Flags"
+.IX Subsection "Flags"
+.IP "\-org  <int>" 4
+.IX Item "-org  <int>"
+Column in the gene info table containing the organism \s-1ID\s0.
+.IP "\-scaf  <bool>" 4
+.IX Item "-scaf  <bool>"
+Min distance to end of the scaffold instead of end of a contig? [\s-1FALSE\s0]
 .IP "\-h	This help message" 4
 .IX Item "-h	This help message"
-.PD
 .SS "For more information:"
 .IX Subsection "For more information:"
-perldoc ITEP_geneInfo2ITOL.pl
+perldoc ITEP_geneInfoDist2ContigEnd.pl
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-Make an \s-1ITOL\s0 metadata table of the number of genes in a cluster
-for each taxon. If a tree is provided, leaf counts are totaled
-for each node and added to the metadata table for displaying pie charts.
+Determine whether a gene is at the end of a contig/scaffold.
+The input is an \s-1ITEP\s0 geneInfo table.
+The minimum distance (bp) between a gene start or end
+to a contig/scaffold start end is appended to the end 
+of the output geneInfo table.
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
 .SS "Basic usage:"
 .IX Subsection "Basic usage:"
-ITEP_geneInfo2ITOL.pl < ITEPgeneInfo.txt > \s-1ITOL\s0.meta
-.SS "Normalizing by cluster:"
-.IX Subsection "Normalizing by cluster:"
-ITEP_geneInfo2ITOL.pl \-n < ITEPgeneInfo.txt > \s-1ITOL\s0.meta
+ITEP_geneInfoDist2ContigEnd.pl < geneInfo.txt > geneInfo_minDist.txt
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Nick Youngblut <nyoungb2@illinois.edu>

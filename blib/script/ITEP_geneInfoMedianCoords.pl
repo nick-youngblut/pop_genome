@@ -124,7 +124,7 @@ Nick Youngblut <nyoungb2@illinois.edu>
 
 =head1 AVAILABILITY
 
-sharchaea.life.uiuc.edu:/home/git/ITOL_PopGen/
+sharchaea.life.uiuc.edu:/home/git/ITEP_PopGen/
 
 =head1 COPYRIGHT
 
