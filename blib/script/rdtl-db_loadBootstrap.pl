@@ -31,7 +31,6 @@ check_file_IO($db_file, "database");
 check_file_IO($tree_list_in, "tree list");
 check_file_IO($cluster_list_in, "cluster list");
 
-
 ### MAIN
 # connect 2 db #
 my %attr = (RaiseError => 0, PrintError=>0, AutoCommit=>0);
@@ -129,6 +128,7 @@ sub get_bootstrap_stats{
 					$Q3[0],
 					$stat->max(),
 					$stat->standard_deviation() ];
+		
 		}
 		#print Dumper %boot; exit;
 	return \%boot;

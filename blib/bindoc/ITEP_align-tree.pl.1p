@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "ITEP_ALIGN-TREE 1"
-.TH ITEP_ALIGN-TREE 1 "2013-11-05" "perl v5.14.2" "User Contributed Perl Documentation"
+.TH ITEP_ALIGN-TREE 1 "2013-11-09" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -154,6 +154,10 @@ Number of clusters to process in parallel. [1]
 .IP "\-raxml  <char>" 4
 .IX Item "-raxml  <char>"
 Which raxml to use? [raxmlHPC\-PTHREADS\-SSE3]
+.Sp
+\&\-item mafft  <char>
+.Sp
+Which mafft to use? [mafft\-linsi]
 .IP "\-h	This help message" 4
 .IX Item "-h	This help message"
 .SS "For more information:"
