@@ -151,6 +151,9 @@ Number of threads to run for mafft & raxml. [1]
 .IP "\-fork  <int>" 4
 .IX Item "-fork  <int>"
 Number of clusters to process in parallel. [1]
+.IP "\-raxml  <char>" 4
+.IX Item "-raxml  <char>"
+Which raxml to use? [raxmlHPC\-PTHREADS\-SSE3]
 .IP "\-h	This help message" 4
 .IX Item "-h	This help message"
 .SS "For more information:"

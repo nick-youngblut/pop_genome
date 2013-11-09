@@ -9,6 +9,7 @@ use Getopt::Long;
 use File::Spec;
 use File::Path;
 use Parallel::ForkManager;
+use Bio::TreeIO;
 
 ### args/flags
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
@@ -18,13 +19,15 @@ my $threads = 1;
 my $fork = 0;
 my $prefix = "clusters";
 my $raxml_prog = "raxmlHPC-PTHREADS-SSE3";
+my $mafft_prog = "mafft-linsi";
 GetOptions(
 	   "rename" => \$rename_b, 			# call replaceOrgWithAbbrev? [TRUE]
 	   "threads=i" => \$threads, 		# number of threads to cal
 	   "fork=i" => \$fork, 				# number of parallel files to process
 	   "prefix=s" => \$prefix, 			# output dir prefix
 	   "clusters=s" => \$clusters_in, 	# cluster list
-	   "raxml=s" => \$raxml_prog, 		# which raxml do use?
+	   "raxml=s" => \$raxml_prog, 		# which raxml to use?
+	   "mafft=s" => \$mafft_prog, 		# which mafft to use?
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
@@ -42,7 +45,7 @@ my $curdir = File::Spec->rel2abs(File::Spec->curdir());
 get_fastas($clusters_in, $curdir, $prefix);
 
 # making directories # 
-my ($align_dir, $pal2nal_dir, $ML_dir) = make_dirs($curdir, $prefix);
+my ($align_dir, $pal2nal_dir, $ML_dir, $rn_dir) = make_dirs($curdir, $prefix);
 
 # getting list of fasta files #
 my $fasta_r = get_fasta_files($curdir, $prefix);
@@ -50,19 +53,46 @@ my $fasta_r = get_fasta_files($curdir, $prefix);
 # forking #
 my $pm = new Parallel::ForkManager($fork);
 foreach my $cluster (@$fasta_r){
+	print STDERR "Starting alignment & phylogeny on: '$cluster'\n" unless $verbose;
 	$pm->start and next;	# starting fork
 	# AA alignment #
-	call_mafft($cluster, $curdir, $prefix, $align_dir, $threads);
+	call_mafft($cluster, $mafft_prog, $curdir, $prefix, $align_dir, $threads);
 	# pal2nal #
 	call_pal2nal($cluster, $curdir, $prefix, $align_dir, $pal2nal_dir, $rename_b);	
 	# phylip & raxml #
 	phy2raxml($cluster, $curdir, $prefix, $pal2nal_dir, $ML_dir, $threads, $raxml_prog);
+	# removing PEGs (for comparing to species tree) #
+	rm_PEGs($cluster, $curdir, $prefix, $ML_dir, $rn_dir);
+	
+	print STDERR "Alignment & phylogeny completed for: '$cluster'\n" unless $verbose;
 	$pm->finish;	#end fork
 	}
 $pm->wait_all_children;	
 
 
 ### subroutines
+sub rm_PEGs{
+	my ($cluster, $curdir, $prefix, $ML_dir, $rn_dir) = @_;
+	
+	my $tree_file = "$ML_dir/$cluster\_ML_lad.nwk";
+	my $treeio = Bio::TreeIO -> new(-file => $tree_file,
+								-format => 'newick');
+	for my $tree ($treeio->next_tree){
+		for my $node ($tree->get_nodes){
+			next unless $node->is_Leaf;
+			my $nodeID = $node->id;
+			$nodeID =~ s/\.peg.+//g;
+			$node->id($nodeID);
+			}
+		
+		my $outfile = "$rn_dir/$cluster\_ML_lad_rn.nwk";
+		my $out = new Bio::TreeIO(-file => ">$outfile", -format => "newick");
+		$out->write_tree($tree);
+		last;
+		}
+	
+	}
+
 sub phy2raxml{
 	my ($cluster, $curdir, $prefix, $pal2nal_dir, $ML_dir, $threads, $raxml_prog) = @_;
 	
@@ -81,7 +111,7 @@ sub phy2raxml{
 	# ladderizing tree #
 	rename("RAxML_bipartitions.$cluster\_ML", "$cluster\_ML.nwk") or die $!;
 	$cmd = "ladderize.r -t $cluster\_ML.nwk";
-	print STDERR `$cmd`;
+	`$cmd`;
 	
 	# moving back to current directory #
 	chdir $curdir or die $!;
@@ -103,9 +133,9 @@ sub call_pal2nal{
 
 sub call_mafft{
 # calling mafft #
-	my ($cluster, $curdir, $prefix, $align_dir, $threads) = @_;
+	my ($cluster, $mafft_prog, $curdir, $prefix, $align_dir, $threads) = @_;
 	
-	my $cmd = "mafft-linsi --thread $threads $curdir/$prefix\_AA/$cluster > $align_dir/$cluster";
+	my $cmd = "$mafft_prog --thread $threads $curdir/$prefix\_AA/$cluster > $align_dir/$cluster";
 		#print Dumper $cmd; exit;
 	`$cmd`;
 	}
@@ -126,9 +156,10 @@ sub get_fasta_files{
 sub get_fastas{
 # loading list of clusters and making fasta files 
 	my ($clusters_in, $curdir, $prefix) = @_;
-	
+	print STDERR "Getting AA fasta files from ITEP\n" unless $verbose;
 	my $cmd_AA = "cat $clusters_in | db_getClusterGeneInformation.py | getClusterFastas.py $curdir/$prefix\_AA";
 	`$cmd_AA`;
+	print STDERR "Getting nuc fasta files from ITEP\n" unless $verbose;
 	my $cmd_nuc = "cat $clusters_in | db_getClusterGeneInformation.py | getClusterFastas.py -n $curdir/$prefix\_nuc";
 	`$cmd_nuc`;
 	}
@@ -152,7 +183,11 @@ sub make_dirs{
 	rmtree($ML_dir) if -d $ML_dir;
 	mkdir $ML_dir or die $!;
 
-	return ($align_dir, $pal2nal_dir, $ML_dir);
+	my $rn_dir = "$curdir/$prefix\_AA_aln_pal2nal_ML_rn/";
+	rmtree($rn_dir) if -d $rn_dir;
+	mkdir $rn_dir or die $!;
+
+	return ($align_dir, $pal2nal_dir, $ML_dir, $rn_dir);
 	}
 	
 
@@ -198,6 +233,10 @@ Number of clusters to process in parallel. [1]
 =item -raxml  <char>
 
 Which raxml to use? [raxmlHPC-PTHREADS-SSE3]
+
+-item mafft  <char>
+
+Which mafft to use? [mafft-linsi]
 
 =item -h	This help message
 
