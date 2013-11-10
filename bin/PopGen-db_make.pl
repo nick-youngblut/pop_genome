@@ -105,7 +105,10 @@ CREATE TABLE dN_dS(
 clusterID	TEXT	NOT NUll,
 runID	TEXT	NOT NULL,
 pop	TEXT	NOT NULL,
-
+ds	REAL,
+dn	REAL,
+ds_dn	REAL,
+dn_ds	REAL,
 unique(ClusterID, runID, pop)
 ON CONFLICT REPLACE
 );
@@ -121,11 +124,11 @@ __END__
 
 =head1 NAME
 
-rdtl-db_make.pl -- make database tables for Ranger-DTL data
+PopGen-db_make.pl -- make database tables for Ranger-DTL data
 
 =head1 SYNOPSIS
 
-rdtl-db_make.pl [options] [DATABASE_NAME]
+PopGen-db_make.pl [options] [DATABASE_NAME]
 
 =head2 Options
 
@@ -139,19 +142,19 @@ rdtl-db_make.pl [options] [DATABASE_NAME]
 
 =head2 For more information:
 
-perldoc rdtl-db_make.pl
+perldoc PopGen-db_make.pl
 
 =head1 DESCRIPTION
 
-Make all tables in the rdtl-db sqlite3 database.
+Make all tables in the PopGen-db sqlite3 database.
 
-The default database name is "rdtl-db.sqlite"
+The default database name is "PopGen.sqlite"
 
 =head1 EXAMPLES
 
 =head2 Usage: 
 
-rdtl-db_make.pl
+PopGen-db_make.pl
 
 =head1 AUTHOR
 

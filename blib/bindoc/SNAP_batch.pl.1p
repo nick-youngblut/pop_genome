@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "SNAP_BATCH 1"
-.TH SNAP_BATCH 1 "2013-04-23" "perl v5.14.2" "User Contributed Perl Documentation"
+.TH SNAP_BATCH 1 "2013-11-09" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -146,6 +146,9 @@ Prefix of output files. [\*(L"SNAP_batch\*(R"]
 .IP "\-directory" 4
 .IX Item "-directory"
 Temporary file directory. [\*(L"SNAP_batch_tmp\*(R"]
+.IP "\-fork  <int>" 4
+.IX Item "-fork  <int>"
+Number of parallel \s-1SNAP\s0 calls. [1]
 .IP "\-v	Verbose output" 4
 .IX Item "-v	Verbose output"
 .PD 0
