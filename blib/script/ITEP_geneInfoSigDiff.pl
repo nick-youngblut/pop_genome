@@ -14,8 +14,10 @@ use File::Spec;
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
 my ($verbose, $pop_in);
+my $min = 3;
 GetOptions(
 	   "pop=s" => \$pop_in,
+	   "min=i" => \$min, 			# number number in a population
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
@@ -35,20 +37,38 @@ get_sig_diff($info_r, $upop_r, "gene_length");
 sub get_sig_diff{
 	my ($info_r, $upop_r, $cat) = @_;
 	
-	foreach my $clusterID (keys %$info_r){
+	foreach my $clusterID (sort{$a<=>$b} keys %$info_r){
 		# pairwise comparisons of populations 
 		for my $i (0..$#$upop_r){
 			for my $ii (0..$#$upop_r){
 				next if $i >= $ii;
-				my $wilcox_test = Statistics::Test::WilcoxonRankSum->new();
+				my ($pop1_size, $pop2_size) = (0,0);
 				
-				$wilcox_test->load_data( $info_r->{$clusterID}{$cat}{$$upop_r[$i]},
+				if (exists $info_r->{$clusterID}{$cat}{$$upop_r[$i]} ){
+					$pop1_size = scalar @{$info_r->{$clusterID}{$cat}{$$upop_r[$i]}}
+					}
+				
+				if (exists $info_r->{$clusterID}{$cat}{$$upop_r[$ii]}){
+					$pop2_size = scalar @{$info_r->{$clusterID}{$cat}{$$upop_r[$ii]}}
+					}
+				
+				if($pop1_size < $min || $pop2_size < $min){
+					print join("\t", $clusterID, $$upop_r[$i], $$upop_r[$ii], 
+							$pop1_size,
+							$pop2_size,
+							$cat, 
+							"NA"), "\n";
+					}
+				else{
+					my $wilcox_test = Statistics::Test::WilcoxonRankSum->new();
+					$wilcox_test->load_data( $info_r->{$clusterID}{$cat}{$$upop_r[$i]},
 										$info_r->{$clusterID}{$cat}{$$upop_r[$ii]});
-				print join("\t", $clusterID, $$upop_r[$i], $$upop_r[$ii], 
-							scalar @{$info_r->{$clusterID}{$cat}{$$upop_r[$i]}},
-							scalar @{$info_r->{$clusterID}{$cat}{$$upop_r[$ii]}},
+					print join("\t", $clusterID, $$upop_r[$i], $$upop_r[$ii], 
+							$pop1_size,
+							$pop2_size,
 							$cat, 
 							$wilcox_test->probability()), "\n";
+					}
 				}
 			}
 		}
@@ -162,6 +182,10 @@ ITEP_geneInfoSigDiff.pl [options] < ITEPgeneInfo.txt > sig-diff_summary.txt
 =item -pop  <char>
 
 Population table (taxonID\tpopulationID). [required]
+
+=item -min  <int>
+
+Minimum number of needed in both populations to make a comparison. [3]
 
 =item -h	This help message
 

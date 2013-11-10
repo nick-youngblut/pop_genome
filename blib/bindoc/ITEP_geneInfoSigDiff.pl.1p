@@ -139,6 +139,9 @@ ITEP_geneInfoSigDiff.pl [options] < ITEPgeneInfo.txt > sig\-diff_summary.txt
 .IP "\-pop  <char>" 4
 .IX Item "-pop  <char>"
 Population table (taxonID\etpopulationID). [required]
+.IP "\-min  <int>" 4
+.IX Item "-min  <int>"
+Minimum number of needed in both populations to make a comparison. [3]
 .IP "\-h	This help message" 4
 .IX Item "-h	This help message"
 .SS "For more information:"
