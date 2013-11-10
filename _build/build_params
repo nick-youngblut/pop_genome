@@ -137,6 +137,7 @@ do{ my $x = [
                              './bin/rdtl-db_loadNodeClade.pl',
                              './bin/ranger-dtl_parse.pl',
                              './bin/PresAbs2Nexus.pl',
+                             './bin/ITEP_geneInfoSigDiff.pl',
                              './bin/ITEP_geneInfoDist2ContigEnd.pl'
                            ],
          'build_script' => 'Build',
