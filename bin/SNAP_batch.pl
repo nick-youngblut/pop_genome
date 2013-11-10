@@ -8,16 +8,19 @@ use Data::Dumper;
 use Getopt::Long;
 use File::Spec;
 use File::Path;
+use Forks::Super;
 
 ### args/flags
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
 my ($verbose, $group_in, $tmp_dir);
 my $prefix = "SNAP_batch";
+my $fork = 1;
 GetOptions(
 	   "group=s" => \$group_in,
 	   "directory=s" => \$tmp_dir,
 	   "prefix=s" => \$prefix,			# output file prefix
+	   "fork=i" => \$fork,
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
@@ -33,23 +36,38 @@ foreach my $infile (@ARGV){
 ### MAIN
 my $group_r = load_group($group_in) if $group_in;
 my $curdir = File::Spec->rel2abs(File::Spec->curdir());
-my $outdir = make_outdir($tmp_dir);
+#my $outdir = make_outdir($tmp_dir);
 
 my %summary;
 my %by_group;
 foreach my $infile (@ARGV){
-	# converting fasta to table #
-	my $tbl_file = fasta2txt($infile, $outdir);
+	my $job = fork{
+		max_proc => $fork,
+		share => [\%summary, \%by_group],
+		sub => sub{
+			# tmp output dir #
+			use File::Temp qw/tempdir/;
+			my $tmpdir = File::Temp->newdir(); 		# temp directory
+			my $outdir= $tmpdir->dirname;
+			chdir $outdir or die $!;
+			
+			# converting fasta to table #
+			my $tbl_file = fasta2txt($infile, $outdir);
 	
-	# running SNAP #
-	call_SNAP($tbl_file);
+			# running SNAP #
+			call_SNAP($tbl_file);
 	
-	# parsing output #
-	parse_SNAP_summary($tbl_file, $infile, \%summary, \%by_group, $group_r);
+			# parsing output #
+			parse_SNAP_summary($tbl_file, $infile, \%summary, \%by_group, $group_r);
+			
+			# back to current directory
+			chdir $curdir or die $!;
+			}
+		}
 	}
+waitall;
 
 # writing summary tables #
-chdir $curdir or die $!;
 write_by_group_table(\%by_group, $group_r, $prefix) if $group_r;
 write_summary_table(\%summary, $prefix);
 
@@ -74,14 +92,16 @@ sub write_by_group_table{
 				next if $i > $ii;		# lower triangle; keeping same comparisons
 
 				# if no values in comparison that are not "NA" #
-				unless( exists $by_group_r->{$file}{$ugroup[$i]}{$ugroup[$ii]} ){
+				if(! exists $by_group_r->{$file}{$ugroup[$i]}{$ugroup[$ii]} ||
+					$by_group_r->{$file}{$ugroup[$i]}{$ugroup[$ii]}{"N"} =~ /NA/){
+					
 					print OUT join("\t", $file, $ugroup[$i], $ugroup[$ii], qw/NA NA NA NA/), "\n";
 					next;
 					}
 				
 				# dn/ds #
 				my $dn_ds = calc_dn_ds($by_group_r->{$file}{$ugroup[$i]}{$ugroup[$ii]}{"ds/dn"} /
-						$by_group_r->{$file}{$ugroup[$i]}{$ugroup[$ii]}{"N"});	
+						$by_group_r->{$file}{$ugroup[$i]}{$ugroup[$ii]}{"N"});				
 				
 				# writing line (Ave values) #
 				# header = file, group1, group2, ave_ds, ave_dn, ave_ds/dn, ave_dn/ds #
@@ -98,7 +118,6 @@ sub write_by_group_table{
 		}
 	
 	close OUT;
-
 	}
 
 sub write_summary_table{
@@ -123,6 +142,19 @@ sub write_summary_table{
 sub parse_SNAP_summary{
 # parsing the output from SNAP #
 	my ($tbl_file, $infile, $summary_r, $by_group_r, $group_r) = @_;
+
+	#print Dumper $group_r; exit;
+	# getting group combinations #
+	my %ugroup;
+	map{ $ugroup{$_} = 1 } values %$group_r;
+	my @ugroup = sort keys %ugroup;
+	my @group_comb;
+	for my $i (0..$#ugroup){
+		for my $ii (0..$#ugroup){
+			next if $ii < $i;
+			push @group_comb, [$ugroup[$i], $ugroup[$ii]];
+			}
+		}
 
 	open IN, "$tbl_file.summary" or die $!;
 	while(<IN>){
@@ -185,6 +217,16 @@ sub parse_SNAP_summary{
 			}
 		}
 	close IN;
+
+	# if no group values; NAs produced #
+	foreach my $comb (@group_comb){
+		unless(exists $by_group_r->{$infile}{$$comb[0]}{$$comb[1]}){
+			$by_group_r->{$infile}{$$comb[0]}{$$comb[1]}{"ds"} = "NA";
+			$by_group_r->{$infile}{$$comb[0]}{$$comb[1]}{"dn"} = "NA";
+			$by_group_r->{$infile}{$$comb[0]}{$$comb[1]}{"ds/dn"} = "NA";
+			$by_group_r->{$infile}{$$comb[0]}{$$comb[1]}{"N"} = "NA";									
+			}
+		}
 
 	# if no mean values #
 	unless(exists $summary_r->{$infile}){
@@ -322,6 +364,10 @@ Prefix of output files. ["SNAP_batch"]
 =item -directory
 
 Temporary file directory. ["SNAP_batch_tmp"]
+
+=item -fork  <int>
+
+Number of parallel SNAP calls. [1]
 
 =item -v	Verbose output
 
