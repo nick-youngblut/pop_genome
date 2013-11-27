@@ -59,9 +59,13 @@ sub load_clust_info{
 	
 	my $entry_cnt = 0;
 	foreach my $clusterID (keys %$info_r){
+		
 		# determining core #
 		my $core_var = "variable";
-		$core_var = "core" if scalar keys %{$info_r->{$clusterID}} == $core;
+		my $Nuniq = 0;
+		map{$Nuniq++ if $info_r->{$clusterID}{$_} == 1} keys %{$info_r->{$clusterID}};
+		$core_var = "core" if $Nuniq == $core;
+		
 		$sth->execute($clusterID, $runID, $core_var);
 		if($DBI::err){
 			print STDERR "ERROR: $DBI::errstr in: '$clusterID' \n";
