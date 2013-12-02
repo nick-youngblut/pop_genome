@@ -77,6 +77,10 @@ A donor-receiver file must be provided,
 which specifies the clades that Mowgli
 will sum the transfers to/from.
 
+=head2 ERROR messages
+
+"ERROR: child died with signal 6" caused by Mowgli error: "Exception: NNI() ----> invalid NNI".
+
 =head1 EXAMPLES
 
 =head2 Basic usage:
@@ -247,11 +251,12 @@ sub write_table{
 			
 			# donor-receiver values #
 			foreach my $DR (keys %{$res_all_r->{$gene_tree}{$gene_tree_rooted}{"DR"}}){
-				push @line, @{$res_all_r->{$gene_tree}{$gene_tree_rooted}{"DR"}{$DR}}{@DR_cat};
+				#push @line, @{$res_all_r->{$gene_tree}{$gene_tree_rooted}{"DR"}{$DR}}{@DR_cat};
+				my @tmp = @line; 
+				push @tmp, @{$res_all_r->{$gene_tree}{$gene_tree_rooted}{"DR"}{$DR}}{@DR_cat};
+				map{ $_ = "NA" unless defined $_} @tmp[0..12];
+				print join("\t", $gene_tree, $gene_tree_rooted, @tmp), "\n";
 				}
-
-			map{ $_ = "NA" unless defined $_} @line[0..12];
-			print join("\t", $gene_tree, $gene_tree_rooted, @line), "\n";
 			}
 		}
 	#print Dumper %header; exit;
