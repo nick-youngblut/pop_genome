@@ -52,6 +52,10 @@ Loss cost. [1]
 
 Bootstrap cutoff for performing NNI by Mowgli. [80]
 
+=item -fork  <int>
+
+Number of parallel Mowgli calls. [1]
+
 =item -v	Verbose output
 
 =item -h	This help message
@@ -64,15 +68,20 @@ perldoc Mowgli_batch.pl
 
 =head1 DESCRIPTION
 
-The flow of execution is roughly:
-   1) Step 1
-   2) Step 2
+Calling Mowgli on multiple gene trees.
+By default, Mowgli is called on
+all possible leaf rootings of each gene
+tree.
+
+A donor-receiver file must be provided,
+which specifies the clades that Mowgli
+will sum the transfers to/from.
 
 =head1 EXAMPLES
 
 =head2 Basic usage:
 
-Mowgli_batch.pl < input > output
+Mowgli_batch.pl -species species.nwk -gene gene_trees/ -x donor_receiver.txt > Mowgli_summary.txt
 
 =head1 AUTHOR
 
@@ -80,7 +89,7 @@ Nick Youngblut <nyoungb2@illinois.edu>
 
 =head1 AVAILABILITY
 
-sharchaea.life.uiuc.edu:/home/git/
+sharchaea.life.uiuc.edu:/home/git/ITEP_PopGen/
 
 =head1 COPYRIGHT
 
@@ -99,6 +108,8 @@ use Getopt::Long;
 use File::Spec;
 use Bio::TreeIO;
 use File::Temp qw/ tempfile tempdir /;
+use Forks::Super;
+use File::Path;
 
 #--- args/flags ---#
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
@@ -107,6 +118,7 @@ my ($species_tree, $gene_dir);
 my ($verbose_b, $root_b, $DR_in);
 my ($dup_cost, $trans_cost, $loss_cost) = (2,3,1);
 my $boot_cutoff = 80;
+my $fork = 1;
 GetOptions(
 	   "species=s" => \$species_tree,
 	   "gene_dir=s" => \$gene_dir,
@@ -117,6 +129,7 @@ GetOptions(
 	   "Transfer=i" => \$trans_cost,
 	   "Loss=i" => \$loss_cost,
 	   "verbose" => \$verbose_b,
+	   "fork=i" => \$fork,
 	   "help|?" => \&pod2usage # Help
 	   );
 
@@ -139,9 +152,11 @@ print STDERR "\n";
 my $gene_files_r = get_gene_tree_list($gene_dir);
 
 # rerooting gene trees (if needed) #
-## making temporary directory ##
-my $tmpdir = File::Temp->newdir(); 		# temp directory
-my $dirname = $tmpdir->dirname;
+## making directory for temporary files ##
+my $dirname = "Mowgli_batch_tmp";
+rmtree($dirname) or die $! if -d $dirname;
+mkdir $dirname or die $!;
+print STDERR "Writing temporary files to $dirname\n\n";
 
 ## rooting ##
 my %file_index;
@@ -156,46 +171,54 @@ else{
 
 # calling Mowgli #
 my %res_all;
-foreach my $gene_tree (keys %file_index){	
-	my %res;
-	foreach my $rooting (keys %{$file_index{$gene_tree}}){
-		my $gene_tree_rooted = $file_index{$gene_tree}{$rooting};
-		
-		# loading gene tree values #
-		$res{$gene_tree_rooted}{"species_tree"} = $species_tree;
-		$res{$gene_tree_rooted}{"rooting"} = $rooting;
-		$res{$gene_tree_rooted}{"dup_cost"} = $dup_cost;
-		$res{$gene_tree_rooted}{"trans_cost"} = $trans_cost;
-		$res{$gene_tree_rooted}{"loss_cost"} = $loss_cost;
-		
-		my $outdir = "$dirname/Mowgli_tmp_output_dir";
-			#my $outdir = "Mowgli_tmp_output_dir";		# debug
-			
-		call_Mowgli($species_tree, 
-				$gene_tree_rooted, 
-				$DR_in,
-				$outdir,
-				$dup_cost,
-				$trans_cost,
-				$loss_cost,
-				$boot_cutoff, \%res);
-				
-		parse_costs($gene_tree_rooted, \%res, $outdir);
-		parse_statistics($gene_tree_rooted, \%res, $outdir);
-		}
-	$res_all{$gene_tree} = \%res;
+foreach my $gene_tree (sort keys %file_index){	
+  foreach my $rooting (sort{$a<=>$b} keys %{$file_index{$gene_tree}}){ 
+   		my $gene_tree_rooted = $file_index{$gene_tree}{$rooting};
+   		my $job = fork {
+			max_proc => $fork,
+  			share => [ \%res_all ],
+    		sub => sub{
+    			call_Mowgli_forked($dirname,$gene_tree,$gene_tree_rooted,$rooting);
+    			}
+    		};
+    	}
 	}
+waitall;
 
 # writing output #
 write_table(\%res_all);
 
 
 #--- Subroutines ---#
+sub call_Mowgli_forked{
+	my ($dirname, $gene_tree,$gene_tree_rooted,$rooting) = @_;
+	
+	# loading gene tree values #
+	$res_all{$gene_tree}{$gene_tree_rooted}{"species_tree"} = $species_tree;
+	$res_all{$gene_tree}{$gene_tree_rooted}{"rooting"} = $rooting;
+	$res_all{$gene_tree}{$gene_tree_rooted}{"dup_cost"} = $dup_cost;
+	$res_all{$gene_tree}{$gene_tree_rooted}{"trans_cost"} = $trans_cost;
+	$res_all{$gene_tree}{$gene_tree_rooted}{"loss_cost"} = $loss_cost;
+
+	my $outdir = "$dirname/Mowgli_tmp_output_dir";
+		#my $outdir = "Mowgli_tmp_output_dir";		# debug
+
+	call_Mowgli($species_tree, 
+			$gene_tree_rooted, 
+			$DR_in,
+			$outdir,
+			$dup_cost,
+			$trans_cost,
+			$loss_cost,
+			$boot_cutoff, $res_all{$gene_tree});
+	
+	parse_costs($gene_tree_rooted, $res_all{$gene_tree}, $outdir);
+	parse_statistics($gene_tree_rooted, $res_all{$gene_tree}, $outdir);
+	}
+
 sub write_table{
 # writing output #
 	my ($res_all_r) = @_;
-	
-	#print Dumper $res_all_r; exit;
 	
 	# header #
 	my @tree_cat = qw/
@@ -220,12 +243,14 @@ sub write_table{
 		foreach my $gene_tree_rooted (keys %{$res_all_r->{$gene_tree}}){
 			# tree values #
 			my @line = @{$res_all_r->{$gene_tree}{$gene_tree_rooted}}{@tree_cat};
+			map{ $_ = "NA" unless defined $_} @line;
 			
 			# donor-receiver values #
 			foreach my $DR (keys %{$res_all_r->{$gene_tree}{$gene_tree_rooted}{"DR"}}){
 				push @line, @{$res_all_r->{$gene_tree}{$gene_tree_rooted}{"DR"}{$DR}}{@DR_cat};
 				}
-			#print Dumper @line; exit;
+
+			map{ $_ = "NA" unless defined $_} @line[0..12];
 			print join("\t", $gene_tree, $gene_tree_rooted, @line), "\n";
 			}
 		}
@@ -292,7 +317,7 @@ sub call_Mowgli{
 	
 	my $cmd = "Mowgli_linux_i386 -s $species_tree -g $gene_tree 
 	-d $dup_cost -t $trans_cost -l $loss_cost 
-	-n 1 -T $boot_cutoff -f $DR_in -o $outdir 2>&1";
+	-n 1 -T $boot_cutoff -f $DR_in -o $outdir";
 	$cmd =~ s/[\t\n]+/ /g;
 	
 	system($cmd);
@@ -301,7 +326,7 @@ sub call_Mowgli{
     	die "ERROR: failed to execute: $!\n";
 		}
 	elsif ($? & 127) {
-    	printf "ERROR: child died with signal %d, %s coredump\n",
+    	printf STDERR "ERROR: child died with signal %d, %s coredump\n",
         	($? & 127),  ($? & 128) ? 'with' : 'without';
         exit(1);
 		}
