@@ -8,7 +8,7 @@ Mowgli_batch.pl -- batch call and parse mowgli & its output, respectively
 
 =head1 SYNOPSIS
 
-Mowgli_batch.pl [flags] > output
+Mowgli_batch.pl [flags] < input > output
 
 =head2 Required flags
 
@@ -50,7 +50,7 @@ Loss cost. [1]
 
 =item -bootstrap  <int>
 
-Bootstrap cutoff for performing NNI by Mowgli. [80]
+Bootstrap cutoff for performing NNI by Mowgli
 
 =item -v	Verbose output
 
@@ -129,10 +129,6 @@ die "ERROR: cannot find $species_tree!\n" unless -e $species_tree;
 die "ERROR: cannot find $gene_dir!\n" unless -d $gene_dir;
 $gene_dir = File::Spec->rel2abs($gene_dir);
 
-# warnings #
-print STDERR "WARNING: gene trees must be binary (use tree_multi2di.r)!\n";
-print STDERR "\n";
-
 
 #--- MAIN ---#
 # getting list of gene trees #
@@ -147,7 +143,7 @@ my $dirname = $tmpdir->dirname;
 my %file_index;
 if(! $root_b){		# re-rooting
 	foreach my $gene_file (@$gene_files_r){
-		all_tree_rootings($gene_dir, $gene_file, $dirname, \%file_index);
+		all_tree_rootings($gene_file, $dirname, \%file_index);
 		}
 	}
 else{
@@ -169,8 +165,6 @@ foreach my $gene_tree (keys %file_index){
 		$res{$gene_tree_rooted}{"loss_cost"} = $loss_cost;
 		
 		my $outdir = "$dirname/Mowgli_tmp_output_dir";
-			#my $outdir = "Mowgli_tmp_output_dir";		# debug
-			
 		call_Mowgli($species_tree, 
 				$gene_tree_rooted, 
 				$DR_in,
@@ -194,8 +188,6 @@ write_table(\%res_all);
 sub write_table{
 # writing output #
 	my ($res_all_r) = @_;
-	
-	#print Dumper $res_all_r; exit;
 	
 	# header #
 	my @tree_cat = qw/
@@ -237,7 +229,7 @@ sub parse_statistics{
 # parsing the statistics file from Mowgli
 	my ($gene_tree_rooted, $res_r, $outdir) = @_;
 	
-	open IN, "$outdir/statistics.mpr" or die $!;
+	open IN, "gtlEnv_core_test/statistics.mpr" or die $!;
 	while(<IN>){
 		chomp;
 		if(/ \w.+:\d+$/){
@@ -292,67 +284,43 @@ sub call_Mowgli{
 	
 	my $cmd = "Mowgli_linux_i386 -s $species_tree -g $gene_tree 
 	-d $dup_cost -t $trans_cost -l $loss_cost 
-	-n 1 -T $boot_cutoff -f $DR_in -o $outdir 2>&1";
+	-n 1 -T $boot_cutoff -f $DR_in -o $outdir 2>&1 ";
 	$cmd =~ s/[\t\n]+/ /g;
 	
-	system($cmd);
-
-	if ($? == -1) {
-    	die "ERROR: failed to execute: $!\n";
-		}
-	elsif ($? & 127) {
-    	printf "ERROR: child died with signal %d, %s coredump\n",
-        	($? & 127),  ($? & 128) ? 'with' : 'without';
-        exit(1);
-		}
-	elsif( $? != 0 ) {
-    	printf STDERR "Mowgli exited with value %d\n", $? >> 8;
-		}
+		#print Dumper $cmd; exit;
 	
+	my $out = `$cmd`;
+	die "Mowgli ERROR: $out!\n" if $out;
 	}
 
 sub all_tree_rootings{
-### Description ###
+#-- Description --#
 # getting all possible tree rootings; just rooting by leaves #
-	my ($gene_dir, $gene_file, $tmpdir, $file_index_r) = @_;
+	my ($gene_file, $tmpdir, $file_index_r) = @_;
 
-	# getting leaves #
-	my $treeo = tree_io("$gene_dir/$gene_file");
+	my $treeo = tree_io($gene_file);
 	my @leaves = $treeo->get_leaf_nodes;
 
 	# status #
-	print STDERR "Using nw_reroot to re-root $gene_file...\n" unless $verbose_b;
+	print STDERR "Re-rooting $gene_file...\n" unless $verbose_b;
 	print STDERR "\tNumber of possible leaf rootings: ", 
 		scalar @leaves, "\n" unless $verbose_b;
 	
-	# calling nw_reroot to reroot trees #
 	my $root_cnt = 0;
 	foreach my $leaf (@leaves){
 		$root_cnt++;
-		#my $tree = tree_io("$gene_dir/$gene_file");
-		(my $outfile = $gene_file) =~ s/\.[^.]+$|$/_r$root_cnt.nwk/;
-		my $cmd = join(" ", "nw_reroot $gene_dir/$gene_file",
-						$leaf->id, ">$tmpdir/$outfile");				
+		my $tree = tree_io($gene_file);
+		my $reroot_leaf = $tree->find_node(-id => $leaf->id);
+	
+		$tree->reroot($reroot_leaf);	
+		my $outfile = tree_write($tree, "$tmpdir/$gene_file", $root_cnt);
+		$file_index_r->{$gene_file}{$root_cnt} = $outfile;
 		
-		system($cmd);
-		
-		if ($? == -1) {
-    		die "ERROR: failed to execute: $!\n";
-			}
-		elsif ($? & 127) {
-    		printf "ERROR: child died with signal %d, %s coredump\n",
-        		($? & 127),  ($? & 128) ? 'with' : 'without';
-	        exit(1);
-			}
-		elsif($? != 0) {
-    		printf STDERR "nw_reroot exited with value %d\n", $? >> 8
-			}
-			
-		# loading file index #
-		$file_index_r->{$gene_file}{$root_cnt} = "$tmpdir/$outfile";
+		# status #
+		#print STDERR "\t\tCompleted rooting: $root_cnt\n" unless $verbose_b;
 		}
 		
-		#print Dumper $file_index_r; exit;
+	#print Dumper $file_index_r; exit;
 	}
 	
 sub tree_write{
