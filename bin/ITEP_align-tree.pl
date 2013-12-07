@@ -55,6 +55,9 @@ my $pm = new Parallel::ForkManager($fork);
 foreach my $cluster (@$fasta_r){
 	print STDERR "Starting alignment & phylogeny on: '$cluster'\n" unless $verbose;
 	$pm->start and next;	# starting fork
+	# purging fasta names of RAxML-unfriendly characters #
+	purge_names($cluster, $curdir);
+	
 	# AA alignment #
 	call_mafft($cluster, $mafft_prog, $curdir, $prefix, $align_dir, $threads);
 	# pal2nal #
@@ -71,6 +74,17 @@ $pm->wait_all_children;
 
 
 ### subroutines
+sub purge_names{
+# purging fasta names of RAxML-unfriendly characters #
+	my ($cluster, $curdir) = @_;
+	
+	my $cmd = "perl -pi -e \"s/[\\t :,)(\\]\\[']/_/g;s|/|_|g\"  $curdir/$prefix\_AA/$cluster";
+	`$cmd`;
+
+	$cmd = "perl -pi -e \"s/[\\t :,)(\\]\\[']/_/g;s|/|_|g\"  $curdir/$prefix\_nuc/$cluster";	
+	`$cmd`;
+	}
+
 sub rm_PEGs{
 	my ($cluster, $curdir, $prefix, $ML_dir, $rn_dir) = @_;
 	

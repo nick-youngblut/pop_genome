@@ -166,8 +166,14 @@ print STDERR "Writing temporary files to $dirname\n\n";
 my %file_index;
 if(! $root_b){		# re-rooting
 	foreach my $gene_file (@$gene_files_r){
-		all_tree_rootings($gene_dir, $gene_file, $dirname, \%file_index);
+		my $job = fork {
+			share => [\%file_index],
+			sub => sub{
+				all_tree_rootings($gene_dir, $gene_file, $dirname, \%file_index);
+				}
+			};
 		}
+	waitall;
 	}
 else{
 	map{ $file_index{$_}{1} = "$gene_dir/$_"; } @$gene_files_r;

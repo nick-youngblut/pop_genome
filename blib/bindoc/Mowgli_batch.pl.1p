@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "MOWGLI_BATCH 1"
-.TH MOWGLI_BATCH 1 "2013-11-27" "perl v5.14.2" "User Contributed Perl Documentation"
+.TH MOWGLI_BATCH 1 "2013-12-02" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -133,7 +133,7 @@
 Mowgli_batch.pl \-\- batch call and parse mowgli & its output, respectively
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-Mowgli_batch.pl [flags] < input > output
+Mowgli_batch.pl [flags] > output
 .SS "Required flags"
 .IX Subsection "Required flags"
 .IP "\-species  <char>" 4
@@ -161,7 +161,10 @@ Transfer cost. [3]
 Loss cost. [1]
 .IP "\-bootstrap  <int>" 4
 .IX Item "-bootstrap  <int>"
-Bootstrap cutoff for performing \s-1NNI\s0 by Mowgli
+Bootstrap cutoff for performing \s-1NNI\s0 by Mowgli. [80]
+.IP "\-fork  <int>" 4
+.IX Item "-fork  <int>"
+Number of parallel Mowgli calls. [1]
 .IP "\-v	Verbose output" 4
 .IX Item "-v	Verbose output"
 .PD 0
@@ -173,20 +176,28 @@ Bootstrap cutoff for performing \s-1NNI\s0 by Mowgli
 perldoc Mowgli_batch.pl
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-The flow of execution is roughly:
-   1) Step 1
-   2) Step 2
+Calling Mowgli on multiple gene trees.
+By default, Mowgli is called on
+all possible leaf rootings of each gene
+tree.
+.PP
+A donor-receiver file must be provided,
+which specifies the clades that Mowgli
+will sum the transfers to/from.
+.SS "\s-1ERROR\s0 messages"
+.IX Subsection "ERROR messages"
+\&\*(L"\s-1ERROR:\s0 child died with signal 6\*(R" caused by Mowgli error: \*(L"Exception: \s-1\fINNI\s0()\fR \-\-\-\-> invalid \s-1NNI\s0\*(R".
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
 .SS "Basic usage:"
 .IX Subsection "Basic usage:"
-Mowgli_batch.pl < input > output
+Mowgli_batch.pl \-species species.nwk \-gene gene_trees/ \-x donor_receiver.txt > Mowgli_summary.txt
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Nick Youngblut <nyoungb2@illinois.edu>
 .SH "AVAILABILITY"
 .IX Header "AVAILABILITY"
-sharchaea.life.uiuc.edu:/home/git/
+sharchaea.life.uiuc.edu:/home/git/ITEP_PopGen/
 .SH "COPYRIGHT"
 .IX Header "COPYRIGHT"
 Copyright 2010, 2011
