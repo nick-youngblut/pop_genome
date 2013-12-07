@@ -250,9 +250,13 @@ Number of clusters to process in parallel. [1]
 
 Which raxml to use? [raxmlHPC-PTHREADS-SSE3]
 
--item mafft  <char>
+=item mafft  <char>
 
 Which mafft to use? [mafft-linsi]
+
+=item pal2nal  <char>
+
+Name of pal2nal executable. [pal2nal.pl]
 
 =item -h	This help message
 
