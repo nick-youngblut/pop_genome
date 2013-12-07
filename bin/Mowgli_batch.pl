@@ -304,8 +304,10 @@ sub parse_costs{
 				chomp;
 				last if /^\s*$/;
 				my @l = split /\t+/;
-				$l[2] = 0 unless $l[2];
-				$l[3] = 0 unless $l[3];
+				$l[0] = "NA" unless defined $l[0];
+				$l[1] = "NA" unless defined $l[1];				
+				$l[2] = 0 unless defined $l[2];
+				$l[3] = 0 unless defined $l[3];
 				
 				# Donor-receiver name issues #
 				$l[0] = "NA" if $l[1] eq "NA";			# both NA if 1 NA

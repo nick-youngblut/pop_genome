@@ -10,12 +10,13 @@ use File::Spec;
 use File::Path;
 use Parallel::ForkManager;
 use Bio::TreeIO;
+use IPC::Cmd qw/can_run/;
 
 ### args/flags
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
 my ($verbose, $rename_b, $clusters_in);
-my $threads = 1;
+my $threads = 2;
 my $fork = 0;
 my $prefix = "clusters";
 my $raxml_prog = "raxmlHPC-PTHREADS-SSE3";
@@ -41,6 +42,10 @@ die " ERROR: cannot find $clusters_in!\n"
 	unless -e $clusters_in;
 my $curdir = File::Spec->rel2abs(File::Spec->curdir());
 
+# checking executables #
+can_run($pal2nal) or die "ERROR: Cannot call '$pal2nal'. Is it in your PATH?\n";
+can_run($raxml_prog) or die "ERROR: Cannot call '$raxml_prog'. Is it in your PATH?\n";
+can_run($mafft_prog) or die "ERROR: Cannot call '$mafft_prog'. Is it in your PATH?\n";
 
 ### Main
 # calling ITEP scripts to get fastas#
@@ -106,7 +111,6 @@ sub rm_PEGs{
 		$out->write_tree($tree);
 		last;
 		}
-	
 	}
 
 sub phy2raxml{
@@ -240,7 +244,7 @@ Call replaceOrgWithAbbrev.py? [TRUE]
 
 =item -threads  <int>
 
-Number of threads to run for mafft & raxml. [1]
+Number of threads to run for mafft & raxml. [2]
 
 =item -fork  <int>
 
