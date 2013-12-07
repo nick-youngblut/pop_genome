@@ -20,6 +20,7 @@ my $fork = 0;
 my $prefix = "clusters";
 my $raxml_prog = "raxmlHPC-PTHREADS-SSE3";
 my $mafft_prog = "mafft-linsi";
+my $pal2nal = "pal2nal.pl";
 GetOptions(
 	   "rename" => \$rename_b, 			# call replaceOrgWithAbbrev? [TRUE]
 	   "threads=i" => \$threads, 		# number of threads to cal
@@ -28,6 +29,7 @@ GetOptions(
 	   "clusters=s" => \$clusters_in, 	# cluster list
 	   "raxml=s" => \$raxml_prog, 		# which raxml to use?
 	   "mafft=s" => \$mafft_prog, 		# which mafft to use?
+	   "pal2nal=s" => \$pal2nal, 		# name pal2nal executable
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
@@ -61,7 +63,7 @@ foreach my $cluster (@$fasta_r){
 	# AA alignment #
 	call_mafft($cluster, $mafft_prog, $curdir, $prefix, $align_dir, $threads);
 	# pal2nal #
-	call_pal2nal($cluster, $curdir, $prefix, $align_dir, $pal2nal_dir, $rename_b);	
+	call_pal2nal($cluster, $curdir, $prefix, $align_dir, $pal2nal_dir, $rename_b, $pal2nal);	
 	# phylip & raxml #
 	phy2raxml($cluster, $curdir, $prefix, $pal2nal_dir, $ML_dir, $threads, $raxml_prog);
 	# removing PEGs (for comparing to species tree) #
@@ -133,13 +135,13 @@ sub phy2raxml{
 
 sub call_pal2nal{
 # calling mafft #
-	my ($cluster, $curdir, $prefix, $align_dir, $pal2nal_dir, $rename_b) = @_;
+	my ($cluster, $curdir, $prefix, $align_dir, $pal2nal_dir, $rename_b, $pal2nal) = @_;
 	die " ERROR: can't find nucleotide sequence!\n"
 		unless -e  "$curdir/$prefix\_nuc/$cluster";
 	`perl -pi -e 's/ /_/g' $align_dir/$cluster`;
 	`perl -pi -e 's/ /_/g' $curdir/$prefix\_nuc/$cluster`;
 	
-	my $cmd = "pal2nal.pl $align_dir/$cluster $curdir/$prefix\_nuc/$cluster -output fasta";
+	my $cmd = "$pal2nal $align_dir/$cluster $curdir/$prefix\_nuc/$cluster -output fasta";
 	$cmd .= " | replaceOrgWithAbbrev.py" unless $rename_b;
 	$cmd .= " > $pal2nal_dir/$cluster";
 	`$cmd`;
