@@ -147,17 +147,19 @@ Output directory prefix. [\*(L"clusters\*(R"]
 Call replaceOrgWithAbbrev.py? [\s-1TRUE\s0]
 .IP "\-threads  <int>" 4
 .IX Item "-threads  <int>"
-Number of threads to run for mafft & raxml. [1]
+Number of threads to run for mafft & raxml. [2]
 .IP "\-fork  <int>" 4
 .IX Item "-fork  <int>"
 Number of clusters to process in parallel. [1]
 .IP "\-raxml  <char>" 4
 .IX Item "-raxml  <char>"
 Which raxml to use? [raxmlHPC\-PTHREADS\-SSE3]
-.Sp
-\&\-item mafft  <char>
-.Sp
+.IP "mafft  <char>" 4
+.IX Item "mafft  <char>"
 Which mafft to use? [mafft\-linsi]
+.IP "pal2nal  <char>" 4
+.IX Item "pal2nal  <char>"
+Name of pal2nal executable. [pal2nal.pl]
 .IP "\-h	This help message" 4
 .IX Item "-h	This help message"
 .SS "For more information:"

@@ -10,16 +10,18 @@ use File::Spec;
 use File::Path;
 use Parallel::ForkManager;
 use Bio::TreeIO;
+use IPC::Cmd qw/can_run/;
 
 ### args/flags
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
 my ($verbose, $rename_b, $clusters_in);
-my $threads = 1;
+my $threads = 2;
 my $fork = 0;
 my $prefix = "clusters";
 my $raxml_prog = "raxmlHPC-PTHREADS-SSE3";
 my $mafft_prog = "mafft-linsi";
+my $pal2nal = "pal2nal.pl";
 GetOptions(
 	   "rename" => \$rename_b, 			# call replaceOrgWithAbbrev? [TRUE]
 	   "threads=i" => \$threads, 		# number of threads to cal
@@ -28,6 +30,7 @@ GetOptions(
 	   "clusters=s" => \$clusters_in, 	# cluster list
 	   "raxml=s" => \$raxml_prog, 		# which raxml to use?
 	   "mafft=s" => \$mafft_prog, 		# which mafft to use?
+	   "pal2nal=s" => \$pal2nal, 		# name pal2nal executable
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
@@ -39,6 +42,10 @@ die " ERROR: cannot find $clusters_in!\n"
 	unless -e $clusters_in;
 my $curdir = File::Spec->rel2abs(File::Spec->curdir());
 
+# checking executables #
+can_run($pal2nal) or die "ERROR: Cannot call '$pal2nal'. Is it in your PATH?\n";
+can_run($raxml_prog) or die "ERROR: Cannot call '$raxml_prog'. Is it in your PATH?\n";
+can_run($mafft_prog) or die "ERROR: Cannot call '$mafft_prog'. Is it in your PATH?\n";
 
 ### Main
 # calling ITEP scripts to get fastas#
@@ -61,7 +68,7 @@ foreach my $cluster (@$fasta_r){
 	# AA alignment #
 	call_mafft($cluster, $mafft_prog, $curdir, $prefix, $align_dir, $threads);
 	# pal2nal #
-	call_pal2nal($cluster, $curdir, $prefix, $align_dir, $pal2nal_dir, $rename_b);	
+	call_pal2nal($cluster, $curdir, $prefix, $align_dir, $pal2nal_dir, $rename_b, $pal2nal);	
 	# phylip & raxml #
 	phy2raxml($cluster, $curdir, $prefix, $pal2nal_dir, $ML_dir, $threads, $raxml_prog);
 	# removing PEGs (for comparing to species tree) #
@@ -104,7 +111,6 @@ sub rm_PEGs{
 		$out->write_tree($tree);
 		last;
 		}
-	
 	}
 
 sub phy2raxml{
@@ -133,13 +139,13 @@ sub phy2raxml{
 
 sub call_pal2nal{
 # calling mafft #
-	my ($cluster, $curdir, $prefix, $align_dir, $pal2nal_dir, $rename_b) = @_;
+	my ($cluster, $curdir, $prefix, $align_dir, $pal2nal_dir, $rename_b, $pal2nal) = @_;
 	die " ERROR: can't find nucleotide sequence!\n"
 		unless -e  "$curdir/$prefix\_nuc/$cluster";
 	`perl -pi -e 's/ /_/g' $align_dir/$cluster`;
 	`perl -pi -e 's/ /_/g' $curdir/$prefix\_nuc/$cluster`;
 	
-	my $cmd = "pal2nal.pl $align_dir/$cluster $curdir/$prefix\_nuc/$cluster -output fasta";
+	my $cmd = "$pal2nal $align_dir/$cluster $curdir/$prefix\_nuc/$cluster -output fasta";
 	$cmd .= " | replaceOrgWithAbbrev.py" unless $rename_b;
 	$cmd .= " > $pal2nal_dir/$cluster";
 	`$cmd`;
@@ -238,7 +244,7 @@ Call replaceOrgWithAbbrev.py? [TRUE]
 
 =item -threads  <int>
 
-Number of threads to run for mafft & raxml. [1]
+Number of threads to run for mafft & raxml. [2]
 
 =item -fork  <int>
 
@@ -248,9 +254,13 @@ Number of clusters to process in parallel. [1]
 
 Which raxml to use? [raxmlHPC-PTHREADS-SSE3]
 
--item mafft  <char>
+=item mafft  <char>
 
 Which mafft to use? [mafft-linsi]
+
+=item pal2nal  <char>
+
+Name of pal2nal executable. [pal2nal.pl]
 
 =item -h	This help message
 
