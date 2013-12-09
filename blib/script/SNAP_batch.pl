@@ -71,8 +71,24 @@ waitall;
 write_by_group_table(\%by_group, $group_r, $prefix) if $group_r;
 write_summary_table(\%summary, $prefix);
 
+# clean up #
+rm_fork_dirs();
 
 ### Subroutines
+sub rm_fork_dirs{
+# removing any fork directories still present #
+	my $curdir = File::Spec->curdir();
+	opendir IN, $curdir or die $!;
+	my @files = readdir IN;
+	closedir IN or die $!;
+	
+	foreach( grep(/^\.fhfork\d+/, @files) ){
+		rmtree($_) or warn "Couldn't delete '$_'";
+		}
+	
+	print STDERR "All Forks::Super tmp directories deleted\n";
+	}
+
 sub write_by_group_table{
 # writing by-group summary of dn/ds #
 	my ($by_group_r, $group_r, $prefix) = @_;

@@ -147,7 +147,7 @@ die "ERROR: cannot find $gene_dir!\n" unless -d $gene_dir;
 $gene_dir = File::Spec->rel2abs($gene_dir);
 
 # warnings #
-print STDERR "WARNING: gene trees must be binary (use tree_multi2di.r)!\n";
+print STDERR "WARNING: gene trees must be binary! Use 'tree_multi2di.r' if you haven't done so already!\n";
 print STDERR "\n";
 
 
@@ -179,6 +179,17 @@ else{
 	map{ $file_index{$_}{1} = "$gene_dir/$_"; } @$gene_files_r;
 	}
 
+# status #
+my $tree_cnt; 
+foreach my $gene_tree (keys %file_index){	
+	foreach my $rooting (keys %{$file_index{$gene_tree}}){ 
+		$tree_cnt++;
+		}
+	}
+print STDERR "\n###########################################################\n";
+print STDERR "### Total number of trees to be processed by Mowgli: $tree_cnt ###\n";
+print STDERR "###########################################################\n\n";
+
 # calling Mowgli #
 my %res_all;
 foreach my $gene_tree (sort keys %file_index){	
@@ -198,8 +209,25 @@ waitall;
 # writing output #
 write_table(\%res_all);
 
+# clean up forks #
+rm_fork_dirs();
+
 
 #--- Subroutines ---#
+sub rm_fork_dirs{
+# removing any fork directories still present #
+	my $curdir = File::Spec->curdir();
+	opendir IN, $curdir or die $!;
+	my @files = readdir IN;
+	closedir IN or die $!;
+	
+	foreach( grep(/^\.fhfork\d+/, @files) ){
+		rmtree($_) or warn "Couldn't delete '$_'";
+		}
+	
+	print STDERR "All Forks::Super tmp directories deleted\n";
+	}
+
 sub call_Mowgli_forked{
 	my ($dirname, $gene_tree,$gene_tree_rooted,$rooting) = @_;
 	
