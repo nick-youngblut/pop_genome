@@ -252,8 +252,13 @@ sub write_summary_table{
 							$mean = 'NA';
 							}
 						else{ $mean = $omega_sum{$group1}{$group2} / $omega_cnt{$group1}{$group2}; }
+						
+						# ordering groups by alphabet #
+						my @ord = sort($group1, $group2);
+						
+						# writing line #
 						print OUT join("\t", $method, $infile,
-							$group1, $group2, $mean), "\n";
+											@ord, $mean), "\n";
 						}
 					}
 				}
@@ -316,6 +321,13 @@ sub parse_yn00{
 				
 				# '-1.0000' values to 'NA' #
 				$$row[2] = "NA" if $$row[2] == -1;
+				
+				# ordering group #
+				my @ord = sort($group1, $group2);
+				if($ord[0] ne $group1){				# need to flip 
+					($group1,$group2) = ($group2,$group1);
+					@$row[0..1] = ($$row[1],$$row[0]);
+					}
 				
 				# group1 group2 seq. seq.     S       N        t   kappa   omega     dN +- SE    dS +- #
 				push @{$res{"NG"}{$infile}}, [$group1, $group2, @$row[0..1],
