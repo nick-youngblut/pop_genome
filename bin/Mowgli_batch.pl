@@ -112,7 +112,8 @@ use Getopt::Long;
 use File::Spec;
 use Bio::TreeIO;
 use File::Temp qw/ tempfile tempdir /;
-use Forks::Super;
+#use Forks::Super;
+use Parallel::ForkManager;
 use File::Path;
 
 #--- args/flags ---#
@@ -163,17 +164,23 @@ mkdir $dirname or die $!;
 print STDERR "Writing temporary files to $dirname\n\n";
 
 ## rooting ##
+my $pm = Parallel::ForkManager->new($fork);
+retreive_from_child($pm);
+my %retrieved_responses;
+
 my %file_index;
 if(! $root_b){		# re-rooting
 	foreach my $gene_file (@$gene_files_r){
-		my $job = fork {
-			share => [\%file_index],
-			sub => sub{
-				all_tree_rootings($gene_dir, $gene_file, $dirname, \%file_index);
-				}
-			};
+		my $pid = $pm->start and next;
+		
+		my %file_index;
+		all_tree_rootings($gene_dir, $gene_file, $dirname, \%file_index);
+		
+		$pm->finish(0, \%file_index);
 		}
-	waitall;
+	$pm->wait_all_children;
+	%file_index = %retrieved_responses;
+	%retrieved_responses = ();
 	}
 else{
 	map{ $file_index{$_}{1} = "$gene_dir/$_"; } @$gene_files_r;
@@ -191,47 +198,55 @@ print STDERR "### Total number of trees to be processed by Mowgli: $tree_cnt ###
 print STDERR "###########################################################\n\n";
 
 # calling Mowgli #
-my %res_all;
-foreach my $gene_tree (sort keys %file_index){	
-  foreach my $rooting (sort{$a<=>$b} keys %{$file_index{$gene_tree}}){ 
-   		my $gene_tree_rooted = $file_index{$gene_tree}{$rooting};
-   		my $job = fork {
-			max_proc => $fork,
-  			share => [ \%res_all ],
-    		sub => sub{
-    			call_Mowgli_forked($dirname,$gene_tree,$gene_tree_rooted,$rooting);
-    			}
-    		};
+foreach my $pid (keys %file_index){
+	foreach my $gene_tree (keys %{$file_index{$pid}}){	
+		foreach my $rooting (sort{$a<=>$b} keys %{$file_index{$pid}{$gene_tree}}){ 			
+	   		my $gene_tree_rooted = $file_index{$pid}{$gene_tree}{$rooting}; 
+			my $pid = $pm->start and next;
+    		my $res_r = call_Mowgli_forked($dirname,$gene_tree,$gene_tree_rooted,$rooting);
+	    	$pm->finish(0, $res_r);
+    		}
     	}
 	}
-waitall;
+$pm->wait_all_children;
 
 # writing output #
-write_table(\%res_all);
+write_table(\%retrieved_responses);
 
 # clean up forks #
-rm_fork_dirs();
+#rm_fork_dirs();
 
 
 #--- Subroutines ---#
-sub rm_fork_dirs{
-# removing any fork directories still present #
-	my $curdir = File::Spec->curdir();
-	opendir IN, $curdir or die $!;
-	my @files = readdir IN;
-	closedir IN or die $!;
+sub retreive_from_child{
+	my $pm = shift;
 	
-	foreach( grep(/^\.fhfork\d+/, @files) ){
-		rmtree($_) or warn "Couldn't delete '$_'";
-		}
-	
-	print STDERR "All Forks::Super tmp directories deleted\n";
+	$pm -> run_on_finish (
+		sub {
+			#print Dumper @_; exit;
+			my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
+			
+			#$ident = $$ unless defined $ident;
+			
+			# see what the child sent us, if anything
+			if (defined($data_structure_reference)) {  # test rather than assume child sent anything
+				my $reftype = ref($data_structure_reference);
+
+				# we can also collect retrieved data structures for processing after all children have exited
+				$retrieved_responses{$pid} = $data_structure_reference;
+				} 
+			else {
+				print STDERR qq|pid "$pid" did not send anything.\n\n|;
+				}
+			}
+		);
 	}
 
 sub call_Mowgli_forked{
 	my ($dirname, $gene_tree,$gene_tree_rooted,$rooting) = @_;
 	
 	# loading gene tree values #
+	my %res_all;
 	$res_all{$gene_tree}{$gene_tree_rooted}{"species_tree"} = $species_tree;
 	$res_all{$gene_tree}{$gene_tree_rooted}{"rooting"} = $rooting;
 	$res_all{$gene_tree}{$gene_tree_rooted}{"dup_cost"} = $dup_cost;
@@ -239,7 +254,6 @@ sub call_Mowgli_forked{
 	$res_all{$gene_tree}{$gene_tree_rooted}{"loss_cost"} = $loss_cost;
 
 	my $outdir = "$dirname/Mowgli_tmp_output_dir";
-		#my $outdir = "Mowgli_tmp_output_dir";		# debug
 
 	call_Mowgli($species_tree, 
 			$gene_tree_rooted, 
@@ -252,6 +266,37 @@ sub call_Mowgli_forked{
 	
 	parse_costs($gene_tree_rooted, $res_all{$gene_tree}, $outdir);
 	parse_statistics($gene_tree_rooted, $res_all{$gene_tree}, $outdir);
+	
+	return \%res_all;
+	}
+
+sub call_Mowgli{
+### Description
+# calling Mowgli #
+	my ($species_tree, $gene_tree, $DR_in, $outdir,
+		$dup_cost, $trans_cost, $loss_cost, $boot_cutoff, $res_r) = @_;
+	
+	print STDERR "Calling Mowgli on: '$gene_tree'\n" unless $verbose_b;
+	
+	my $cmd = "Mowgli_linux_i386 -s $species_tree -g $gene_tree 
+	-d $dup_cost -t $trans_cost -l $loss_cost 
+	-n 1 -T $boot_cutoff -f $DR_in -o $outdir";
+	$cmd =~ s/[\t\n]+/ /g;
+	
+	system($cmd);
+
+	if ($? == -1) {
+    	die "ERROR: failed to execute: $!\n";
+		}
+	elsif ($? & 127) {
+    	printf STDERR "ERROR: child died with signal %d, %s coredump\n",
+        	($? & 127),  ($? & 128) ? 'with' : 'without';
+        exit(1);
+		}
+	elsif( $? != 0 ) {
+    	printf STDERR "Mowgli exited with value %d\n", $? >> 8;
+		}
+	
 	}
 
 sub write_table{
@@ -277,23 +322,24 @@ sub write_table{
 	print join("\t", "gene_tree", "gene_tree_rooted", @tree_cat, @DR_cat), "\n";
 
 	# body #
-	foreach my $gene_tree (keys %$res_all_r){
-		foreach my $gene_tree_rooted (keys %{$res_all_r->{$gene_tree}}){
-			# tree values #
-			my @line = @{$res_all_r->{$gene_tree}{$gene_tree_rooted}}{@tree_cat};
-			map{ $_ = "NA" unless defined $_} @line;
-			
-			# donor-receiver values #
-			foreach my $DR (keys %{$res_all_r->{$gene_tree}{$gene_tree_rooted}{"DR"}}){
-				#push @line, @{$res_all_r->{$gene_tree}{$gene_tree_rooted}{"DR"}{$DR}}{@DR_cat};
-				my @tmp = @line; 
-				push @tmp, @{$res_all_r->{$gene_tree}{$gene_tree_rooted}{"DR"}{$DR}}{@DR_cat};
-				map{ $_ = "NA" unless defined $_} @tmp[0..12];
-				print join("\t", $gene_tree, $gene_tree_rooted, @tmp), "\n";
+	foreach my $pid (keys %$res_all_r){
+		foreach my $gene_tree (keys %{$res_all_r->{$pid}}){
+			foreach my $gene_tree_rooted (keys %{$res_all_r->{$pid}{$gene_tree}}){
+				# tree values #
+				my @line = @{$res_all_r->{$pid}{$gene_tree}{$gene_tree_rooted}}{@tree_cat};
+				map{ $_ = "NA" unless defined $_} @line;
+				
+				# donor-receiver values #
+				foreach my $DR (keys %{$res_all_r->{$pid}{$gene_tree}{$gene_tree_rooted}{"DR"}}){
+					#push @line, @{$res_all_r->{$gene_tree}{$gene_tree_rooted}{"DR"}{$DR}}{@DR_cat};
+					my @tmp = @line; 
+					push @tmp, @{$res_all_r->{$pid}{$gene_tree}{$gene_tree_rooted}{"DR"}{$DR}}{@DR_cat};
+					map{ $_ = "NA" unless defined $_} @tmp[0..12];
+					print join("\t", $gene_tree, $gene_tree_rooted, @tmp), "\n";
+					}
 				}
 			}
 		}
-	#print Dumper %header; exit;
 	}
 
 sub parse_statistics{
@@ -354,34 +400,7 @@ sub parse_costs{
 		#print Dumper %$res_r; exit;
 	}
 
-sub call_Mowgli{
-### Description
-# calling Mowgli #
-	my ($species_tree, $gene_tree, $DR_in, $outdir,
-		$dup_cost, $trans_cost, $loss_cost, $boot_cutoff, $res_r) = @_;
-	
-	print STDERR "Calling Mowgli on: '$gene_tree'\n" unless $verbose_b;
-	
-	my $cmd = "Mowgli_linux_i386 -s $species_tree -g $gene_tree 
-	-d $dup_cost -t $trans_cost -l $loss_cost 
-	-n 1 -T $boot_cutoff -f $DR_in -o $outdir";
-	$cmd =~ s/[\t\n]+/ /g;
-	
-	system($cmd);
 
-	if ($? == -1) {
-    	die "ERROR: failed to execute: $!\n";
-		}
-	elsif ($? & 127) {
-    	printf STDERR "ERROR: child died with signal %d, %s coredump\n",
-        	($? & 127),  ($? & 128) ? 'with' : 'without';
-        exit(1);
-		}
-	elsif( $? != 0 ) {
-    	printf STDERR "Mowgli exited with value %d\n", $? >> 8;
-		}
-	
-	}
 
 sub all_tree_rootings{
 ### Description ###

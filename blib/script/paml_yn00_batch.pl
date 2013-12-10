@@ -102,7 +102,7 @@ use Data::Dumper;
 use Getopt::Long;
 use File::Spec;
 use File::Path;
-use Forks::Super;
+use Parallel::ForkManager;
 use IPC::Cmd qw/can_run/;
 
 ### args/flags
@@ -134,54 +134,82 @@ my $files_r = load_file_list($fasta_dir, ["fasta", "fna", "fa"]);
 
 my $group_r = load_group($group_in) if $group_in;
 
-my %res;
 my $file_cnt = 0;
+my $pm = Parallel::ForkManager->new($fork);
+retreive_from_child($pm);
+my %retrieved_responses;
+
+# calling paml on each file #
 foreach my $infile (@$files_r){
 	# status #
 	$file_cnt++;
 	print STDERR "Number of files completed: $file_cnt\n" if $file_cnt % 100 == 0;
-
-	my $job = fork{
-		max_proc => $fork,
-		share => [\%res],
-		sub => sub{
-			# tmp output dir #
-			use File::Temp qw/tempdir/;
-			my $tmpdir = File::Temp->newdir(); 		# temp directory
-			my $outdir= $tmpdir->dirname;
-			chdir $outdir or die $!;
+	my $pid = $pm->start and next;
+		
+	# tmp output dir #
+	use File::Temp qw/tempdir/;
+	my $tmpdir = File::Temp->newdir(); 		# temp directory
+	my $outdir= $tmpdir->dirname;
+	chdir $outdir or die $!;
+	
+	# symlink fasta #
+	symlink("$fasta_dir/$infile", $infile) or die $!;
+	
+	# converting fasta to old-school phylip #
+	my $fasta_r = read_fasta($infile);
+	my ($outfile, $index_r) = fasta2phylip($fasta_r, $infile);
+	
+	# write out a yn00.ctl file #
+	my ($ctlfile, $yn00_out) = write_ctl_file($outfile);
+	
+	# running yn00 (PAML) #
+	`yn00 $ctlfile`;
+	
+	# parsing output #
+	my $res_r = parse_yn00($yn00_out, $index_r, $group_r, $infile);
+	
+	#write_result_table($res_r, $prefix);
+	
+	# back to current directory
+	chdir $curdir or die $!;
 			
-			# symlink fasta #
-			symlink("$fasta_dir/$infile", $infile) or die $!;
-			
-			# converting fasta to old-school phylip #
-			my $fasta_r = read_fasta($infile);
-			my ($outfile, $index_r) = fasta2phylip($fasta_r, $infile);
-			
-			# write out a yn00.ctl file #
-			my ($ctlfile, $yn00_out) = write_ctl_file($outfile);
-			
-			# running yn00 (PAML) #
-			`yn00 $ctlfile`;
-			
-			# parsing output #
-			my $res_r = parse_yn00($yn00_out, \%res, $index_r, $group_r, $infile);
-			
-			# back to current directory
-			chdir $curdir or die $!;
-			}
-		}
+	$pm->finish(0, $res_r);
 	}
-waitall;
+$pm->wait_all_children;
 
 # writing summary tables #
-write_result_table(\%res, $prefix);
-write_summary_table(\%res, $prefix);
-
-# clean up #
-rm_fork_dirs();
+write_result_table(\%retrieved_responses, $prefix);
+write_summary_table(\%retrieved_responses, $prefix);
 
 ### Subroutines
+sub retreive_from_child{
+	my $pm = shift;
+	
+	$pm -> run_on_finish (
+		sub {
+			#print Dumper @_; exit;
+			my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
+			
+			#$ident = $$ unless defined $ident;
+			
+			# see what the child sent us, if anything
+			if (defined($data_structure_reference)) {  # test rather than assume child sent anything
+				my $reftype = ref($data_structure_reference);
+				#print qq|ident "$ident" returned a "$reftype" reference.\n\n|;
+				#if (1) {  # simple on/off switch to display the contents
+				#	print &Dumper($data_structure_reference) . qq|end of "$ident" sent structure\n\n|;
+				#	}
+
+				# we can also collect retrieved data structures for processing after all children have exited
+				$retrieved_responses{$pid} = $data_structure_reference;
+				} 
+			else {
+				print qq|ident "$ident" did not send anything.\n\n|;
+				}
+			}
+		);
+	}
+
 sub write_summary_table{
 # mean omega by group #
 # summing by infile #
@@ -190,31 +218,47 @@ sub write_summary_table{
 	open OUT, ">$prefix\_summary.txt" or die $!;
 	print OUT join("\t", qw/method file group1 group2 mean_omega/), "\n";
 	
-	foreach my $method (keys %$res_r){
-		foreach my $infile (keys %{$res_r->{$method}}){
-			my %omega_sum;
-			my %omega_cnt;
-			foreach my $row (@{$res_r->{$method}{$infile}}){
-				next if $$row[8] eq "NA";			# skipping 'NA' values
-				if(exists $omega_sum{$$row[0]}{$$row[1]}){
-					$omega_sum{$$row[0]}{$$row[1]} += $$row[8];
-					$omega_cnt{$$row[0]}{$$row[1]}++;
+	foreach my $pid (keys %$res_r){
+		foreach my $method (keys %{$res_r->{$pid}}){
+			foreach my $infile (keys %{$res_r->{$pid}{$method}}){
+				my %omega_sum;
+				my %omega_cnt;
+				foreach my $row (@{$res_r->{$pid}{$method}{$infile}}){
+					if(exists $omega_sum{$$row[0]}{$$row[1]}){
+						if($$row[8] eq "NA"){
+							$omega_sum{$$row[0]}{$$row[1]} += 0;
+							$omega_cnt{$$row[0]}{$$row[1]} += 0;					
+							}
+						else{
+							$omega_sum{$$row[0]}{$$row[1]} += $$row[8];
+							$omega_cnt{$$row[0]}{$$row[1]}++;
+							}
+						}
+					else{
+						if($$row[8] eq "NA"){
+							$omega_sum{$$row[1]}{$$row[0]} += 0;
+							$omega_cnt{$$row[1]}{$$row[0]} += 0;
+							}
+						else{
+							$omega_sum{$$row[1]}{$$row[0]} += $$row[8];
+							$omega_cnt{$$row[1]}{$$row[0]}++;						
+							}
+						}
 					}
-				else{
-					$omega_sum{$$row[1]}{$$row[0]} += $$row[8];
-					$omega_cnt{$$row[1]}{$$row[0]}++;
-					}
-				}
-			#print Dumper %omega_sum; exit;
-			foreach my $group1 (keys %omega_sum){
-				foreach my $group2 (keys %{$omega_sum{$group1}}){
-					$omega_sum{$group1}{$group2} = 0 
-						unless exists $omega_sum{$group1}{$group2};
-					$omega_cnt{$group1}{$group2} = 0
-						unless exists $omega_cnt{$group1}{$group2};
-					print OUT join("\t", $method, $infile,
-						$group1, $group2, 
-						$omega_sum{$group1}{$group2} / $omega_cnt{$group1}{$group2}), "\n";
+				foreach my $group1 (keys %omega_sum){
+					foreach my $group2 (keys %{$omega_sum{$group1}}){
+						$omega_sum{$group1}{$group2} = 0 
+							unless exists $omega_sum{$group1}{$group2};
+						$omega_cnt{$group1}{$group2} = 0
+							unless exists $omega_cnt{$group1}{$group2};
+						my $mean;
+						if($omega_cnt{$group1}{$group2} == 0){
+							$mean = 'NA';
+							}
+						else{ $mean = $omega_sum{$group1}{$group2} / $omega_cnt{$group1}{$group2}; }
+						print OUT join("\t", $method, $infile,
+							$group1, $group2, $mean), "\n";
+						}
 					}
 				}
 			}
@@ -225,17 +269,19 @@ sub write_summary_table{
 sub write_result_table{
 # writing a table of all of the results #
 	my ($res_r, $prefix) = @_;
-
+	
 	open OUT, ">$prefix\_results.txt" or die $!;
 
 	my @header = qw/method file group1 group2
-	seq1 seq2 S N t kappa omega dN+-SE dS+-SE/;
+		seq1 seq2 S N t kappa omega dN+-SE dS+-SE/;
 	
 	print OUT join("\t", @header), "\n";
-	foreach my $method (keys %$res_r){
-		foreach my $infile (keys %{$res_r->{$method}}){
-			foreach my $row (@{$res_r->{$method}{$infile}}){
-				print OUT join("\t", $method, $infile, @$row), "\n";
+	foreach my $pid (keys %$res_r){
+		foreach my $method (keys %{$res_r->{$pid}}){
+			foreach my $infile (keys %{$res_r->{$pid}{$method}}){
+				foreach my $row (@{$res_r->{$pid}{$method}{$infile}}){
+					print OUT join("\t", $method, $infile, @$row), "\n";
+					}
 				}
 			}
 		}
@@ -245,9 +291,10 @@ sub write_result_table{
 sub parse_yn00{
 ### parsing yn00 result file ###
 # parsing Nei & Gojobori; Yang & Nielsen #
-	my ($outfile, $res_r, $index_r, $group_r, $infile) = @_;
+	my ($outfile, $index_r, $group_r, $infile) = @_;
 	
 	open IN, "$outfile" or die $!;
+	my %res;
 	while(<IN>){
 		if($_ =~ /^Nei & Gojobori 1986. dN\/dS \(dN, dS\)/){	#parsing Nei & Gojobori #
 			my @dist;
@@ -275,7 +322,7 @@ sub parse_yn00{
 				$$row[2] = "NA" if $$row[2] == -1;
 				
 				# group1 group2 seq. seq.     S       N        t   kappa   omega     dN +- SE    dS +- #
-				push @{$res_r->{"NG"}{$infile}}, [$group1, $group2, @$row[0..1],
+				push @{$res{"NG"}{$infile}}, [$group1, $group2, @$row[0..1],
 									("NA") x 4, $$row[2], ("NA") x 3 ];
 				}
 			}
@@ -302,11 +349,14 @@ sub parse_yn00{
 				$line[6] = "NA" if $line[6] >= 99;
 				
 				# group1 group2 seq. seq.     S       N        t   kappa   omega     dN +- SE    dS +- #
-				push @{$res_r->{"YN"}{$infile}}, [$group1, $group2, @line];
+				push @{$res{"YN"}{$infile}}, [$group1, $group2, @line];
 				}
 			}
 		}
-	close IN;			
+	close IN;	
+	
+		#print Dumper %res; exit;
+	return \%res;
 	}
 
 sub dist2tbl{
@@ -318,7 +368,7 @@ sub dist2tbl{
 	
 	my @dist;
 	for my $i (0..$max){
-		for my $ii (0..$max){
+		for my $ii (1..$max){
 			#next if $i >= $ii; 				# lower triangle
 			if(defined $$dist_r[$i][$ii]){
 				push @dist, [$$dist_r[$i][0], $$dist_r[$ii][0], $$dist_r[$i][$ii]];

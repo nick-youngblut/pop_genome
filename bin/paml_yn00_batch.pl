@@ -195,16 +195,12 @@ sub retreive_from_child{
 			# see what the child sent us, if anything
 			if (defined($data_structure_reference)) {  # test rather than assume child sent anything
 				my $reftype = ref($data_structure_reference);
-				#print qq|ident "$ident" returned a "$reftype" reference.\n\n|;
-				#if (1) {  # simple on/off switch to display the contents
-				#	print &Dumper($data_structure_reference) . qq|end of "$ident" sent structure\n\n|;
-				#	}
 
 				# we can also collect retrieved data structures for processing after all children have exited
 				$retrieved_responses{$pid} = $data_structure_reference;
 				} 
 			else {
-				print qq|ident "$ident" did not send anything.\n\n|;
+				print STDERR qq|ident "$ident" did not send anything.\n\n|;
 				}
 			}
 		);
