@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "PAML_YN00_BATCH 1"
-.TH PAML_YN00_BATCH 1 "2013-12-09" "perl v5.14.2" "User Contributed Perl Documentation"
+.TH PAML_YN00_BATCH 1 "2013-12-10" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
