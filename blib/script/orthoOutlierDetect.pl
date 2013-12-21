@@ -218,8 +218,6 @@ sub flag_truncation{
 	
 	foreach my $id (keys %$half_stats_r){
 		foreach my $index (keys %{$half_stats_r->{$id}}){
-			next unless exists $output_r->{$id}{$index};			# not an outlier sequence
-			
 			my $h1_out = 0;
 			if(exists $half_stats_r->{$id}{$index}{0}){
 				$h1_out = 1 if exists $half_stats_r->{$id}{$index}{0}{'seqID'}

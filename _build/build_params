@@ -140,6 +140,7 @@ do{ my $x = [
                              './bin/ranger-dtl_parse.pl',
                              './bin/PresAbs2Nexus.pl',
                              './bin/ITEP_geneInfoSigDiff.pl',
+                             './bin/orthoOutlierDetect.pl',
                              './bin/ITEP_geneInfoDist2ContigEnd.pl'
                            ],
          'build_script' => 'Build',
