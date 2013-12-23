@@ -54,9 +54,6 @@ Get stats on how bootstrap values are distributed
 within and between populations. Stats will
 also be provided for the entire tree ('total' population).
 
-Population-specific nodes may differ among trees (differ number of nodes
-per population per tree)!
-
 Not all taxa in the population file need to be found in each tree file.
 
 =head1 EXAMPLES
@@ -145,85 +142,6 @@ sub write_stats_table{
 	}
 
 sub get_bootstrap_stats{
-# loading bootstraps for each tree and calculating stats #
-	my ($files_r, $pops_r, $format) = @_;
-	
-	my %boot;
-	foreach my $file (keys %$files_r){
-		
-		# status #
-		print STDERR "...processing: $file\n"
-			if $verbose_b;
-				
-		# loading tree #
-		my $treeo = tree_io($file, $format);
-		$treeo->move_id_to_bootstrap unless $move_id_b;
-		
-		# foreach internal node: determine which population descentants fall into 
-		## getting LCA of each pair of taxa ##
-		my @pop_taxa = keys %$pops_r;
-		my $boot_not_found = 0;
-		my %stats;
-		foreach my $node ($treeo->get_nodes){
-			next if $node->is_Leaf;
-			$node->bootstrap(0) unless $node->bootstrap;			# nodes w/ bootstrap of 0 will be missing bootstrap value
-			
-			# determine population that LCA falls into #
-			my %lca_pop;		
-			foreach my $desc ($node->get_all_Descendents){
-				next unless $desc->is_Leaf;
-				die "ERROR cannot find ", $desc->id, " in population file!\n"
-					unless exists $pops_r->{$desc->id};
-				$lca_pop{ $pops_r->{$desc->id} }++;
-				}
-			
-			my $pop_compare = join("__", 
-							sort{$a cmp $b} keys %lca_pop );
-
-			## initializing if needed ##
-			$stats{$pop_compare} = Statistics::Descriptive::Full->new()
-				unless exists $stats{$pop_compare};
-			$stats{'total'} = Statistics::Descriptive::Full->new()
-				unless exists $stats{'total'};				
-			
-			$stats{$pop_compare}->add_data($node->bootstrap);
-			$stats{'total'}->add_data($node->bootstrap);
-							
-			}
-		
-		# warnings #
-		warn "WARNING: $boot_not_found nodes in $file did not have bootstrap values (each given value of 0)!\n"
-			if $boot_not_found > 0 && $verbose_b;
-			
-		# loading stats #
-		foreach my $pop (keys %stats){
-			my ($min, $q1, $mean, $median, $q3, $max, $N) = ('NA') x 7;
-			$min = $stats{$pop}->min() if defined $stats{$pop}->min();
-			$q1 = ($stats{$pop}->percentile(25))[0] if defined $stats{$pop}->percentile(25);
-			$mean = $stats{$pop}->mean() if defined $stats{$pop}->mean();
-			$median = $stats{$pop}->median() if defined $stats{$pop}->median();
-			$q3 = ($stats{$pop}->percentile(75))[0] if defined $stats{$pop}->percentile(75);
-			$max = $stats{$pop}->max() if defined $stats{$pop}->max();
-			$N = $stats{$pop}->count() if defined $stats{$pop}->count();
-			
-			
-			$boot{$file}{$pop} = {
-				min => $min,
-				q1 => $q1,
-				mean => $mean,
-				median => $median,
-				q3 => $q3,
-				max => $max,
-				N => $N
-				};
-			}
-		}
-		
-		#print Dumper %boot; exit;
-	return \%boot;
-	}
-
-sub get_bootstrap_stats_old{
 # loading bootstraps for each tree and calculating stats #
 	my ($files_r, $pops_r, $format) = @_;
 	

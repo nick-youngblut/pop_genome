@@ -123,38 +123,55 @@
 .rm #[ #] #H #V #F C
 .\" ========================================================================
 .\"
-.IX Title "POPGEN-DB_MAKE 1"
-.TH POPGEN-DB_MAKE 1 "2013-12-22" "perl v5.14.2" "User Contributed Perl Documentation"
+.IX Title "SEQID_BYPOP 1"
+.TH SEQID_BYPOP 1 "2013-12-22" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
 .nh
 .SH "NAME"
-PopGen\-db_make.pl \-\- make database tables for Ranger\-DTL data
+seqID_byPop.pl \-\- Calculating average sequence identity within & between populations
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-PopGen\-db_make.pl [options] [\s-1DATABASE_NAME\s0]
-.SS "Options"
-.IX Subsection "Options"
-.IP "\-r 	Replace existing database. [\s-1FALSE\s0]" 4
-.IX Item "-r 	Replace existing database. [FALSE]"
-.PD 0
+seqID_byPop.pl [flags] > seqID_stats.txt
+.SS "Required flags"
+.IX Subsection "Required flags"
+.IP "\-table  <char>" 4
+.IX Item "-table  <char>"
+Table of tree files & matching gene cluster IDs (2\-column; tab-delimited; 'file\etclusterID').
+.IP "\-population  <char>" 4
+.IX Item "-population  <char>"
+Table of taxa in tree files & matching population (2\-column; tab-delimited; 'taxon\etpopulation')
+.SS "Optional flags"
+.IX Subsection "Optional flags"
+.IP "\-delimiter  <char>" 4
+.IX Item "-delimiter  <char>"
+Delimiter separating taxon_name from annotation in sequence files. [\*(L" \*(R"]
+.IP "\-processors  <int>" 4
+.IX Item "-processors  <int>"
+Number of processors used by Mothur. [1]
+.IP "\-mothur  <char>" 4
+.IX Item "-mothur  <char>"
+Mothur cmd used to produce a pdistance matrix. [\*(L"dist.seqs(fasta=?, calc=onegap, countends=T)\*(R"]
 .IP "\-h	This help message" 4
 .IX Item "-h	This help message"
-.PD
 .SS "For more information:"
 .IX Subsection "For more information:"
-perldoc PopGen\-db_make.pl
+perldoc seqID_byPop.pl
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-Make all tables in the PopGen-db sqlite3 database.
+Get average percent sequence identity of all comparisons of sequences.
+Average percent identity comparisons are parsed by population
+(both within and between) if a population file is provided.
 .PP
-The default database name is \*(L"PopGen.sqlite\*(R"
+Not all taxa in the population file need to be found in each alignment.
+The '\-delimiter' option can be used is annotations or other info is 
+appended on the taxon names in the sequence files.
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
-.SS "Usage:"
-.IX Subsection "Usage:"
-PopGen\-db_make.pl
+.SS "Basic usage"
+.IX Subsection "Basic usage"
+seqID_byPop.pl \-p pop.txt \-t file\-cluster_list.txt > seqID_stats.txt
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Nick Youngblut <nyoungb2@illinois.edu>
