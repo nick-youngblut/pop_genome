@@ -65,6 +65,35 @@ ON CONFLICT REPLACE
 
 HERE
 
+	$sql{"seqID"} = <<HERE;
+/* creating tables */
+DROP TABLE IF EXISTS seqID;
+
+CREATE TABLE seqID(
+clusterID	TEXT	NOT NUll,
+runID	TEXT	NOT NULL,
+pop	TEXT	NOT NULL,
+value	REAL	NOT NULL,
+unique(ClusterID, runID, pop)
+ON CONFLICT REPLACE
+);
+
+HERE
+
+	$sql{"Bootstrap"} = <<HERE;
+DROP TABLE IF EXISTS Bootstrap;
+
+CREATE TABLE Bootstrap(
+ClusterID	TEXT	NOT NULL,
+runID	TEXT	NOT NULL,
+pop	TEXT	NOT NULL,
+value	REAL	NOT NULL,
+unique(ClusterID, runID, pop)
+ON CONFLICT REPLACE
+);
+
+HERE
+
 	$sql{"Fst"} = <<HERE;
 /* creating tables */
 DROP TABLE IF EXISTS Fst;
@@ -76,21 +105,6 @@ pop	TEXT	NOT NULL,
 value	REAL	NOT NULL,
 ci_low	REAL	NOT NULL,
 ci_high	REAL	NOT NULL,
-unique(ClusterID, runID, pop)
-ON CONFLICT REPLACE
-);
-
-HERE
-
-	$sql{"seqID"} = <<HERE;
-/* creating tables */
-DROP TABLE IF EXISTS seqID;
-
-CREATE TABLE seqID(
-clusterID	TEXT	NOT NUll,
-runID	TEXT	NOT NULL,
-pop	TEXT	NOT NULL,
-value	REAL	NOT NULL,
 unique(ClusterID, runID, pop)
 ON CONFLICT REPLACE
 );
@@ -112,6 +126,8 @@ dn_ds	REAL,
 unique(ClusterID, runID, pop)
 ON CONFLICT REPLACE
 );
+
+
 
 HERE
 	
