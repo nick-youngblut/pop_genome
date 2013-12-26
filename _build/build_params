@@ -127,6 +127,7 @@ do{ my $x = [
                              './bin/rdtl-db_loadPdistance.pl',
                              './bin/PopGen-db_loadClusterInfo.pl',
                              './bin/ITEP_geneInfo2ITOL.pl',
+                             './bin/quartetDecomp_byPop.pl',
                              './bin/PopGen-db_loaddnds.pl',
                              './bin/rdtl-db_make.pl',
                              './bin/rdtl-db_loadBootstrap.pl',
