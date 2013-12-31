@@ -117,8 +117,10 @@ sub write_tbl_byCluster{
 	my $clust_cnt = 0;
 	foreach my $clust (sort keys %$tbl_r){
 		foreach my $quartet (sort keys %{$tbl_r->{$clust}}){
-			print join("\t", $clust, $quartet, 
-					$tbl_r->{$clust}{$quartet}{'tree'}), "\n";
+			print join("\t", $quartet, 
+					$tbl_r->{$clust}{$quartet}{'status'},
+					$tbl_r->{$clust}{$quartet}{'tree'},
+					$clust), "\n";
 			}
 		$clust_cnt++ if scalar keys %{$tbl_r->{$clust}};
 		}
@@ -143,7 +145,7 @@ sub check_dists{
 				next;
 				}
 			elsif($n_var < 4){ 
-				warn "Only $n_var of the 4 in ($clust -> $quartet) have >=$snp_cut SNPs. Deleting!\n"
+				warn "Only $n_var of the 4 across-quartet comparisons in ($clust -> $quartet) have >=$snp_cut SNPs. Deleting the gene_fam->quartet!\n"
 					unless $verbose_b;
 				delete $tbl_r->{$clust}{$quartet};
 				$del_cnt++;
@@ -237,14 +239,14 @@ sub load_quartet_by_cluster{
 		my @ll = split /,/, $l[3];
 		
 		# quartet tree #
-		my @q = split /,/, $l[1];
+		my @q = split /,/, $l[2];
 		map{ s/[();]+//g } @q;
 		
 		# loading hash #
-		foreach my $clust (@ll){		# cluster_ID=>quartetID=>cat=>value			
-			$tbl{$clust}{$l[0]}{'tree'} = $l[1];
-			$tbl{$clust}{$l[0]}{'taxa'} = [ [@q[0..1]], [@q[2..3]] ];
-			}
+		## cluster_ID=>quartetID=>cat=>value			
+		$tbl{$l[3]}{$l[0]}{'tree'} = $l[2];
+		$tbl{$l[3]}{$l[0]}{'taxa'} = [ [@q[0..1]], [@q[2..3]] ];
+		$tbl{$l[3]}{$l[0]}{'status'} = $l[1];
 		}
 
 	# status #

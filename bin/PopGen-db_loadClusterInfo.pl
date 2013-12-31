@@ -1,5 +1,77 @@
 #!/usr/bin/env perl
 
+=pod
+
+=head1 NAME
+
+PopGen-db_loadClusterInfo.pl -- loading cluster info from an ITEP geneInfo table
+
+=head1 SYNOPSIS
+
+PopGen-db_loadClusterInfo.pl [flags] < geneInfo.txt
+
+=head2 Required flags
+
+=over
+
+=item -database  <char>
+
+PopGen-db database file.
+
+=item -runID  <char>
+
+ITEP cluster run ID. 
+
+=item -core  <int>
+
+ClusterID considered core if found in '-core' taxa.
+
+=back
+
+=head2 Optional flags
+
+=over
+
+=item -verbose  <bool>
+
+Verbose output. [FALSE]
+
+=item -h	This help message
+
+=back
+
+=head2 For more information:
+
+perldoc PopGen-db_loadClusterInfo.pl
+
+=head1 DESCRIPTION
+
+Load basic cluster info into PopGen-db.
+The table produced by db_getClusterGeneInformation.py 
+is used for loading the database.
+
+=head1 EXAMPLES
+
+=head2 Basic usage
+
+PopGen-db_loadClusterInfo.pl -da PopGen-db.sqlite -r mazei_I_2.0_c_0.4_m_maxbit -c 56 < gene_info.txt
+
+=head1 AUTHOR
+
+Nick Youngblut <nyoungb2@illinois.edu>
+
+=head1 AVAILABILITY
+
+sharchaea.life.uiuc.edu:/home/git/ITEP_PopGen/
+
+=head1 COPYRIGHT
+
+Copyright 2010, 2011
+This software is licensed under the terms of the GPLv3
+
+=cut
+
+
 ### modules
 use strict;
 use warnings;
@@ -57,7 +129,7 @@ sub load_clust_info{
 			
 	my $sth = $dbh->prepare($q);
 	
-	my $entry_cnt = 0;
+	my %entry_cnt;
 	foreach my $clusterID (keys %$info_r){
 		
 		# determining core #
@@ -70,10 +142,20 @@ sub load_clust_info{
 		if($DBI::err){
 			print STDERR "ERROR: $DBI::errstr in: '$clusterID' \n";
 			}
-		else{ $entry_cnt++; }		
+		else{
+			 $entry_cnt{$core_var}++; 
+			 $entry_cnt{'total'}++; 
+			 }		
 		}
 
-	print STDERR " Number of entries added/updated in PopGen-db Cluster_meta table: $entry_cnt\n";		
+	map{ $entry_cnt{$_} = 0 unless exists $entry_cnt{$_} } qw/core variable total/;
+	print STDERR " Number of entries added/updated in PopGen-db Cluster_meta table: ",
+					$entry_cnt{'total'}, "\n";		
+	print STDERR " \tNumber of 'core' entries: ",
+					$entry_cnt{'core'}, "\n";		
+	print STDERR " \tNumber of 'variable' entries: ",
+					$entry_cnt{'variable'}, "\n";		
+
 	}
 
 sub load_geneInfo{
@@ -104,74 +186,5 @@ sub list_tables{
 	return [keys %$all];
 	}
 
-__END__
 
-=pod
-
-=head1 NAME
-
-PopGen-db_loadClusterInfo.pl -- loading cluster info from an ITEP geneInfo table
-
-=head1 SYNOPSIS
-
-PopGen-db_loadClusterInfo.pl [flags]
-
-=head2 Required flags
-
-=over
-
-=item -database  <char>
-
-PopGen-db database file.
-
-=item -runID  <char>
-
-ITEP cluster run ID. 
-
-=item -core  <int>
-
-ClusterID considered core if found in '-core' taxa.
-
-=back
-
-=head2 Optional flags
-
-=over
-
-=item -verbose  <bool>
-
-Verbose output. [FALSE]
-
-=item -h	This help message
-
-=back
-
-=head2 For more information:
-
-perldoc PopGen-db_loadClusterInfo.pl
-
-=head1 DESCRIPTION
-
-Load basic cluster info into PopGen-db.
-
-=head1 EXAMPLES
-
-=head2 Basic usage
-
-PopGen-db_loadClusterInfo.pl -da PopGen-db.sqlite -r mazei_I_2.0_c_0.4_m_maxbit -c 56
-
-=head1 AUTHOR
-
-Nick Youngblut <nyoungb2@illinois.edu>
-
-=head1 AVAILABILITY
-
-sharchaea.life.uiuc.edu:/home/git/ITEP_PopGen/
-
-=head1 COPYRIGHT
-
-Copyright 2010, 2011
-This software is licensed under the terms of the GPLv3
-
-=cut
 

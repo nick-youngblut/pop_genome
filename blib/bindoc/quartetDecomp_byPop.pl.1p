@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "QUARTETDECOMP_BYPOP 1"
-.TH QUARTETDECOMP_BYPOP 1 "2013-12-29" "perl v5.14.2" "User Contributed Perl Documentation"
+.TH QUARTETDECOMP_BYPOP 1 "2013-12-31" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -150,6 +150,13 @@ quartets.txt file from Quartet Decomposition Server
 .IP "\-boot  <int>" 4
 .IX Item "-boot  <int>"
 Bootstrap cutoff for defining supported quartets (> \-boot). [80]
+.IP "\-gene  <char>" 4
+.IX Item "-gene  <char>"
+genefamliy.out file from Quartet Decomposition Server. (used to label gene families)
+.Sp
+\&\-item \-regex  <char>
+.Sp
+Regex to alter file names in genefamliy.out (2 arguments required; eg. \-r '.+maxbit|\e.fasta_ML' '').
 .IP "\-v	Verbose output" 4
 .IX Item "-v	Verbose output"
 .PD 0
@@ -162,6 +169,16 @@ perldoc quartetDecomp_byPop.pl
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
 summarize output from Quartet Decomposition Server analysis
+.SS "output"
+.IX Subsection "output"
+.IP "\(bu" 4
+quartet \s-1ID\s0
+.IP "\(bu" 4
+\&'cogruent' or 'congruent' depending on quartet topology
+.IP "\(bu" 4
+quartet tree
+.IP "\(bu" 4
+gene tree containing quartet (modified by \-regex if provided)
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
 .SS "Basic usage:"
