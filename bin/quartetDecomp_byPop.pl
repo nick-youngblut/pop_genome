@@ -36,6 +36,14 @@ quartets.txt file from Quartet Decomposition Server
 
 Bootstrap cutoff for defining supported quartets (> -boot). [80]
 
+=item -gene  <char>
+
+genefamliy.out file from Quartet Decomposition Server. (used to label gene families)
+
+-item -regex  <char>
+
+Regex to alter file names in genefamliy.out (2 arguments required; eg. -r '.+maxbit|\.fasta_ML' ''). 
+
 =item -v	Verbose output
 
 =item -h	This help message
@@ -49,6 +57,20 @@ perldoc quartetDecomp_byPop.pl
 =head1 DESCRIPTION
 
 summarize output from Quartet Decomposition Server analysis
+
+=head2 output
+
+=over
+
+=item * quartet ID
+
+=item * 'cogruent' or 'congruent' depending on quartet topology
+
+=item * quartet tree
+
+=item * gene tree containing quartet (modified by -regex if provided)
+
+=back
 
 =head1 EXAMPLES
 
@@ -83,7 +105,7 @@ use File::Spec;
 #--- args/flags ---#
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
-my ($verbose_b, $pop_in, $matrix_in, $quartets_in, $gene_fam_in);
+my ($verbose_b, $pop_in, $matrix_in, $quartets_in, $gene_fam_in, @regex);
 my $boot_cut = 80;		# >= bootstrap support for quartet
 GetOptions(
 	"population=s" => \$pop_in,
@@ -91,6 +113,7 @@ GetOptions(
 	"quartets=s" => \$quartets_in,
 	"bootstrap=i" => \$boot_cut,
 	"gene=s" => \$gene_fam_in,
+	"regex=s{2,2}" => \@regex,	
 	"verbose" => \$verbose_b,
 	"help|?" => \&pod2usage # Help
 	);
@@ -100,12 +123,12 @@ die "ERROR: provide a population file!\n" unless $pop_in;
 die "ERROR: provide a matrix file!\n" unless $matrix_in;
 die "ERROR: provide a quartet file!\n" unless $quartets_in;
 map{ "ERROR: cannot find: '$_'\n" unless -e } ($pop_in, $matrix_in, $quartets_in);
-
+$regex[0] = qr/$regex[0]/ if defined $regex[0];
 
 #--- MAIN ---#
 my $pops_r = load_pop($pop_in);
+my $gene_fam_r = load_gene_fam($gene_fam_in, \@regex) if $gene_fam_in;
 my $matrix_r = load_matrix($matrix_in, $boot_cut);
-my $gene_fam_r = load_gene_fam($gene_fam_in) if $gene_fam_in;
 load_quartets($quartets_in, $pops_r, $matrix_r, $gene_fam_r);
 
 #--- Subroutines ---#
@@ -153,15 +176,20 @@ sub load_quartets{
 				}
 			
 			# writing out line #
+			my $status; 
 			if( scalar @n1 + scalar @n2 == 4 &&									# different at each node
 				scalar @n3 + scalar @n4 + scalar @n5 + scalar @n6 == 6 ){		# same across 2 pairings
+				$status = 'incongruent';
+				}
+			else{ $status = 'congruent'; }
+			
+			foreach my $gene ( @{$matrix_r->{$l[0]}} ){
 				print join("\t", 
-						"q_$l[0]",								# quartet index
-						$l[1],
-						scalar @{$matrix_r->{$l[0]}},			# N_gene_families
-						join(",", @{$matrix_r->{$l[0]}}) 		# gene_family_list
-						), "\n"; 		
-						
+					"q_$l[0]",
+					$status,						
+					$l[1],
+					$gene
+					), "\n"; 		
 				}
 			}
 		}
@@ -170,15 +198,17 @@ sub load_quartets{
 	}
 
 sub load_gene_fam{
-	my ($gene_fam_in) = @_;
+	my ($gene_fam_in, $regex_r) = @_;
 	
 	open IN, $gene_fam_in or die $!;
 	my %gene_fam;
 	while(<IN>){
 		chomp;
 		my @l = split /\t/;
-		die "ERROR: gene family order file should be 2 columns: order\\tfamily_ID\n"
-			unless scalar @l == 2 && $l[0] =~ /^\d+$/;
+		die "ERROR: gene family order file should be 3 columns: order\\tfile_name\\tN_trees\n"
+			unless scalar @l == 3 && $l[0] =~ /^\d+$/;
+		
+		$l[1] =~ s/$$regex_r[0]/$$regex_r[1]/g if defined $$regex_r[0];
 			
 		die "ERROR: duplicate ordering values in gene family order list!\n"
 			if exists $gene_fam{$l[0]};
@@ -186,6 +216,7 @@ sub load_gene_fam{
 		}
 	close IN;
 	
+		#print Dumper %gene_fam; exit;
 	return \%gene_fam;
 	}
 	
@@ -213,9 +244,9 @@ sub load_matrix{
 				$q_line{$i} = $l[$i];
 				}
 			}
-		else{
+		else{			# applying bootstrap cutoff 
 			for my $i (1..$#l){
-				push @{$matrix{ $q_line{$i} }}, $l[0]
+				push @{$matrix{ $q_line{$i} }}, $l[0]			# all gene families w/ supported quartet
 					if $l[$i] > $boot_cut;
 				}
 			}

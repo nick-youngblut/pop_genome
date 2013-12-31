@@ -123,33 +123,30 @@
 .rm #[ #] #H #V #F C
 .\" ========================================================================
 .\"
-.IX Title "QUARTETDECOMP_BYPOP 1"
-.TH QUARTETDECOMP_BYPOP 1 "2013-12-29" "perl v5.14.2" "User Contributed Perl Documentation"
+.IX Title "QUARTETDECOMP_DISTCUT 1"
+.TH QUARTETDECOMP_DISTCUT 1 "2013-12-29" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
 .nh
 .SH "NAME"
-quartetDecomp_byPop.pl \-\- summarize output from Quartet Decomposition Server analysis
+quartetDecomp_distCut.pl \-\- filter out quartets that do not have differentiating SNPs
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-quartetDecomp_byPop.pl [flags] > quartet_summary.txt
+quartetDecomp_distCut.pl [flags] < quartet_summary.txt > quartet_summary_filtered.txt
 .SS "Required flags"
 .IX Subsection "Required flags"
-.IP "\-pop  <char>" 4
-.IX Item "-pop  <char>"
-Population file (2\-column; tab-delimited; taxon\etpopulation)
-.IP "\-matrix  <char>" 4
-.IX Item "-matrix  <char>"
-matrix.txt file from Quartet Decomposition Server
-.IP "\-quartet  <char>" 4
-.IX Item "-quartet  <char>"
-quartets.txt file from Quartet Decomposition Server
+.IP "\-align  <char>" 4
+.IX Item "-align  <char>"
+Alignment file (2\-column; tab-delimited; file\e\etID).
 .SS "Optional flags"
 .IX Subsection "Optional flags"
-.IP "\-boot  <int>" 4
-.IX Item "-boot  <int>"
-Bootstrap cutoff for defining supported quartets (> \-boot). [80]
+.IP "\-SNP  <int>" 4
+.IX Item "-SNP  <int>"
+Number of SNPs that must differentiate taxa on either node of quartet. [1]
+.IP "\-regex  <char>" 4
+.IX Item "-regex  <char>"
+Regex to alter taxa names in alignment files (2 arguments required; eg. \-r '.peg.+' '').
 .IP "\-v	Verbose output" 4
 .IX Item "-v	Verbose output"
 .PD 0
@@ -158,15 +155,21 @@ Bootstrap cutoff for defining supported quartets (> \-boot). [80]
 .PD
 .SS "For more information:"
 .IX Subsection "For more information:"
-perldoc quartetDecomp_byPop.pl
+perldoc quartetDecomp_distCut.pl
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-summarize output from Quartet Decomposition Server analysis
+Some quartets that passed the bootstrap support cutoff
+may actually have no differentiating SNPs, so the 
+supported topology was just by chance. This script will
+remove any such quartets (for each tree/alignment) 
+that do not meet the specified \s-1SNP\s0 requirement.
+.PP
+The ouput will be by \s-1ID\s0. Columns include: '\s-1ID\s0'\et'quartetID'\et'quartet_tree'
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
 .SS "Basic usage:"
 .IX Subsection "Basic usage:"
-quartetDecomp_byPop.pl [flags] > quartet_summary.txt
+quartetDecomp_distCut.pl \-a align_list.txt < quartet_summary.txt > quartet_summary_filtered.txt
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Nick Youngblut <nyoungb2@illinois.edu>

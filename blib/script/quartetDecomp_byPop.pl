@@ -34,7 +34,7 @@ quartets.txt file from Quartet Decomposition Server
 
 =item -boot  <int>
 
-Bootstrap cutoff for defining supported quartets (> -boot). [70]
+Bootstrap cutoff for defining supported quartets (> -boot). [80]
 
 =item -v	Verbose output
 
@@ -83,13 +83,14 @@ use File::Spec;
 #--- args/flags ---#
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
-my ($verbose_b, $pop_in, $matrix_in, $quartets_in);
-my $boot_cut = 70;		# >= bootstrap support for quartet
+my ($verbose_b, $pop_in, $matrix_in, $quartets_in, $gene_fam_in);
+my $boot_cut = 80;		# >= bootstrap support for quartet
 GetOptions(
 	"population=s" => \$pop_in,
 	"matrix=s" => \$matrix_in,
 	"quartets=s" => \$quartets_in,
 	"bootstrap=i" => \$boot_cut,
+	"gene=s" => \$gene_fam_in,
 	"verbose" => \$verbose_b,
 	"help|?" => \&pod2usage # Help
 	);
@@ -104,7 +105,8 @@ map{ "ERROR: cannot find: '$_'\n" unless -e } ($pop_in, $matrix_in, $quartets_in
 #--- MAIN ---#
 my $pops_r = load_pop($pop_in);
 my $matrix_r = load_matrix($matrix_in, $boot_cut);
-load_quartets($quartets_in, $pops_r, $matrix_r);
+my $gene_fam_r = load_gene_fam($gene_fam_in) if $gene_fam_in;
+load_quartets($quartets_in, $pops_r, $matrix_r, $gene_fam_r);
 
 #--- Subroutines ---#
 sub load_quartets{
@@ -112,7 +114,7 @@ sub load_quartets{
 ## if quartet supported in any gene tree (matrix):
 #		determine whether incongruent w/ population 
 #			both quartet nodes contain both populations
-	my ($quartets_in, $pops_r, $matrix_r) = @_;
+	my ($quartets_in, $pops_r, $matrix_r, $gene_fam_r) = @_;
 	
 	open IN, $quartets_in or die $!;
 	while(<IN>){
@@ -140,24 +142,51 @@ sub load_quartets{
 			my @n5 = unique( $pops_r->{$taxa[0]}, $pops_r->{$taxa[3]} );
 			my @n6 = unique( $pops_r->{$taxa[1]}, $pops_r->{$taxa[2]} );
 
+			# converting gene family to user-defined name (if provided) #
+			if($gene_fam_r){
+				foreach my $fam (@{$matrix_r->{$l[0]}}){
+					$fam =~ s/^fam_//;
+					die "ERROR: cannot find '$fam' in gene family file!\n"
+						unless exists $gene_fam_r->{$fam};
+					$fam = $gene_fam_r->{$fam};
+					}
+				}
+			
+			# writing out line #
 			if( scalar @n1 + scalar @n2 == 4 &&									# different at each node
 				scalar @n3 + scalar @n4 + scalar @n5 + scalar @n6 == 6 ){		# same across 2 pairings
 				print join("\t", 
-						"q\_$l[0]",								# quartet index
+						"q_$l[0]",								# quartet index
 						$l[1],
 						scalar @{$matrix_r->{$l[0]}},			# N_gene_families
 						join(",", @{$matrix_r->{$l[0]}}) 		# gene_family_list
 						), "\n"; 		
 						
 				}
-				
-				
-			#if($l[0] == 8157){ print Dumper @n1, @n2; exit;} 
 			}
-		
 		}
 	close IN;
 
+	}
+
+sub load_gene_fam{
+	my ($gene_fam_in) = @_;
+	
+	open IN, $gene_fam_in or die $!;
+	my %gene_fam;
+	while(<IN>){
+		chomp;
+		my @l = split /\t/;
+		die "ERROR: gene family order file should be 2 columns: order\\tfamily_ID\n"
+			unless scalar @l == 2 && $l[0] =~ /^\d+$/;
+			
+		die "ERROR: duplicate ordering values in gene family order list!\n"
+			if exists $gene_fam{$l[0]};
+		$gene_fam{$l[0]} = $l[1];
+		}
+	close IN;
+	
+	return \%gene_fam;
 	}
 	
 sub unique{
