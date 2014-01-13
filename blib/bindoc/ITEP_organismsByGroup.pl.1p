@@ -123,48 +123,49 @@
 .rm #[ #] #H #V #F C
 .\" ========================================================================
 .\"
-.IX Title "POPGEN-DB_LOADCLUSTERINFO 1"
-.TH POPGEN-DB_LOADCLUSTERINFO 1 "2014-01-10" "perl v5.14.2" "User Contributed Perl Documentation"
+.IX Title "ITEP_ORGANISMSBYGROUP 1"
+.TH ITEP_ORGANISMSBYGROUP 1 "2014-01-10" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
 .nh
 .SH "NAME"
-PopGen\-db_loadClusterInfo.pl \-\- loading cluster info from an ITEP geneInfo table
+ITEP_organismsByGroup.pl \-\- parse and ITEP organisms file by groups in the ITEP groups file
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-PopGen\-db_loadClusterInfo.pl [flags] < geneInfo.txt
+ITEP_organismsByGroup.pl [flags]
 .SS "Required flags"
 .IX Subsection "Required flags"
-.IP "\-database  <char>" 4
-.IX Item "-database  <char>"
-PopGen-db database file.
-.IP "\-runID  <char>" 4
-.IX Item "-runID  <char>"
-\&\s-1ITEP\s0 cluster run \s-1ID\s0.
-.IP "\-core  <int>" 4
-.IX Item "-core  <int>"
-ClusterID considered core if found in '\-core' taxa.
+.IP "\-org" 4
+.IX Item "-org"
+organisms file
+.IP "\-group" 4
+.IX Item "-group"
+groups file
 .SS "Optional flags"
 .IX Subsection "Optional flags"
-.IP "\-verbose  <bool>" 4
-.IX Item "-verbose  <bool>"
-Verbose output. [\s-1FALSE\s0]
+.IP "\-dir" 4
+.IX Item "-dir"
+Output directory [organisms_byGroup].
+.IP "\-v	Verbose output" 4
+.IX Item "-v	Verbose output"
+.PD 0
 .IP "\-h	This help message" 4
 .IX Item "-h	This help message"
+.PD
 .SS "For more information:"
 .IX Subsection "For more information:"
-perldoc PopGen\-db_loadClusterInfo.pl
+perldoc ITEP_organismsByGroup.pl
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-Load basic cluster info into PopGen-db.
-The table produced by db_getClusterGeneInformation.py 
-is used for loading the database.
+Parse and \s-1ITEP\s0 organisms file by groups in the \s-1ITEP\s0 groups file.
+Can be useful for having ITEP-independent way to identifying taxa
+in each designate groups.
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
-.SS "Basic usage"
-.IX Subsection "Basic usage"
-PopGen\-db_loadClusterInfo.pl \-da PopGen\-db.sqlite \-r mazei_I_2.0_c_0.4_m_maxbit \-c 56 < gene_info.txt
+.SS "Basic usage:"
+.IX Subsection "Basic usage:"
+ITEP_organismsByGroup.pl \-o organisms \-g group
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Nick Youngblut <nyoungb2@illinois.edu>
