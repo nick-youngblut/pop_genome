@@ -65,10 +65,22 @@ foreach my $cluster (@$fasta_r){
 	# purging fasta names of RAxML-unfriendly characters #
 	purge_names($cluster, $curdir);
 	
+	# getting number of sequences in file #
+	my $seq_cnt = get_seq_cnt($cluster, $curdir);
+	
+	# checking for >= 2 taxa in cluster #
+	die "WARNING: <2 sequences in '$cluster'. Exiting prior to calling mafft!\n"
+		unless $seq_cnt >= 2;
+	
 	# AA alignment #
 	call_mafft($cluster, $mafft_prog, $curdir, $prefix, $align_dir, $threads);
 	# pal2nal #
 	call_pal2nal($cluster, $curdir, $prefix, $align_dir, $pal2nal_dir, $rename_b, $pal2nal);	
+
+	# checking for >= 4 taxa in cluster (required for RAxML) #
+	die "WARNING: <4 sequences in '$cluster'. Exiting prior to calling RAxML!\n"
+		unless $seq_cnt >= 4;
+
 	# phylip & raxml #
 	phy2raxml($cluster, $curdir, $prefix, $pal2nal_dir, $ML_dir, $threads, $raxml_prog);
 	# removing PEGs (for comparing to species tree) #
@@ -114,7 +126,7 @@ sub rm_PEGs{
 	}
 
 sub phy2raxml{
-	my ($cluster, $curdir, $prefix, $pal2nal_dir, $ML_dir, $threads, $raxml_prog) = @_;
+	my ($cluster, $curdir, $prefix, $pal2nal_dir, $ML_dir, $threads, $raxml_prog) = @_;	
 	
 	# convert to phylip #
 	my $cmd = "alignIO.py $pal2nal_dir/$cluster $ML_dir/$cluster.phy";
@@ -126,12 +138,28 @@ sub phy2raxml{
 	# calling raxml #
 	print STDERR "Starting RAxML inference on: '$cluster'\n";
 	$cmd = "$raxml_prog -f a -x 0319 -p 0911 -# 100 -m GTRGAMMA -s $cluster.phy -n $cluster\_ML -T $threads";
-	print STDERR `$cmd`;
+	`$cmd`;
+	
+	if ($? == -1) {
+    	print "ERROR: failed to execute: $!\n";
+		}
+	elsif ($? & 127) {
+    	printf "ERROR: child died with signal %d, %s coredump\n",
+        	($? & 127),  ($? & 128) ? 'with' : 'without';
+		}
 	
 	# ladderizing tree #
 	rename("RAxML_bipartitions.$cluster\_ML", "$cluster\_ML.nwk") or die $!;
 	$cmd = "ladderize.r -t $cluster\_ML.nwk";
 	`$cmd`;
+	
+	if ($? == -1) {
+    	print "ERROR: failed to execute: $!\n";
+		}
+	elsif ($? & 127) {
+    	printf "ERROR: child died with signal %d, %s coredump\n",
+        	($? & 127),  ($? & 128) ? 'with' : 'without';
+		}
 	
 	# moving back to current directory #
 	chdir $curdir or die $!;
@@ -149,15 +177,46 @@ sub call_pal2nal{
 	$cmd .= " | replaceOrgWithAbbrev.py" unless $rename_b;
 	$cmd .= " > $pal2nal_dir/$cluster";
 	`$cmd`;
+	
+	if ($? == -1) {
+    	print "ERROR: failed to execute: $!\n";
+		}
+	elsif ($? & 127) {
+    	printf "ERROR: child died with signal %d, %s coredump\n",
+        	($? & 127),  ($? & 128) ? 'with' : 'without';
+		}
 	}
 
 sub call_mafft{
 # calling mafft #
 	my ($cluster, $mafft_prog, $curdir, $prefix, $align_dir, $threads) = @_;
 	
+	# calling mafft #
 	my $cmd = "$mafft_prog --thread $threads $curdir/$prefix\_AA/$cluster > $align_dir/$cluster";
 		#print Dumper $cmd; exit;
 	`$cmd`;
+	
+	if ($? == -1) {
+    	print "ERROR: failed to execute: $!\n";
+		}
+	elsif ($? & 127) {
+    	printf "ERROR: child died with signal %d, %s coredump\n",
+        	($? & 127),  ($? & 128) ? 'with' : 'without';
+		}
+	}
+
+sub get_seq_cnt{
+# count number of sequences in cluster #
+	my ($cluster, $curdir) = @_; 
+	
+	open IN, "$curdir/$prefix\_AA/$cluster" or die $!;
+	my $seq_cnt = 0;
+	while(<IN>){
+		$seq_cnt++ if /^>/;
+		}
+	close IN;
+	
+	return $seq_cnt;
 	}
 
 sub get_fasta_files{
