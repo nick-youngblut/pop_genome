@@ -63,9 +63,7 @@ Divergent sequences are identified as:
 (mean sequenceID of the whole alignment - stdev sequenceID of whole
 alignment * stdev_multiplier)
 
-(mean sequenceID of a sequence versus each other in alignment) >
-(mean sequenceID of the whole alignment + stdev sequenceID of whole
-alignment * stdev_multiplier)
+These genes are relatively divergent in the gene cluster
 
 Possible truncations are identified by first spliting the alignment 
 in half. Outliers in both seqID & gaps (similar to seqID outlier detection)
