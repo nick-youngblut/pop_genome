@@ -133,6 +133,10 @@ sub check_dists{
 	
 	my $del_cnt = 0;
 	foreach my $clust (keys %$tbl_r){		# all clusters w/ supported quartets
+		# status #
+		print STDERR "Processing cluster: $clust\n" unless $verbose_b;
+		
+		# loading fasta #
 		die "ERROR: cannot find '$clust' in alignment list IDs\n"
 			unless exists $align_list_r->{$clust};
 		my $fasta_r = load_fasta($align_list_r->{$clust}, $regex_r); 

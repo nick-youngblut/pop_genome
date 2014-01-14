@@ -192,7 +192,7 @@ sub call_mafft{
 	my ($cluster, $mafft_prog, $curdir, $prefix, $align_dir, $threads) = @_;
 	
 	# calling mafft #
-	my $cmd = "$mafft_prog --thread $threads $curdir/$prefix\_AA/$cluster > $align_dir/$cluster";
+	my $cmd = "$mafft_prog --quiet --thread $threads $curdir/$prefix\_AA/$cluster > $align_dir/$cluster";
 		#print Dumper $cmd; exit;
 	`$cmd`;
 	
