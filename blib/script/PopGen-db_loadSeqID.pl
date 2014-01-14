@@ -1,5 +1,79 @@
 #!/usr/bin/env perl
 
+=pod
+
+=head1 NAME
+
+PopGen-db_loadSeqID.pl -- loading a table of SeqID (or pdistance) values
+
+=head1 SYNOPSIS
+
+PopGen-db_loadSeqID.pl [flags] < pdist_res.txt
+
+=head2 Required flags
+
+=over
+
+=item -database  <char>
+
+PopGen-db database file.
+
+=item -runID  <char>
+
+ITEP cluster run ID. 
+
+=back
+
+=head2 Optional flags
+
+=over
+
+=item -regex  <char>
+
+Regex for pulling cluster ID out of colunn 1 values. [".+_|\.f[astn]*a\$"]
+
+=item -pdist  <bool>
+
+pdistance values instead of Sequence ID values? [FALSE]
+
+=item -verbose  <bool>
+
+Verbose output. [FALSE]
+
+=item -h	This help message
+
+=back
+
+=head2 For more information:
+
+perldoc PopGen-db_loadSeqID.pl
+
+=head1 DESCRIPTION
+
+Load table of sequence identities into PopGen-db.
+
+=head1 EXAMPLES
+
+=head2 Basic usage (pdistance values)
+
+PopGen-db_loadSeqID.pl -p -da PopGen-db.sqlite -r mazei_I_2.0_c_0.4_m_maxbit < pdist_res.txt
+
+=head1 AUTHOR
+
+Nick Youngblut <nyoungb2@illinois.edu>
+
+=head1 AVAILABILITY
+
+sharchaea.life.uiuc.edu:/home/git/ITEP_PopGen/
+
+=head1 COPYRIGHT
+
+Copyright 2010, 2011
+This software is licensed under the terms of the GPLv3
+
+=cut
+
+
 ### modules
 use strict;
 use warnings;
@@ -73,8 +147,11 @@ sub load_clust_info{
 			undef $l[2];
 			}
 		else{
-			$l[2] = (1 - $l[2]) * 100 if $pdist_b;			# converting to seqID
+			$l[2] = (100 - $l[2]) if $pdist_b;			# converting to seqID
 			}
+			
+		die "ERROR: $l[2] is not in range 0-100 (line $.)\n"
+			unless $l[2] >=0 && $l[2] <= 100;
 		
 		
 		$sth->execute($clusterID, $runID, $l[1], $l[2]);
@@ -97,79 +174,4 @@ sub check_file_IO{
 		unless -e $infile;
 	}
 
-
-__END__
-
-=pod
-
-=head1 NAME
-
-PopGen-db_loadSeqID.pl -- loading a table of SeqID (or pdistance) values
-
-=head1 SYNOPSIS
-
-PopGen-db_loadSeqID.pl [flags]
-
-=head2 Required flags
-
-=over
-
-=item -database  <char>
-
-PopGen-db database file.
-
-=item -runID  <char>
-
-ITEP cluster run ID. 
-
-=back
-
-=head2 Optional flags
-
-=over
-
-=item -regex  <char>
-
-Regex for pulling cluster ID out of colunn 1 values. [".+_|\.f[astn]*a\$"]
-
-=item -pdist  <bool>
-
-pdistance values instead of Sequence ID values? [FALSE]
-
-=item -verbose  <bool>
-
-Verbose output. [FALSE]
-
-=item -h	This help message
-
-=back
-
-=head2 For more information:
-
-perldoc PopGen-db_loadSeqID.pl
-
-=head1 DESCRIPTION
-
-Load table of sequence identities into PopGen-db.
-
-=head1 EXAMPLES
-
-=head2 Basic usage (pdistance values)
-
-PopGen-db_loadSeqID.pl -p -da PopGen-db.sqlite -r mazei_I_2.0_c_0.4_m_maxbit < pdist_res.txt
-
-=head1 AUTHOR
-
-Nick Youngblut <nyoungb2@illinois.edu>
-
-=head1 AVAILABILITY
-
-sharchaea.life.uiuc.edu:/home/git/ITEP_PopGen/
-
-=head1 COPYRIGHT
-
-Copyright 2010, 2011
-This software is licensed under the terms of the GPLv3
-
-=cut
 
