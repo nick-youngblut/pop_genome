@@ -1,0 +1,3 @@
+/home/nyoungb2/perl/projects/ITEP_PopGen/dev/SNAP_batch/1001.fna	NA	NA	NA	NA
+/home/nyoungb2/perl/projects/ITEP_PopGen/dev/SNAP_batch/1000.fna	0.00	0.00	3.83	0.261096605744125
+/home/nyoungb2/perl/projects/ITEP_PopGen/dev/SNAP_batch/1003.fna	NA	NA	NA	NA

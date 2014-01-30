@@ -1,0 +1,5 @@
+query_desc	hit_accession	hit_desc	perc_id	evalue	bit_score	hsp_length	q_start	q_end	hit_start	hit_end
+fig|6666666.30644.peg.1676	NP_635071	transposase [Methanosarcina mazei Go1] >gi|20907711|gb|AAM32743.1| Transposase [Methanosarcina mazei Go1]	98.2456140350877	3.0852e-30	117.857	57	19	75	1	57
+fig|6666666.30644.peg.1676	NP_632282	transposase [Methanosarcina mazei Go1] >gi|20904612|gb|AAM29954.1| Transposase [Methanosarcina mazei Go1]	98.2456140350877	3.14777e-30	117.857	57	19	75	1	57
+fig|6666666.30644.peg.1676	NP_634531	transposase [Methanosarcina mazei Go1] >gi|21228611|ref|NP_634533.1| transposase [Methanosarcina mazei Go1] >gi|21229367|ref|NP_635289.1| transposase [Methanosarcina mazei Go1] >gi|20907105|gb|AAM32203.1| Transposase [Methanosarcina mazei Go1] >gi|20907108|gb|AAM32205.1| Transposase [Methanosarcina mazei Go1] >gi|20907954|gb|AAM32961.1| Transposase [Methanosarcina mazei Go1]	98.2456140350877	3.244e-30	117.472	57	19	75	1	57
+fig|6666666.30644.peg.1676	YP_303619	transposase [Methanosarcina barkeri str. Fusaro] >gi|72394766|gb|AAZ69039.1| transposase [Methanosarcina barkeri str. Fusaro]	66.6666666666667	7.00648e-22	91.6633	75	1	75	1	74
