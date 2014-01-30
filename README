@@ -1,27 +1,36 @@
-ITEP_PopGen
+# pop_genome
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+## DESCRIPTION
 
-A README file is required for CPAN modules since CPAN extracts the README
-file from a module distribution so that people browsing the archive
-can use it to get an idea of the module's uses. It is usually a good idea
-to provide version information here so that people can decide whether
-fixes for the module are worth downloading.
+A collection of scripts used for various population genomics analyses of bacterial/archaeal genomes.
+Many build upon ITEP, which is a toolset for pangenome analysis. 
+
+## DEPENDENCIES
+
+Depending on the script:
+
+* BioPerl 
+* ITEP: https://github.com/mattb112885/clusterDbAnalysis
+* SNAP: http://www.hiv.lanl.gov/content/sequence/SNAP/SNAP.html
+* PAML: http://abacus.gene.ucl.ac.uk/software/paml.html
+* Arlecore: http://cmpg.unibe.ch/software/arlequin35/
+* Mowgli: http://www.atgc-montpellier.fr/Mowgli/
+* Ranger-DTL: http://compbio.mit.edu/ranger-dtl/
+* Mothur: http://www.mothur.org/wiki/Download_mothur
+* PhiPack: http://www.maths.otago.ac.nz/~dbryant/software.html
+* sqlite
 
 
-INSTALLATION
+## INSTALLATION
 
 To install this module, run the following commands:
-
+	
 	perl Build.PL
 	./Build
 	./Build test
 	./Build install
 
-SUPPORT AND DOCUMENTATION
+## SUPPORT AND DOCUMENTATION
 
 After installing, you can find documentation for this module with the
 perldoc command.
@@ -43,7 +52,7 @@ You can also look for information at:
         http://search.cpan.org/dist/ITEP_PopGen/
 
 
-LICENSE AND COPYRIGHT
+## LICENSE AND COPYRIGHT
 
 Copyright (C) 2013 Nick Youngblut
 
