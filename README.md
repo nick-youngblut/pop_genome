@@ -92,21 +92,6 @@ perldoc command.
 
     perldoc ITEP_PopGen
 
-You can also look for information at:
-
-    RT, CPAN's request tracker (report bugs here)
-        http://rt.cpan.org/NoAuth/Bugs.html?Dist=ITEP_PopGen
-
-    AnnoCPAN, Annotated CPAN documentation
-        http://annocpan.org/dist/ITEP_PopGen
-
-    CPAN Ratings
-        http://cpanratings.perl.org/d/ITEP_PopGen
-
-    Search CPAN
-        http://search.cpan.org/dist/ITEP_PopGen/
-
-
 ## LICENSE AND COPYRIGHT
 
 Copyright (C) 2013 Nick Youngblut
