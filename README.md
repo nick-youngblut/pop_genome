@@ -30,6 +30,8 @@ To install this module, run the following commands:
 	./Build test
 	./Build install
 
+Or just add the 'bin' folder to your $PATH.
+
 ## Scripts used in 'Genomic and phenotypic differentiation among Methanosarcina mazei populations from Columbia River sediment'
 
 This repo also includes scripts for other analyses no included in the manuscript.
