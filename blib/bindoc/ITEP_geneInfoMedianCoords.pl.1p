@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "ITEP_GENEINFOMEDIANCOORDS 1"
-.TH ITEP_GENEINFOMEDIANCOORDS 1 "2013-11-09" "perl v5.14.2" "User Contributed Perl Documentation"
+.TH ITEP_GENEINFOMEDIANCOORDS 1 "2014-05-31" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -147,8 +147,7 @@ perldoc ITEP_geneInfoMedianCoords.pl
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
 Get the general median start-stops of
-genes in
-a
+genes listed in an \s-1ITEP\s0 geneInfo table.
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
 .SS "Basic usage:"

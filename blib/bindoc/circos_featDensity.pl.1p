@@ -123,124 +123,60 @@
 .rm #[ #] #H #V #F C
 .\" ========================================================================
 .\"
-.IX Title "FORAGER 1"
-.TH FORAGER 1 "2014-01-29" "perl v5.14.2" "User Contributed Perl Documentation"
+.IX Title "CIRCOS_FEATDENSITY 1"
+.TH CIRCOS_FEATDENSITY 1 "2014-05-31" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
 .nh
 .SH "NAME"
-FORAGer.pl \-\- Finding Orthologous Reads and Genes
+circos_featDensity.pl \-\- sliding window of feature density across the genome
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-db_getClusterGeneInformation.py | FORAGer.pl [flags]
-.SS "Required flags"
-.IX Subsection "Required flags"
-.IP "\-index" 4
-.IX Item "-index"
-Index file listing *sam files & \s-1FIG\s0 IDs.
-.Sp
-2 (or 3) column format (*txt): 1st=/PATH_to_FILE/FILE.sam; 2nd=FIG; (3rd=Query)
-.SS "Optional flags"
-.IX Subsection "Optional flags"
-.IP "\-outdir" 4
-.IX Item "-outdir"
-Output directory name (location of all mapped read files). 
-For multiple queries, querie names will be appended to the directory
-name. [./Mapped2Cluster/]
-.IP "\-extend" 4
-.IX Item "-extend"
-Number of base pairs to extend around the gene of interest (5' & 3'). [100]
-.IP "\-fork" 4
-.IX Item "-fork"
-Number of \s-1SAM\s0 files to process in parallel. [1]
-.IP "\-bitwise" 4
-.IX Item "-bitwise"
-Use \s-1SAM\s0 bitwise flag to return read to original orientation (i.e. rev/rev\-comp read)
-.IP "\-v	Verbose output. [\s-1TRUE\s0]" 4
-.IX Item "-v	Verbose output. [TRUE]"
-.PD 0
-.IP "\-w 	Warnings? [\s-1TRUE\s0]" 4
-.IX Item "-w 	Warnings? [TRUE]"
-.IP "\-h	This help message" 4
-.IX Item "-h	This help message"
-.PD
+circos_featDensity.pl [flags] < circos_xy.txt > featDensity_xy.txt
+.SS "Required Flags"
+.IX Subsection "Required Flags"
+.IP "\-size  <int>" 4
+.IX Item "-size  <int>"
+Genome size (bp).
+.SS "Optional Flags"
+.IX Subsection "Optional Flags"
+.IP "\-window  <int>" 4
+.IX Item "-window  <int>"
+Window size (bp). [10000]
+.IP "\-jump  <int>" 4
+.IX Item "-jump  <int>"
+Jump size (bp). [1000]
+.IP "\-cutoff  <float>" 4
+.IX Item "-cutoff  <float>"
+Value cutoff to include feature ('\-compare' for sign: '>' '<'). [0]
+.IP "\-compare  <char>" 4
+.IX Item "-compare  <char>"
+Sign used for \-cutoff comparisons ('>', '>=', '<', '<='). ['>=']
 .SS "For more information:"
 .IX Subsection "For more information:"
-perldoc FORAGer.pl
+perldoc circos_featDensity.pl
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-Pull out all reads mapping to each gene (& region around the gene)
-in each gene cluster. Multiple draft (query reads) and (almost)\-closed
-genomes (reference genomes) can be used.
-.SS "Input"
-.IX Subsection "Input"
-\fIIndex file\fR
-.IX Subsection "Index file"
+Get number of features within each window.
 .PP
-2 or 3 column tab-delimited file for associating a \s-1SAM\s0 file to 
-the \s-1FIG\s0 \s-1ID\s0 of the reference genome used for mapping. 'Query' (3rd column)
-is only needed if multiple query draft genomes were used for read
-mapping.
+Input is a table in Circos xy format (scaffold\etstart\etstop\etvalue).
 .PP
-1st=/PATH_to_FILE/FILE.sam;  2nd=FIG; (3rd=Query)
+Output is in Circos xy table format.
 .PP
-\fIdb_getClusterGeneInformation.py |\fR
-.IX Subsection "db_getClusterGeneInformation.py |"
-.PP
-Piped output from db_getClusterGeneInformation.py.
-.PP
-Clusters should be from 1 cluster run!
-.PP
-output from
-.PP
-\fI\s-1SAM\s0 files\fR
-.IX Subsection "SAM files"
-.PP
-Reads from a genome of interest (e.g. a draft genome) should be mapped
-onto all other genomes (producing the \s-1SAM\s0 files required).
-.PP
-You do not need to provide a *sam file for each \s-1FIG\s0 in each gene cluster;
-however, genes from any genomes lacking *sam files will be skipped (ie. 
-no reads pulled out for those genes; less total reads for the local assembly)
-.PP
-Multiple mappings are allowed for the same file (e.g. bowtie2 with '\-k' flag).
-.SS "Output files"
-.IX Subsection "Output files"
-All files output to a directory(s). See '\-outdir'.
-.PP
-File prefix = 'clust#'
-.PP
-\&'_FR.fna' = Just paired-end reads that both mapped to the gene region
-.PP
-\&'_A.fna' = All reads that mapped to the gene region
-.SS "Requires"
-.IX Subsection "Requires"
-\&\s-1ITEP\s0 must be set up, so that it can be queried.
+All features (rows in table) < '\-cutoff' will be skipping in the
+density calculation.
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
-.SS "Mapping reads to a reference genome"
-.IX Subsection "Mapping reads to a reference genome"
-$ bowtie2\-build genome1.fna genome1
-.PP
-$ bowtie2 \-x genome1 \-S genome1.sam \-1 reads_F.fq \-2 reads_R.fq \-k 10
-.SS "Make an index file"
-.IX Subsection "Make an index file"
-column1 = *sam file location
-.PP
-column2 = \s-1FIG\s0 \s-1ID\s0
-.SS "Get some gene clusters of interest"
-.IX Subsection "Get some gene clusters of interest"
-$ db_getAllClusterRuns.py | grep \*(L"mazei_I_2.0_c_0.4_m_maxbit\*(R" | 
-db_getClustersWithAnnotation.py \*(L"methyl coenzyme M reductase\*(R" |
-db_getClusterGeneInformation.py | FORAGer.pl \-in index.txt 
-\&\-runID all_I_2.0_c_0.4_m_maxbit
+.SS "Density of 4 Mb genome"
+.IX Subsection "Density of 4 Mb genome"
+circos_featDensity.pl < feat_xy.txt \-s 4000000 > featDensity.txt
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Nick Youngblut <nyoungb2@illinois.edu>
 .SH "AVAILABILITY"
 .IX Header "AVAILABILITY"
-sharchaea.life.uiuc.edu:/home/git/ITEP_PopGen/
+sharchaea.life.uiuc.edu:/home/git/annotation/
 .SH "COPYRIGHT"
 .IX Header "COPYRIGHT"
 Copyright 2010, 2011
