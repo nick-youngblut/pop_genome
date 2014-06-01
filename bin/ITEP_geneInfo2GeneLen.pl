@@ -196,6 +196,10 @@ tab-delimited table of gene lengths.
 Multi-copy genes will each be on a seperate line.
 The grouping of multi-copy genes on each line is random.
 
+=head2 OUTPUT
+
+columsn: taxon_name, gene_copy_number, clusterID1, clusterID2, ...
+
 =head1 EXAMPLES
 
 =head1 AUTHOR

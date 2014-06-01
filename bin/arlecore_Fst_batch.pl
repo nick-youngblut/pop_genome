@@ -1,372 +1,672 @@
 #!/usr/bin/env perl
 
-### modules
 use strict;
 use warnings;
+
+=pod
+
+=head1 NAME
+
+arlecore_Fst_batch.pl -- batch runs of arlecore to get Fst values from >= alignments
+
+=head1 SYNOPSIS
+
+arlecore_Fst_batch.pl [flags] aln(s).fna > Fst_res.txt
+
+=head2 flags
+
+=head3 Required
+
+=over
+
+=item -count
+
+Count file in Mothur format.
+
+=back
+
+=head3 Optional
+
+=over
+
+=item -ars
+
+*ars file used for arelcore. A default ars file will be written if not
+provided.
+
+=item -min
+
+The minimum number of populations and taxa in each population.
+Two values required (min_populations min_taxa_per_population). [2 3]
+
+=item -delimiter
+
+Delimiter separating taxon name from gene ID/annotation in fasta files (taxon name must come 1st). [" "]
+
+=item -forks
+
+Number of fasta files to process in parallel. [1]
+
+=item -v	Verbose output
+
+=item -h	This help message
+
+=back
+
+=head2 For more information:
+
+perldoc arlecore_Fst_batch.pl
+
+=head1 DESCRIPTION
+
+Perform batch runs of arlecore with many alignment files.
+Mothur de-uniques sequences to make the *arp file.
+The Fst and p values are parsed from the htm output of arlecore.
+
+The count file should be used to designate population structure.
+Names in the count file and fasta files must match!
+
+Multi-copy genes and genes absent in members of a population
+can be used (must meet '-min' cutoffs), but the results
+might not be reliable.
+
+=head2 Output
+
+tab-delimited table.
+Columns: file, pop1__pop2, Fst, Fst-pvalue_low, Fst-pvalue_high
+
+=head1 EXAMPLES
+
+=head2 Usage:
+
+arlecore_Fst_batch.pl -c pops.count aln*.fna > Fst_res.txt
+
+=head1 AUTHOR
+
+Nick Youngblut <nyoungb2@illinois.edu>
+
+=head1 AVAILABILITY
+
+sharchaea.life.uiuc.edu:/home/git/arlequin_scripts/
+
+=head1 COPYRIGHT
+
+Copyright 2010, 2011
+This software is licensed under the terms of the GPLv3
+
+=cut
+
 use Pod::Usage;
 use Data::Dumper;
 use Getopt::Long;
 use File::Spec;
 use File::Path;
+use File::Temp;
+use Parallel::ForkManager;
+use IPC::Cmd qw/can_run run/;
 
 ### args/flags
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
 my ($verbose, $struct_in, $ars_in, $count_in, $prefix);
+my $forks = 0;
+my @min = (2, 3);
 my $delim = " ";
 GetOptions(
 	   "count=s" => \$count_in,
 	   "ars=s" => \$ars_in,
-	   "outdir=s" => \$prefix,
+	   "forks=i" => \$forks,
 	   "delimiter=s" => \$delim,
+	   "min=i{2,2}" => \@min,
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
 
-### I/O error & defaults
+#--- I/O error & defaults ---#
 die " ERROR: provide a table in Mothur count file format!\n" unless $count_in;
 die " ERROR $count_in not found!\n" unless -e $count_in;
 $count_in = File::Spec->rel2abs($count_in);
 $delim = qr/$delim/;
 
 foreach my $infile (@ARGV){
-	die " ERROR: $infile not found!\n" unless -e $infile;
-	$infile = File::Spec->rel2abs($infile);
-	}
+  die " ERROR: $infile not found!\n" unless -e $infile;
+  $infile = File::Spec->rel2abs($infile);
+}
 
-### MAIN 
-# output directory #
-my $outdir = make_outdir($prefix);
+# checking for executables
+my @exe = qw/mothur arlecore/;
+map{ can_run($_) || 
+       die "Cannot find executable: '$_'. " 
+	 . "Add it to your \$PATH\n"} @exe;
+
+
+#--- MAIN ---#
+# directory #
+my $cwd = File::Spec->rel2abs(File::Spec->curdir());
 
 # ars #
 $ars_in = write_ars() unless $ars_in;  
 $ars_in = File::Spec->rel2abs($ars_in);
 die " ERROR: $ars_in not found!\n" unless -e $ars_in;
 
+# forking 
+my $pm = Parallel::ForkManager->new($forks);
+$pm->run_on_finish(
+		   sub{
+		       my ($pid, $exit_code, $ident, 
+			   $exit_signal, $core_dump, $ret_r) = @_;
+		       write_fst_table($ret_r) if defined $ret_r;
+		       });
+
+
 ## arlecore run ##
-my %fst_res;
 foreach my $infile (@ARGV){
-	$infile = File::Spec->rel2abs($infile);
-	
-	# getting unique sequences with mothur #
-	($infile, $count_in) = symlink_files($outdir, $infile, $count_in);
-	my ($mthr_fasta, $mthr_count) = Mothur_unique_seqs($infile, $count_in);
+  $pm->start and next;
 
-	# loading count file of uniques #
-	my $count_r = load_count($mthr_count);
-	my $totals_r = sample_totals($count_r);
-	
-	# loading fasta #
-	my $fasta_r = load_fasta($mthr_fasta, $delim);
+  $infile = File::Spec->rel2abs($infile);
+  
+  # making a tmpdir & chdir to tempdir
+  my ($tmpdir, $tmpdirName) = makeTempDir();
 
-	## writing arp ##
-	# arp header, body, structure_portion #
-	my $arp_file = "$outdir/tmp.arp";
-	open my $arp_fh, ">$arp_file" or die $!;
-	write_arp_header($arp_fh, scalar keys %$count_r, "Fst_batch");
-	write_arp_sample($arp_fh, $fasta_r, $count_r, $totals_r);
-	write_arp_structure($arp_fh, $count_r, $totals_r);
-	close $arp_fh or die $!;
-	
-	# calling arlecore & parsing Fst values #
-	call_arlecore($arp_file, $ars_in);
-	my $arlecore_out = make_arlecore_out($arp_file);
-	#(my $arlecore_out = $arp_file) =~ s/(.+)\.[^\.]+$|(.+)/$1.res\/$1.htm/;
-	my ($fst_mtx_r, $fstp_mtx_r, $pop_names_r) = get_fst($arlecore_out, $infile);
-	
-	# loading Fst values into a hash #
-	load_fst_values($infile, \%fst_res, $fst_mtx_r, $fstp_mtx_r, $pop_names_r);
-	
-	}
+  # copying input fasta & adding copyID to each (if multi-copy genes)
+  my ($fasta_file, $taxon_index) = 
+    copyRenameFasta($infile, $tmpdirName);
 
-write_fst_table(\%fst_res);
+  # editing count file to multi copy & missing genes
+  my $count_file = copyEditCount( $count_in, $taxon_index, $tmpdirName );
+  
+  my $edit_count_r = load_count($count_file);
+  my ($edit_totals_r) = sample_totals($edit_count_r);
 
-### Subroutines
-sub make_arlecore_out{
-# getting correct directory for arlecore output #
-	my ($arp_file) = @_;
-	my @parts = File::Spec->splitpath($arp_file);
-	return "$parts[0]$parts[1]/tmp.res/tmp.htm";
-	}
-	
-sub symlink_files{
-# symlinking fasta and count because Mothur is stupid #
-	my ($outdir, $infile, $count_in) = @_;
-	
-	# fasta #
-	my @parts = File::Spec->splitpath($infile);
-	my $ln_infile = "$outdir/$parts[2]";
-	symlink($infile, $ln_infile) or die $!;
-	
-	# count #
-	@parts = File::Spec->splitpath($count_in);
-	my $ln_count_in = "$outdir/$parts[2]";
-	symlink($count_in, $ln_count_in) or die $! 
-		unless -e $ln_count_in;
-		
-	return $ln_infile, $ln_count_in;
-	}
+  # applying min
+  unless( applyMin($edit_totals_r, \@min) ){
+    print STDERR "$infile\tDid_not_pass_-min\n";
+    chdir $cwd or die $!;
+    $pm->finish(0);
+  }
 
-sub make_outdir{
-# making outdir for all of the temp files #
-	my $outdir = shift;
-	
-	$outdir = "arlecore_Fst_batch_tmp" unless $outdir;
-	rmtree($outdir) if -d $outdir;
-	mkdir $outdir or die $!;
-	
-	$outdir = File::Spec->rel2abs($outdir);
-	chdir $outdir or die $!;
-	
-	return $outdir;
-	}
+  # getting unique sequences with mothur #
+  #($infile, $count_in) = symlink_files($outdir, $infile, $count_in);
+  my ($mthr_fasta, $mthr_count) = Mothur_unique_seqs($fasta_file, $count_file);
+
+  # loading count file of unique sequences from Mothur #
+  my $count_r = load_count($mthr_count);
+  my ($totals_r) = sample_totals($count_r);
+
+       
+  # loading fasta #
+  my $fasta_r = load_fasta($mthr_fasta, $delim);
+  
+  ## writing arp ##
+  # arp header, body, structure_portion #
+  my $arp_file = File::Spec->catfile($tmpdirName, "tmp.arp");
+  open my $arp_fh, ">$arp_file" or die $!;
+  write_arp_header($arp_fh, scalar keys %$count_r, "Fst_batch");
+  write_arp_sample($arp_fh, $fasta_r, $count_r, $totals_r);
+  write_arp_structure($arp_fh, $count_r, $totals_r);
+  close $arp_fh or die $!;
+  
+  # calling arlecore & parsing Fst values #
+  call_arlecore($arp_file, $ars_in);
+  my $arlecore_out = make_arlecore_out($arp_file);
+  #(my $arlecore_out = $arp_file) =~ s/(.+)\.[^\.]+$|(.+)/$1.res\/$1.htm/;
+  my ($fst_mtx_r, $fstp_mtx_r, $pop_names_r) = get_fst($arlecore_out, $infile);
+  
+  # loading Fst values into a hash #
+  my $fst_res_r = load_fst_values($infile, $fst_mtx_r, $fstp_mtx_r, $pop_names_r);
+
+  # cd to cwd
+  chdir $cwd or die $!;
+
+  # check that output was created
+  die "ERROR: not output created for file: '$infile'\n"
+    unless defined $fst_res_r;
+  
+  # end fork
+  $pm->finish(0, $fst_res_r);
+}
+$pm->wait_all_children;
+
+
+
+#--- Subroutines ---#
+
+=head2 applyMin
+
+Summing number of taxa represented in each population
+
+=cut
+
+sub applyMin{
+  my $totals_r = shift || die $!;
+  my $min_r = shift || die $!;
+
+  # IN check
+  die "ERROR: -min needes 2 args\n"
+    unless defined $min_r->[0] and defined $min_r->[1];
+
+    
+  # min sample check
+  my $Nsamp = 0;
+  map{ $Nsamp++ if $totals_r->{$_}{allByTaxon} >= $min[1] } keys %$totals_r;
+
+  
+  $Nsamp >= $min[0] ? return 1 : return 0;
+}
+
+sub sample_totals{
+# summing by sample for count file (%%) #
+  my $count_r = shift;
+  
+  my %totals;	
+  foreach my $samp (keys %$count_r){
+    foreach my $taxon (keys %{$count_r->{$samp}}){
+      (my $base = $taxon) =~ s/__\d+$//;
+      $totals{$samp}{byTaxon}{$base} += $count_r->{$samp}{$taxon};
+      $totals{$samp}{all}{$taxon} += $count_r->{$samp}{$taxon};
+    }
+
+    # totaling by sample
+    $totals{$samp}{allByTaxon} = scalar keys %{$totals{$samp}{byTaxon}};
+  }
+  
+  return \%totals;
+}
+
+
+=head2 write_fst_table
+
+Writing tab-delimited table of fst values
+
+=cut
 
 sub write_fst_table{
 # writing out Fst values for all genes #
-	my ($fst_res_r) = @_;
-	
-	foreach my $file (keys %$fst_res_r){
-		foreach my $comp (sort keys %{$fst_res_r->{$file}}){
-			#foreach my $var (keys %{$fst_res_r->{$file}{$comp}}){
-			
-			print join("\t", $file, $comp, 
-				$fst_res_r->{$file}{$comp}{"fst"},
-				$fst_res_r->{$file}{$comp}{"fstp"}), "\n";				
-			}
-		}
-	
-	}
+  my ($fst_res_r) = @_;
+  
+  foreach my $file (keys %$fst_res_r){
+    foreach my $comp (sort keys %{$fst_res_r->{$file}}){
+      #foreach my $var (keys %{$fst_res_r->{$file}{$comp}}){
+      
+      print join("\t", $file, $comp, 
+		 $fst_res_r->{$file}{$comp}{"fst"},
+		 $fst_res_r->{$file}{$comp}{"fstp_low"},
+		 $fst_res_r->{$file}{$comp}{"fstp_high"}),
+		 "\n";				
+    }
+  }  
+}
+
+
+=head2 load_fst_values
+
+loading Fst values in a hash
+
+=cut
 
 sub load_fst_values{
 # storing Fst values in a hash #
-	my ($infile, $fst_res_r, $fst_mtx_r, $fstp_mtx_r, $pop_names_r) = @_;
-	
-	foreach my $num (sort{$a <=> $b} keys %$pop_names_r){		# each name		
-		for my $i (0..$#{$fst_mtx_r->{$num}}){					# Fst matrix
-			next if $num == ($i + 1);								
-			
-			# fst_res_r->{file}{popX__popY}{"fst|fstp"}{value} #
-			$fst_res_r->{$infile}->
-				{join("__", $pop_names_r->{$i + 1}, $pop_names_r->{$num} )}->
-				{"fst"} = ${$fst_mtx_r->{$num}}[$i];
-			$fst_res_r->{$infile}->
-				{join("__", $pop_names_r->{$i + 1}, $pop_names_r->{$num} )}->
-				{"fstp"} = ${$fstp_mtx_r->{$num}}[$i];			
-			}
-		}
-	}
+  my ($infile, $fst_mtx_r, $fstp_mtx_r, $pop_names_r) = @_;
+ 
+  my %fst_res;
+  foreach my $num (sort{$a <=> $b} keys %$pop_names_r){		# each name		
+    for my $i (0..$#{$fst_mtx_r->{$num}}){					# Fst matrix
+      next if $num == ($i + 1);								
+      
+      # fst_res_r->{file}{popX__popY}{"fst|fstp"}{value} #
+      my $popXY = join("__", $pop_names_r->{$i + 1}, $pop_names_r->{$num} );
+      $fst_res{$infile}{$popXY}{"fst"} = ${$fst_mtx_r->{$num}}[$i];
 
-sub get_fst{
-	### parsing htm file for Fst matrix ###
-	my ($file, $infile) = @_;
-	open my $ifh, $file or die $!;
-	my ($pop_names_ref, $fst_mtx_ref, $fstp_mtx_ref);
-	while(<$ifh>){
-		chomp;
-		print STDERR " WARNING: arlecore could not read sample data for \"$infile\"\n"
-			if /unable to read sample data/;
-		
-		if($_ =~ /Label  	Population name/){
-			$pop_names_ref = get_pop_names($ifh);
-			}
-		elsif($_ =~ "Population pairwise FSTs"){
-			<$ifh>;
-			$fst_mtx_ref = parse_matrix($ifh);
-			}
-		elsif($_ =~ "FST P values"){
-			<$ifh>;
-			$fstp_mtx_ref = parse_matrix($ifh);
-			}
-		}
-	close $ifh;
-	#$fst_mtx_ref = names2mtx($pop_names_ref, $fst_mtx_ref);
-	#$fstp_mtx_ref = names2mtx($pop_names_ref, $fstp_mtx_ref);
-	return ($fst_mtx_ref, $fstp_mtx_ref, $pop_names_ref);	#%@
-		
-	# get fst subroutines #
-	sub get_pop_names{
-		my %names;
-		my $ifh = shift;
-		<$ifh>;
-		while(<$ifh>){
-			chomp;
-			last if $_ =~ /^-+/;
-			next if $_ =~ /^\s*$|^\S/;	
-			my @tmp = split(/[\s:]+/); shift @tmp;
-			$names{$tmp[0]} = $tmp[1];
-			}
-			#print Dumper(%names); exit;
-		return \%names;
-		}
-	sub parse_matrix{
-		my %mtx;
-		my $ifh = shift;
-		while(<$ifh>){
-			chomp;
-			last if $_ =~ /^-+/;
-			next if $_ =~ /^\s*$|^\S/;			
-			my @tmp = split(/\s+/); shift(@tmp);
-			if(! exists($mtx{"header"})){ $mtx{"header"} = \@tmp; }
-			else{ $mtx{shift @tmp} = \@tmp; }
-			}
-		return \%mtx;
-		}
+      my @fstp = split /\+-/, ${$fstp_mtx_r->{$num}}[$i], 2;
+      $fst_res{$infile}{$popXY}{"fstp_low"} = $fstp[0] - $fstp[1];			
+      $fst_res{$infile}{$popXY}{"fstp_high"} = $fstp[0] + $fstp[1];			
+    }
+  }
 
-	}
+  return \%fst_res;
+}
+
+
+=head2 call_arlecore
+
+Calling arlecore with previously written ars file.
+
+=cut
 
 sub call_arlecore{
-# Description:
-#	 calling arelcore for window of alignment
-	my ($arp_file, $ars_in) = @_;
-	
-	
-	my $cmd = "arlecore $arp_file $ars_in";
-	if($verbose){ system($cmd); }
-	else{ `$cmd`; }
-	
-	}
+  my ($arp_file, $ars_in) = @_;
+  
+  my $cmd = "arlecore $arp_file $ars_in";
+  my( $success, $error_message, $full_buf, 
+      $stdout_buf, $stderr_buf ) =
+	run( command => $cmd, verbose => 0 );
+
+  die "System call failed: '$cmd'" unless $success;
+}
+
+
+
+=head2 Mothur_unique_seqs
+
+calling unique.seqs function in mothur.
+
+=cut
 
 sub Mothur_unique_seqs{
-# calling unique.seqs() in mothur #
-	my ($infile, $count_in) = @_;
-	(my $mthr_fasta = $infile) =~ s/(\.[^\.]+$|$)/.unique$1/;
-	(my $mthr_count = $infile) =~ s/(\.[^\.]+$|$)/.count_table/;
+  my ($infile, $count_in) = @_;
+  (my $mthr_fasta = $infile) =~ s/(\.[^\.]+$|$)/.unique$1/;
+  (my $mthr_count = $infile) =~ s/(\.[^\.]+$|$)/.count_table/;
+  
+  # calling #
+  my $cmd = "mothur \"#unique.seqs(fasta=$infile, count=$count_in)\"";
+
+  my( $success, $error_message, $full_buf, 
+      $stdout_buf, $stderr_buf ) =
+            run( command => $cmd, verbose => 0 );
+
+  # checking for errors
+  die "System call failed: $cmd" unless $success;
+
+  foreach my $line (@$stdout_buf){
+    if( $line =~ /ERROR/){
+      die "Mothur error: '$line'";
+    }
+  }
+    
+  return $mthr_fasta, $mthr_count;
+}
+
+=head2 copyEditCount
+
+Editing taxon count info to match edited fasta.
+
+=cut
+
+sub copyEditCount{
+  my $count_in = shift || die "Provide count_in\n";
+  my $taxon_index_r = shift || die "Provide taxon_index\n";
+  my $tmpdirName = shift || die "Provide tmpdirName\n";
+
+
+
+  # outfile
+  my @parts = File::Spec->splitpath($count_in);
+  my $outfile = File::Spec->catfile($tmpdirName, $parts[2]);
+  open OUT, ">$outfile" or die $!;
+
+  open IN, $count_in or die $!;
+  while(<IN>){
+    chomp;
+
+    if($. == 1){  # header
+      print OUT $_, "\n";
+    }
+    else{
+      my @l = split /\t/;
+      # skipping if no copies
+      next unless exists $taxon_index_r->{$l[0]} and 
+	scalar @{$taxon_index_r->{$l[0]}} > 0;
+      # making duplicate rows for each gene copy
+      foreach my $taxonCopy (@{$taxon_index_r->{$l[0]}}){
+	print OUT join("\t", $taxonCopy, @l[1..$#l] ), "\n";
+      }
+    }
+  }
+  close IN;
+  close OUT;
+
+  return $outfile;   # new count file in tempdir
+}
+
+=head2 copyRenameFasta
+
+renaming sequences in fasta and copying
+to temp directory.
+
+=cut
+
+sub copyRenameFasta{
+  my $infile = shift || die "Provide infile\n";
+  my $tmpdir = shift || die "Proivide tmpdir\n";
+
+  # making output file name
+  my @parts = File::Spec->splitpath($infile);
+  my $outfile = File::Spec->catfile($tmpdir, $parts[2]);
+
+  open OUT, ">$outfile" or die $!;
+  open IN, $infile or die $!;
+
+  my %copies;
+  my %taxon_index;
+  while(<IN>){
+    chomp;
+    if(/^\s*>(.+)/){
+      $copies{$_}++;
+      my $orig = $1;
+      
+      (my $new = $orig) =~ s/$/__$copies{$_}/;
+      print OUT ">$new\n";
+
+      push @{$taxon_index{$orig}}, $new;
+    }
+    else{
+      print OUT $_, "\n";
+    }
+  }
+
+  close IN; 
+  close OUT;
+
+  return ($outfile, \%taxon_index);
+}
+
+=head2 makeTempDir
+
+Making a temporary directory for system calls.
+
+=cut
+
+sub makeTempDir{  
+  my $tmp = File::Temp->new();
+  my $tmpdir = $tmp->newdir();
+  my $tmpdirName = $tmpdir->dirname;
+  chdir $tmpdirName or die $!;
+  return $tmpdir, $tmpdirName;
+}
+
+sub make_arlecore_out{
+# getting correct directory for arlecore output #
+  my ($arp_file) = @_;
+  my @parts = File::Spec->splitpath($arp_file);
+  return "$parts[0]$parts[1]/tmp.res/tmp.htm";
+}
 	
-	# calling #
-	my $mthr_out = `mothur "#unique.seqs(fasta=$infile, count=$count_in)"`;
-	
-	if($mthr_out =~ /ERROR/){
-		print $mthr_out, "\n"; exit;
-		}
-	
-		#print Dumper $mthr_fasta, $mthr_count; exit;
-	return $mthr_fasta, $mthr_count;
-	}
+
+sub make_outdir{
+# making outdir for all of the temp files #
+  my $outdir = shift;
+  
+  $outdir = "arlecore_Fst_batch_tmp" unless $outdir;
+  rmtree($outdir) if -d $outdir;
+  mkdir $outdir or die $!;
+  
+  $outdir = File::Spec->rel2abs($outdir);
+  chdir $outdir or die $!;
+  
+  return $outdir;
+}
+
+
+
+sub get_fst{
+  ### parsing htm file for Fst matrix ###
+  my ($file, $infile) = @_;
+  open my $ifh, $file or die $!;
+  my ($pop_names_ref, $fst_mtx_ref, $fstp_mtx_ref);
+  while(<$ifh>){
+    chomp;
+    print STDERR " WARNING: arlecore could not read sample data for \"$infile\"\n"
+      if /unable to read sample data/;
+    
+    if($_ =~ /Label  	Population name/){
+      $pop_names_ref = get_pop_names($ifh);
+    }
+    elsif($_ =~ "Population pairwise FSTs"){
+      <$ifh>;
+      $fst_mtx_ref = parse_matrix($ifh);
+    }
+    elsif($_ =~ "FST P values"){
+      <$ifh>;
+      $fstp_mtx_ref = parse_matrix($ifh);
+    }
+  }
+  close $ifh;
+  #$fst_mtx_ref = names2mtx($pop_names_ref, $fst_mtx_ref);
+  #$fstp_mtx_ref = names2mtx($pop_names_ref, $fstp_mtx_ref);
+  return ($fst_mtx_ref, $fstp_mtx_ref, $pop_names_ref);	#%@
+  
+  # get fst subroutines #
+  sub get_pop_names{
+    my %names;
+    my $ifh = shift;
+    <$ifh>;
+    while(<$ifh>){
+      chomp;
+      last if $_ =~ /^-+/;
+      next if $_ =~ /^\s*$|^\S/;	
+			my @tmp = split(/[\s:]+/); shift @tmp;
+      $names{$tmp[0]} = $tmp[1];
+    }
+    #print Dumper(%names); exit;
+    return \%names;
+  }
+  sub parse_matrix{
+    my %mtx;
+    my $ifh = shift;
+    while(<$ifh>){
+      chomp;
+      last if $_ =~ /^-+/;
+      next if $_ =~ /^\s*$|^\S/;			
+      my @tmp = split(/\s+/); shift(@tmp);
+      if(! exists($mtx{"header"})){ $mtx{"header"} = \@tmp; }
+      else{ $mtx{shift @tmp} = \@tmp; }
+    }
+    return \%mtx;
+  }  
+}
+
 
 sub write_arp_structure{
-# writing [[Structure]] portion of arp file #
-	my ($arp_fh, $count_r, $totals_r) = @_;
-	
-	# structure header #
-	print $arp_fh join("\n", "[[Structure]]",
-		"StructureName=\"Designated_populations\"",
-		join("=", "NBGroups", scalar keys %$totals_r)), "\n";
-	
-	# groups #
-	foreach my $group (keys %$count_r){
-		print $arp_fh "Group={\n";
-		print $arp_fh "\"$group\"";
-		print $arp_fh "\n}\n";
-		}
-	}
+  # writing [[Structure]] portion of arp file #
+  my ($arp_fh, $count_r, $totals_r) = @_;
+  
+  # structure header #
+  print $arp_fh join("\n", "[[Structure]]",
+		     "StructureName=\"Designated_populations\"",
+		     join("=", "NBGroups", scalar keys %$totals_r)), "\n";
+  
+  # groups #
+  foreach my $group (keys %$count_r){
+    print $arp_fh "Group={\n";
+    print $arp_fh "\"$group\"";
+    print $arp_fh "\n}\n";
+  }
+}
 
 sub write_arp_sample{
 # writing sample data ([[Samples]]) for arp #
 	
-	my ($arp_fh, $fasta_r, $count_r, $totals_r) = @_;
-	
-	foreach my $sample (keys %$count_r){
-		print $arp_fh "SampleName=\"$sample\"\n";
-		print $arp_fh "SampleSize=$$totals_r{$sample}\n";
-		print $arp_fh "SampleData= {\n";
-		foreach my $taxon (keys %{$count_r->{$sample}}){
-			next if $count_r->{$sample}{$taxon} == 0;			# skipping if not found in sample
-			die " ERROR: $taxon found in count file, but not in fasta!\n" 
-				if ! exists $fasta_r->{$taxon};
-			print $arp_fh join(" ", $taxon, $count_r->{$sample}{$taxon}, $fasta_r->{$taxon}), "\n";
-			}
-		print $arp_fh "}\n";
-		}
-	}
+  my ($arp_fh, $fasta_r, $count_r, $totals_r) = @_;
+  
+  foreach my $sample (keys %$count_r){
+    print $arp_fh "SampleName=\"$sample\"\n";
+    print $arp_fh "SampleSize=" . $totals_r->{$sample}{allByTaxon} . "\n";
+    print $arp_fh "SampleData= {\n";
+    foreach my $taxon (keys %{$count_r->{$sample}}){
+      next if $count_r->{$sample}{$taxon} == 0;			# skipping if not found in sample
+      die " ERROR: $taxon found in count file, but not in fasta!\n" 
+	if ! exists $fasta_r->{$taxon};
+      print $arp_fh join(" ", $taxon, $count_r->{$sample}{$taxon}, $fasta_r->{$taxon}), "\n";
+    }
+    print $arp_fh "}\n";
+  }
+}
 
 sub write_arp_header{
 # writing the header to an arp file #
-	my ($fh, $samp_cnt, $id) = @_;
-	
-	print $fh "[Profile]\n\n";
-	print $fh "Title=\"$id\"\n";
-	print $fh "NbSamples=", $samp_cnt, "\n";
-	print $fh "GenotypicData=0\nLocusSeparator=NONE\nDataType=DNA\n[DATA]\n[[Samples]]\n";
-	
-	}
-	
-sub sample_totals{
-# summing by sample for count file (%%) #
-	my $count_r = shift;
-	
-	my %totals;	
-	foreach my $samp (keys %$count_r){
-		foreach my $taxon (keys %{$count_r->{$samp}}){
-			$totals{$samp} += $count_r->{$samp}{$taxon};
-			}
-		}
-		#print Dumper %totals; exit;
-	return \%totals;
-	}
+  my ($fh, $samp_cnt, $id) = @_;
+  
+  print $fh "[Profile]\n\n";
+  print $fh "Title=\"$id\"\n";
+  print $fh "NbSamples=", $samp_cnt, "\n";
+  print $fh "GenotypicData=0\nLocusSeparator=NONE\nDataType=DNA\n[DATA]\n[[Samples]]\n";
+  
+}
+
 
 sub load_fasta{
 # loading fasta alignment #
-	my ($fasta_in, $delim) = @_;
-
-	open IN, $fasta_in or die $!;
-	my (%fasta, $tmpkey);
-	while(<IN>){
-		chomp;
- 		$_ =~ s/#.+//;
- 		next if  $_ =~ /^\s*$/;	
- 		if($_ =~ /^\s*>/){
- 			my @parts = split /$delim/;		# parsing out taxon name from gene annotation
- 			$_ = $parts[0];
- 			$_ =~ s/^>//;
- 			$fasta{$_} = "";
- 			$tmpkey = $_;	# changing key
- 			}
- 		else{
- 			s/\./-/g;					# no '.' in sequence allowed!
- 			$fasta{$tmpkey} .= $_; 
- 			}
-		}
-	close IN;
+  my ($fasta_in, $delim) = @_;
+  
+  open IN, $fasta_in or die $!;
+  my (%fasta, $tmpkey);
+  while(<IN>){
+    chomp;
+    $_ =~ s/#.+//;
+    next if  $_ =~ /^\s*$/;	
+    if($_ =~ /^\s*>/){
+      my @parts = split /$delim/;		# parsing out taxon name from gene annotation
+      $_ = $parts[0];
+      $_ =~ s/^>//;
+      $fasta{$_} = "";
+      $tmpkey = $_;	# changing key
+    }
+    else{
+      s/\./-/g;					# no '.' in sequence allowed!
+      $fasta{$tmpkey} .= $_; 
+    }
+  }
+  close IN;
 	
-	# checking alignment length #
-	my %lens;
-	foreach my $taxon (keys %fasta){
-		die " ERROR: $taxon sequence is a different length!\n"
-			if scalar keys %lens > 0 && ! exists $lens{length $fasta{$taxon}};			
-		$lens{length $fasta{$taxon} } = 1;
-		}
-		
-	return \%fasta;
-	}
+  # checking alignment length #
+  my %lens;
+  foreach my $taxon (keys %fasta){
+    die " ERROR: $taxon sequence is a different length!\n"
+      if scalar keys %lens > 0 && ! exists $lens{length $fasta{$taxon}};			
+    $lens{length $fasta{$taxon} } = 1;
+  }
+  
+  return \%fasta;
+}
 
 sub load_count{
 ### loading count data as %@% ###
 # count file in mothur format #
-	my $infile = shift;
-	open(IN, $infile) or die $!;
-	my (%index, @header);
-	while(<IN>){
-		chomp;
-		$_ =~ s/#.+//;
-		next if $_ =~ /^\s*$/;
-	
-		if($. == 1){ # if header
-			@header = split(/\t/);
-			}
-		else{	# loading %% (sample -> seq -> count)
-			my @tmp = split(/\t/);
-			die " ERROR: the count file should have >= 3 columns\n"
-				unless scalar @tmp >= 3;
-			for(my $i=2; $i<=$#tmp; $i++){		# skippign rownames & total
-				$index{$header[$i]}{$tmp[0]} = $tmp[$i];
-				}
-			}
-		}
-	close IN;
-	
-		#print Dumper(%index); exit;
-	return \%index;
-	}
+  my $infile = shift;
+  open(IN, $infile) or die $!;
+  my (%index, @header);
+  while(<IN>){
+    chomp;
+    $_ =~ s/#.+//;
+    next if $_ =~ /^\s*$/;
+    
+    if($. == 1){ # if header
+      @header = split(/\t/);
+    }
+    else{	# loading %% (sample -> seq -> count)
+      my @tmp = split(/\t/);
+      die " ERROR: the count file should have >= 3 columns\n"
+	unless scalar @tmp >= 3;
+      for(my $i=2; $i<=$#tmp; $i++){		# skippign rownames & total
+	$index{$header[$i]}{$tmp[0]} = $tmp[$i];
+      }
+    }
+  }
+  close IN;
+  
+  #print Dumper(%index); exit;
+  return \%index;
+}
 
 
 sub write_ars{
@@ -1002,85 +1302,4 @@ HERE
 	return $outname; 
 	}
 
-__END__
-
-=pod
-
-=head1 NAME
-
-arlecore_Fst_batch.pl -- batch runs of arlecore to get Fst values from >= alignments
-
-=head1 SYNOPSIS
-
-arlecore_Fst_batch.pl [flags] aln(s).fna > Fst_res.txt
-
-=head2 flags
-
-=head3 Required
-
-=over
-
-=item -count
-
-Count file in Mothur format.
-
-=back
-
-=head3 Optional
-
-=over
-
-=item -ars
-
-*ars file used for arelcore. A default ars file will be written if not
-provided.
-
-=item -outdir
-
-Designate an output for all of the temporary files produced by Mothur
-and arelcore. ["arlecore_Fst_batch_tmp"]
-
-=item -delimiter
-
-Delimiter separating taxon name from gene ID/annotation in fasta files (taxon name must come 1st). [" "]
-
-=item -v	Verbose output
-
-=item -h	This help message
-
-=back
-
-=head2 For more information:
-
-perldoc arlecore_Fst_batch.pl
-
-=head1 DESCRIPTION
-
-Perform batch runs of arlecore with many alignment files.
-Mothur de-uniques sequences to make the *arp file.
-The Fst and p values are parsed from the htm output of arlecore.
-
-The count file should be used to designate population structure.
-Names in the count file and fasta files must match!
-
-=head1 EXAMPLES
-
-=head2 Usage:
-
-arlecore_Fst_batch.pl -c pops.count aln*.fna > Fst_res.txt
-
-=head1 AUTHOR
-
-Nick Youngblut <nyoungb2@illinois.edu>
-
-=head1 AVAILABILITY
-
-sharchaea.life.uiuc.edu:/home/git/arlequin_scripts/
-
-=head1 COPYRIGHT
-
-Copyright 2010, 2011
-This software is licensed under the terms of the GPLv3
-
-=cut
 
