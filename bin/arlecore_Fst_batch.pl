@@ -191,7 +191,7 @@ foreach my $infile (@ARGV){
 
   # loading count file of unique sequences from Mothur #
   my $count_r = load_count($mthr_count);
-  my ($totals_r) = sample_totals($count_r);
+  my ($totals_r) = sample_totals_arl($count_r);
 
        
   # loading fasta #
@@ -205,6 +205,7 @@ foreach my $infile (@ARGV){
   write_arp_sample($arp_fh, $fasta_r, $count_r, $totals_r);
   write_arp_structure($arp_fh, $count_r, $totals_r);
   close $arp_fh or die $!;
+
   
   # calling arlecore & parsing Fst values #
   call_arlecore($arp_file, $ars_in);
@@ -230,6 +231,20 @@ $pm->wait_all_children;
 
 
 #--- Subroutines ---#
+
+sub sample_totals_arl{
+# summing by sample for count file (%%) #
+  my $count_r = shift;
+  
+  my %totals;
+  foreach my $samp (keys %$count_r){
+    foreach my $taxon (keys %{$count_r->{$samp}}){
+      $totals{$samp} += $count_r->{$samp}{$taxon};
+    }
+  }
+  #print Dumper %totals; exit;
+  return \%totals;
+}
 
 =head2 applyMin
 
@@ -578,9 +593,10 @@ sub write_arp_sample{
 	
   my ($arp_fh, $fasta_r, $count_r, $totals_r) = @_;
   
+
   foreach my $sample (keys %$count_r){
     print $arp_fh "SampleName=\"$sample\"\n";
-    print $arp_fh "SampleSize=" . $totals_r->{$sample}{allByTaxon} . "\n";
+    print $arp_fh "SampleSize=$$totals_r{$sample}\n";
     print $arp_fh "SampleData= {\n";
     foreach my $taxon (keys %{$count_r->{$sample}}){
       next if $count_r->{$sample}{$taxon} == 0;			# skipping if not found in sample
