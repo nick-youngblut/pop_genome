@@ -148,13 +148,16 @@ Count file in Mothur format.
 .IX Item "-ars"
 *ars file used for arelcore. A default ars file will be written if not
 provided.
-.IP "\-outdir" 4
-.IX Item "-outdir"
-Designate an output for all of the temporary files produced by Mothur
-and arelcore. [\*(L"arlecore_Fst_batch_tmp\*(R"]
+.IP "\-min" 4
+.IX Item "-min"
+The minimum number of populations and taxa in each population.
+Two values required (min_populations min_taxa_per_population). [2 3]
 .IP "\-delimiter" 4
 .IX Item "-delimiter"
 Delimiter separating taxon name from gene ID/annotation in fasta files (taxon name must come 1st). [\*(L" \*(R"]
+.IP "\-forks" 4
+.IX Item "-forks"
+Number of fasta files to process in parallel. [1]
 .IP "\-v	Verbose output" 4
 .IX Item "-v	Verbose output"
 .PD 0
@@ -172,6 +175,14 @@ The Fst and p values are parsed from the htm output of arlecore.
 .PP
 The count file should be used to designate population structure.
 Names in the count file and fasta files must match!
+.PP
+Multi-copy genes and genes absent in members of a population
+can be used (must meet '\-min' cutoffs), but the results
+might not be reliable.
+.SS "Output"
+.IX Subsection "Output"
+tab-delimited table.
+Columns: file, pop1_\|_pop2, Fst, Fst\-pvalue_low, Fst\-pvalue_high
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
 .SS "Usage:"
@@ -187,3 +198,28 @@ sharchaea.life.uiuc.edu:/home/git/arlequin_scripts/
 .IX Header "COPYRIGHT"
 Copyright 2010, 2011
 This software is licensed under the terms of the GPLv3
+.SS "applyMin"
+.IX Subsection "applyMin"
+Summing number of taxa represented in each population
+.SS "write_fst_table"
+.IX Subsection "write_fst_table"
+Writing tab-delimited table of fst values
+.SS "load_fst_values"
+.IX Subsection "load_fst_values"
+loading Fst values in a hash
+.SS "call_arlecore"
+.IX Subsection "call_arlecore"
+Calling arlecore with previously written ars file.
+.SS "Mothur_unique_seqs"
+.IX Subsection "Mothur_unique_seqs"
+calling unique.seqs function in mothur.
+.SS "copyEditCount"
+.IX Subsection "copyEditCount"
+Editing taxon count info to match edited fasta.
+.SS "copyRenameFasta"
+.IX Subsection "copyRenameFasta"
+renaming sequences in fasta and copying
+to temp directory.
+.SS "makeTempDir"
+.IX Subsection "makeTempDir"
+Making a temporary directory for system calls.

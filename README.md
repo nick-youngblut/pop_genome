@@ -34,7 +34,9 @@ To install this module, run the following commands:
 	./Build test
 	./Build install
 
-__Or__ just add the './bin/' folder to your $PATH.
+__Or__ just add the bin folder to your $PATH.
+This [link](http://www.cyberciti.biz/faq/unix-linux-adding-path/)
+provides more info on adding to your $PATH.
 
 
 ## Getting help
