@@ -59,14 +59,22 @@ sequences may be false orthologs in a gene cluster.
 
 Divergent sequences are identified as: 
 
-(mean sequenceID of a sequence versus each other in alignment) < 
+(mean sequenceID of a sequence versus each other in alignment) <
 (mean sequenceID of the whole alignment - stdev sequenceID of whole
+alignment * stdev_multiplier)
+
+(mean sequenceID of a sequence versus each other in alignment) >
+(mean sequenceID of the whole alignment + stdev sequenceID of whole
 alignment * stdev_multiplier)
 
 Possible truncations are identified by first spliting the alignment 
 in half. Outliers in both seqID & gaps (similar to seqID outlier detection)
 for 1 half but not the other will be flagged as possible truncations that
 produced the observed sequence divergence in the alignment.
+
+For possible truncations: ITEP can be used to determine 
+how far these outlier genes are from contig ends (artificial
+gene truncation due to missing genome region).
 
 =head3 file table
 

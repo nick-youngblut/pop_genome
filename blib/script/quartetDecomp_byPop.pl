@@ -56,7 +56,13 @@ perldoc quartetDecomp_byPop.pl
 
 =head1 DESCRIPTION
 
-summarize output from Quartet Decomposition Server analysis
+Summarize output from Quartet Decomposition Server analysis.
+
+Only works with 2 populations (clades) in dataset.
+
+Quartets are only assessed if they pass the bootstrap cutoff 
+(found in matrix file) and if they contain 2 taxa from each
+of the 2 clades.
 
 =head2 output
 
@@ -154,16 +160,22 @@ sub load_quartets{
 			die "ERROR: '$_' does not have 4 taxa!\n"
 				unless scalar @taxa == 4;
 		
+			# quartet must have 2 taxa from each population #
+			my %pop_cnt;
+			map{ $pop_cnt{ $pops_r->{$_} } = 1 } @taxa;
+			next unless scalar keys %pop_cnt == 2;
+		
 			# determining whether mixed population on each quartet node #
 			map{ die "ERROR: cannot find $_ in population file!\n" unless exists
 					$pops_r->{$_} } @taxa;
-					
-			my @n1 = unique( $pops_r->{$taxa[0]}, $pops_r->{$taxa[1]} );
-			my @n2 = unique( $pops_r->{$taxa[2]}, $pops_r->{$taxa[3]} );
-			my @n3 = unique( $pops_r->{$taxa[0]}, $pops_r->{$taxa[2]} );
-			my @n4 = unique( $pops_r->{$taxa[1]}, $pops_r->{$taxa[3]} );
-			my @n5 = unique( $pops_r->{$taxa[0]}, $pops_r->{$taxa[3]} );
-			my @n6 = unique( $pops_r->{$taxa[1]}, $pops_r->{$taxa[2]} );
+			
+				
+			my @n1 = unique( $pops_r->{$taxa[0]}, $pops_r->{$taxa[1]} );		# side 1
+			my @n2 = unique( $pops_r->{$taxa[2]}, $pops_r->{$taxa[3]} );		# side 2
+			my @n3 = unique( $pops_r->{$taxa[0]}, $pops_r->{$taxa[2]} );		# top
+			my @n4 = unique( $pops_r->{$taxa[1]}, $pops_r->{$taxa[3]} );		# bottom
+			my @n5 = unique( $pops_r->{$taxa[0]}, $pops_r->{$taxa[3]} );		# across 1
+			my @n6 = unique( $pops_r->{$taxa[1]}, $pops_r->{$taxa[2]} );		# across 2
 
 			# converting gene family to user-defined name (if provided) #
 			if($gene_fam_r){

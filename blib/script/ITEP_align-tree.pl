@@ -97,11 +97,12 @@ sub purge_names{
 # purging fasta names of RAxML-unfriendly characters #
 	my ($cluster, $curdir) = @_;
 	
-	my $cmd = "perl -pi -e \"s/[\\t :,)(\\]\\[']/_/g;s|/|_|g\"  $curdir/$prefix\_AA/$cluster";
+	my $cmd = "perl -pi -e \"s/[\\t :,)(\\]\\['#]/_/g;s|/|_|g\"  $curdir/$prefix\_AA/$cluster";
 	`$cmd`;
 
-	$cmd = "perl -pi -e \"s/[\\t :,)(\\]\\[']/_/g;s|/|_|g\"  $curdir/$prefix\_nuc/$cluster";	
+	$cmd = "perl -pi -e \"s/[\\t :,)(\\]\\['#]/_/g;s|/|_|g\"  $curdir/$prefix\_nuc/$cluster";	
 	`$cmd`;
+        
 	}
 
 sub rm_PEGs{
@@ -192,7 +193,7 @@ sub call_mafft{
 	my ($cluster, $mafft_prog, $curdir, $prefix, $align_dir, $threads) = @_;
 	
 	# calling mafft #
-	my $cmd = "$mafft_prog --thread $threads $curdir/$prefix\_AA/$cluster > $align_dir/$cluster";
+	my $cmd = "$mafft_prog --quiet --thread $threads $curdir/$prefix\_AA/$cluster > $align_dir/$cluster";
 		#print Dumper $cmd; exit;
 	`$cmd`;
 	
@@ -241,7 +242,16 @@ sub get_fastas{
 	print STDERR "Getting nuc fasta files from ITEP\n" unless $verbose;
 	my $cmd_nuc = "cat $clusters_in | db_getClusterGeneInformation.py | getClusterFastas.py -n $curdir/$prefix\_nuc";
 	`$cmd_nuc`;
-	}
+
+        # checking for written fasta files
+        opendir IN, "$curdir/$prefix\_AA" or die $!;
+        die "ERROR: no AA files written! Is the right ITEP db sourced?\n" unless grep(!/^\./, readdir IN);
+        closedir IN;
+
+        opendir IN, "$curdir/$prefix\_nuc" or die $!;
+        die "ERROR: no nuc files written! Is the right ITEP db sourced?\n" unless grep(!/^\./, readdir IN);
+        closedir IN;
+    }
 
 sub make_dirs{
 # making directories for:

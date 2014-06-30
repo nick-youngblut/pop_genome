@@ -1,1 +1,0 @@
-query_desc	hit_accession	hit_desc	perc_id	evalue	bit_score	hsp_length	q_start	q_end	hit_start	hit_end

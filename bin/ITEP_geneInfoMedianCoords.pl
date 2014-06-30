@@ -105,8 +105,7 @@ perldoc ITEP_geneInfoMedianCoords.pl
 =head1 DESCRIPTION
 
 Get the general median start-stops of
-genes in
-a
+genes listed in an ITEP geneInfo table.
 
 =head1 EXAMPLES
 
