@@ -94,7 +94,7 @@ _in prep_'
 
 * Mowgli_batch.pl
 
-### Parsing output from the Quartet Decomposition Server (http://csbl1.bmb.uga.edu/QD/)
+### Parsing output from the [Quartet Decomposition Server](http://csbl1.bmb.uga.edu/QD/)
 
 * quartetDecomp_byPop.pl
 * quartetDecomp_distCut.pl

@@ -11,7 +11,7 @@ arlecore_Fst_batch.pl -- batch runs of arlecore to get Fst values from >= alignm
 
 =head1 SYNOPSIS
 
-arlecore_Fst_batch.pl [flags] aln(s).fna > Fst_res.txt
+arlecore_Fst_batch.pl [flags] *aligned.fna > Fst_res.txt
 
 =head2 flags
 
@@ -19,7 +19,7 @@ arlecore_Fst_batch.pl [flags] aln(s).fna > Fst_res.txt
 
 =over
 
-=item -count
+=item -count  <char>
 
 Count file in Mothur format.
 
@@ -29,27 +29,35 @@ Count file in Mothur format.
 
 =over
 
-=item -ars
+=item -ars  <char>
 
 *ars file used for arelcore. A default ars file will be written if not
 provided.
 
-=item -min
+=item -min  <int> <int>
 
 The minimum number of populations and taxa in each population.
 Two values required (min_populations min_taxa_per_population). [2 3]
 
-=item -delimiter
+=item -delimiter  <char>
 
 Delimiter separating taxon name from gene ID/annotation in fasta files (taxon name must come 1st). [" "]
 
-=item -forks
+=item -forks  <int>
 
 Number of fasta files to process in parallel. [1]
 
-=item -v	Verbose output
+=item -keep  <bool>
 
-=item -h	This help message
+Keep the arlecore input and output for each alignment?
+
+=item -verbose  <bool>
+
+Verbose output
+
+=item -help  <bool>
+
+This help message
 
 =back
 
@@ -108,7 +116,7 @@ use IPC::Cmd qw/can_run run/;
 ### args/flags
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
-my ($verbose, $struct_in, $ars_in, $count_in, $prefix);
+my ($verbose, $struct_in, $ars_in, $count_in, $prefix, $keep_tmp_files);
 my $forks = 0;
 my @min = (2, 3);
 my $delim = " ";
@@ -118,6 +126,7 @@ GetOptions(
 	   "forks=i" => \$forks,
 	   "delimiter=s" => \$delim,
 	   "min=i{2,2}" => \@min,
+	   "keep" => \$keep_tmp_files,
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
@@ -153,10 +162,10 @@ die " ERROR: $ars_in not found!\n" unless -e $ars_in;
 my $pm = Parallel::ForkManager->new($forks);
 $pm->run_on_finish(
 		   sub{
-		       my ($pid, $exit_code, $ident, 
-			   $exit_signal, $core_dump, $ret_r) = @_;
-		       write_fst_table($ret_r) if defined $ret_r;
-		       });
+		     my ($pid, $exit_code, $ident, 
+			 $exit_signal, $core_dump, $ret_r) = @_;
+		     write_fst_table($ret_r) if defined $ret_r;
+		   });
 
 
 ## arlecore run ##
@@ -166,7 +175,14 @@ foreach my $infile (@ARGV){
   $infile = File::Spec->rel2abs($infile);
   
   # making a tmpdir & chdir to tempdir
-  my ($tmpdir, $tmpdirName) = makeTempDir();
+  my ($tmpdir, $tmpdirName);
+  if($keep_tmp_files){
+    ($tmpdir, $tmpdirName) = makePersistDir($infile);
+  }
+  else{
+    ($tmpdir, $tmpdirName) = makeTempDir();
+  }
+
 
   # copying input fasta & adding copyID to each (if multi-copy genes)
   my ($fasta_file, $taxon_index) = 
@@ -210,7 +226,6 @@ foreach my $infile (@ARGV){
   # calling arlecore & parsing Fst values #
   call_arlecore($arp_file, $ars_in);
   my $arlecore_out = make_arlecore_out($arp_file);
-  #(my $arlecore_out = $arp_file) =~ s/(.+)\.[^\.]+$|(.+)/$1.res\/$1.htm/;
   my ($fst_mtx_r, $fstp_mtx_r, $pop_names_r) = get_fst($arlecore_out, $infile);
   
   # loading Fst values into a hash #
@@ -488,6 +503,25 @@ sub makeTempDir{
   chdir $tmpdirName or die $!;
   return $tmpdir, $tmpdirName;
 }
+
+=head2 makePersisDir
+
+Making a directory that will persist upon exiting.
+Directory named by input file.
+
+=cut
+
+sub makePersistDir{
+  my $infile = shift or die "Provide infile\n";
+  
+  (my $dirName = $infile) =~ s/\.[^\.]+$|$/_arlecore/;
+
+  mkdir $dirName or die "ERROR: cannot make directory: $dirName\n";
+  chdir $dirName or die $!;
+
+  return $dirName, $dirName;
+}
+
 
 sub make_arlecore_out{
 # getting correct directory for arlecore output #
