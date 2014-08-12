@@ -71,17 +71,30 @@ Perform batch runs of arlecore with many alignment files.
 Mothur de-uniques sequences to make the *arp file.
 The Fst and p values are parsed from the htm output of arlecore.
 
-The count file should be used to designate population structure.
-Names in the count file and fasta files must match!
 
 Multi-copy genes and genes absent in members of a population
 can be used (must meet '-min' cutoffs), but the results
 might not be reliable.
 
+=head2 Count File
+
+The count file should be used to designate population structure.
+Names in the count file and fasta files must match 
+(you can use the -delimiter flag to make the fasta file sequence
+names match the names in the count file)!
+
 =head2 Output
 
 tab-delimited table.
 Columns: file, pop1__pop2, Fst, Fst-pvalue_low, Fst-pvalue_high
+
+=head2 WARNINGS
+
+Test with ARLECORE v 3.5.1.3 (17.09.11). Other versions may
+not work with default *ars and *arp file produced. You can
+use the -keep flag to try to debug what changes to these files
+need to be made in order to get a different version of Arlecore
+to work
 
 =head1 EXAMPLES
 
@@ -108,8 +121,8 @@ use Pod::Usage;
 use Data::Dumper;
 use Getopt::Long;
 use File::Spec;
-use File::Path;
 use File::Temp;
+use File::Path qw/rmtree/;
 use Parallel::ForkManager;
 use IPC::Cmd qw/can_run run/;
 
@@ -186,7 +199,7 @@ foreach my $infile (@ARGV){
 
   # copying input fasta & adding copyID to each (if multi-copy genes)
   my ($fasta_file, $taxon_index) = 
-    copyRenameFasta($infile, $tmpdirName);
+    copyRenameFasta($infile, $tmpdirName, $delim);
 
   # editing count file to multi copy & missing genes
   my $count_file = copyEditCount( $count_in, $taxon_index, $tmpdirName );
@@ -458,6 +471,7 @@ to temp directory.
 sub copyRenameFasta{
   my $infile = shift || die "Provide infile\n";
   my $tmpdir = shift || die "Proivide tmpdir\n";
+  my $delim = shift || die "Provide delim\n";
 
   # making output file name
   my @parts = File::Spec->splitpath($infile);
@@ -474,10 +488,13 @@ sub copyRenameFasta{
       $copies{$_}++;
       my $orig = $1;
       
-      (my $new = $orig) =~ s/$/__$copies{$_}/;
+      # parse out just taxon name using delim
+      my @p = split /$delim/, $orig;
+
+      (my $new = $p[0]) =~ s/$/__$copies{$_}/;
       print OUT ">$new\n";
 
-      push @{$taxon_index{$orig}}, $new;
+      push @{$taxon_index{$p[0]}}, $new;
     }
     else{
       print OUT $_, "\n";
@@ -516,6 +533,7 @@ sub makePersistDir{
   
   (my $dirName = $infile) =~ s/\.[^\.]+$|$/_arlecore/;
 
+  rmtree($dirName) if -d $dirName;
   mkdir $dirName or die "ERROR: cannot make directory: $dirName\n";
   chdir $dirName or die $!;
 
