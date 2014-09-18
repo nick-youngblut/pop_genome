@@ -225,7 +225,7 @@ foreach my $infile (@ARGV){
 
        
   # loading fasta #
-  my $fasta_r = load_fasta($mthr_fasta, $delim);
+  my $fasta_r = load_fasta($mthr_fasta); #, $delim);
   
   ## writing arp ##
   # arp header, body, structure_portion #
@@ -457,6 +457,7 @@ sub copyEditCount{
   close IN or die $!;
   close OUT or die $!;
 
+
   return $outfile;   # new count file in tempdir
 }
 
@@ -497,6 +498,7 @@ sub copyRenameFasta{
       (my $new = $p[0]) =~ s/$/__$copy_num/;
       print OUT ">$new\n";
 
+      # saving new taxon_name
       push @{$taxon_index{$p[0]}}, $new;
     }
     else{
@@ -504,10 +506,11 @@ sub copyRenameFasta{
     }
   }
 
-  close IN; 
-  close OUT;
+  close IN or die $!;
+  close OUT or die $!;
 
-  return ($outfile, \%taxon_index);
+  #print Dumper %taxon_index;
+  return $outfile, \%taxon_index;
 }
 
 =head2 makeTempDir
@@ -677,7 +680,10 @@ sub write_arp_header{
 
 sub load_fasta{
 # loading fasta alignment #
-  my ($fasta_in, $delim) = @_;
+# delim is optional 
+  my $fasta_in = shift or die $!;
+  my %h = @_;
+  my $delim = $h{-delim} if exists $h{-delim};
   
   open IN, $fasta_in or die $!;
   my (%fasta, $tmpkey);
@@ -686,8 +692,10 @@ sub load_fasta{
     $_ =~ s/#.+//;
     next if  $_ =~ /^\s*$/;	
     if($_ =~ /^\s*>/){
-      my @parts = split /$delim/;		# parsing out taxon name from gene annotation
-      $_ = $parts[0];
+      if (defined $delim){
+	my @parts = split /$delim/;		# parsing out taxon name from gene annotation
+	$_ = $parts[0];
+      }
       $_ =~ s/^>//;
       $fasta{$_} = "";
       $tmpkey = $_;	# changing key
