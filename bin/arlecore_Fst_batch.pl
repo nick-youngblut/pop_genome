@@ -207,9 +207,10 @@ foreach my $infile (@ARGV){
   my $edit_count_r = load_count($count_file);
   my ($edit_totals_r) = sample_totals($edit_count_r);
 
+
   # applying min
   unless( applyMin($edit_totals_r, \@min) ){
-    print STDERR "$infile\tDid_not_pass_-min\n";
+    print STDERR "WARNING: $infile\tDid not pass -min. Skipping.\n";
     chdir $cwd or die $!;
     $pm->finish(0);
   }
@@ -430,8 +431,6 @@ sub copyEditCount{
   my $taxon_index_r = shift || die "Provide taxon_index\n";
   my $tmpdirName = shift || die "Provide tmpdirName\n";
 
-
-
   # outfile
   my @parts = File::Spec->splitpath($count_in);
   my $outfile = File::Spec->catfile($tmpdirName, $parts[2]);
@@ -455,8 +454,8 @@ sub copyEditCount{
       }
     }
   }
-  close IN;
-  close OUT;
+  close IN or die $!;
+  close OUT or die $!;
 
   return $outfile;   # new count file in tempdir
 }
@@ -485,13 +484,17 @@ sub copyRenameFasta{
   while(<IN>){
     chomp;
     if(/^\s*>(.+)/){
-      $copies{$_}++;
       my $orig = $1;
       
       # parse out just taxon name using delim
       my @p = split /$delim/, $orig;
 
-      (my $new = $p[0]) =~ s/$/__$copies{$_}/;
+      # counting copies
+      $copies{$p[0]}++;
+      my $copy_num = $copies{$p[0]};
+
+      # making new taxon name
+      (my $new = $p[0]) =~ s/$/__$copy_num/;
       print OUT ">$new\n";
 
       push @{$taxon_index{$p[0]}}, $new;
@@ -711,6 +714,7 @@ sub load_count{
 ### loading count data as %@% ###
 # count file in mothur format #
   my $infile = shift;
+
   open(IN, $infile) or die $!;
   my (%index, @header);
   while(<IN>){
@@ -730,9 +734,9 @@ sub load_count{
       }
     }
   }
-  close IN;
+  close IN or die $!;
   
-  #print Dumper(%index); exit;
+  #print Dumper %index;
   return \%index;
 }
 
