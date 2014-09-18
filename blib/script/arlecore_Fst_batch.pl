@@ -11,7 +11,7 @@ arlecore_Fst_batch.pl -- batch runs of arlecore to get Fst values from >= alignm
 
 =head1 SYNOPSIS
 
-arlecore_Fst_batch.pl [flags] aln(s).fna > Fst_res.txt
+arlecore_Fst_batch.pl [flags] *aligned.fna > Fst_res.txt
 
 =head2 flags
 
@@ -19,7 +19,7 @@ arlecore_Fst_batch.pl [flags] aln(s).fna > Fst_res.txt
 
 =over
 
-=item -count
+=item -count  <char>
 
 Count file in Mothur format.
 
@@ -29,27 +29,35 @@ Count file in Mothur format.
 
 =over
 
-=item -ars
+=item -ars  <char>
 
 *ars file used for arelcore. A default ars file will be written if not
 provided.
 
-=item -min
+=item -min  <int> <int>
 
 The minimum number of populations and taxa in each population.
 Two values required (min_populations min_taxa_per_population). [2 3]
 
-=item -delimiter
+=item -delimiter  <char>
 
 Delimiter separating taxon name from gene ID/annotation in fasta files (taxon name must come 1st). [" "]
 
-=item -forks
+=item -forks  <int>
 
 Number of fasta files to process in parallel. [1]
 
-=item -v	Verbose output
+=item -keep  <bool>
 
-=item -h	This help message
+Keep the arlecore input and output for each alignment?
+
+=item -verbose  <bool>
+
+Verbose output
+
+=item -help  <bool>
+
+This help message
 
 =back
 
@@ -63,17 +71,30 @@ Perform batch runs of arlecore with many alignment files.
 Mothur de-uniques sequences to make the *arp file.
 The Fst and p values are parsed from the htm output of arlecore.
 
-The count file should be used to designate population structure.
-Names in the count file and fasta files must match!
 
 Multi-copy genes and genes absent in members of a population
 can be used (must meet '-min' cutoffs), but the results
 might not be reliable.
 
+=head2 Count File
+
+The count file should be used to designate population structure.
+Names in the count file and fasta files must match 
+(you can use the -delimiter flag to make the fasta file sequence
+names match the names in the count file)!
+
 =head2 Output
 
 tab-delimited table.
 Columns: file, pop1__pop2, Fst, Fst-pvalue_low, Fst-pvalue_high
+
+=head2 WARNINGS
+
+Test with ARLECORE v 3.5.1.3 (17.09.11). Other versions may
+not work with default *ars and *arp file produced. You can
+use the -keep flag to try to debug what changes to these files
+need to be made in order to get a different version of Arlecore
+to work
 
 =head1 EXAMPLES
 
@@ -100,15 +121,15 @@ use Pod::Usage;
 use Data::Dumper;
 use Getopt::Long;
 use File::Spec;
-use File::Path;
 use File::Temp;
+use File::Path qw/rmtree/;
 use Parallel::ForkManager;
 use IPC::Cmd qw/can_run run/;
 
 ### args/flags
 pod2usage("$0: No files given.") if ((@ARGV == 0) && (-t STDIN));
 
-my ($verbose, $struct_in, $ars_in, $count_in, $prefix);
+my ($verbose, $struct_in, $ars_in, $count_in, $prefix, $keep_tmp_files);
 my $forks = 0;
 my @min = (2, 3);
 my $delim = " ";
@@ -118,6 +139,7 @@ GetOptions(
 	   "forks=i" => \$forks,
 	   "delimiter=s" => \$delim,
 	   "min=i{2,2}" => \@min,
+	   "keep" => \$keep_tmp_files,
 	   "verbose" => \$verbose,
 	   "help|?" => \&pod2usage # Help
 	   );
@@ -153,10 +175,10 @@ die " ERROR: $ars_in not found!\n" unless -e $ars_in;
 my $pm = Parallel::ForkManager->new($forks);
 $pm->run_on_finish(
 		   sub{
-		       my ($pid, $exit_code, $ident, 
-			   $exit_signal, $core_dump, $ret_r) = @_;
-		       write_fst_table($ret_r) if defined $ret_r;
-		       });
+		     my ($pid, $exit_code, $ident, 
+			 $exit_signal, $core_dump, $ret_r) = @_;
+		     write_fst_table($ret_r) if defined $ret_r;
+		   });
 
 
 ## arlecore run ##
@@ -166,11 +188,18 @@ foreach my $infile (@ARGV){
   $infile = File::Spec->rel2abs($infile);
   
   # making a tmpdir & chdir to tempdir
-  my ($tmpdir, $tmpdirName) = makeTempDir();
+  my ($tmpdir, $tmpdirName);
+  if($keep_tmp_files){
+    ($tmpdir, $tmpdirName) = makePersistDir($infile);
+  }
+  else{
+    ($tmpdir, $tmpdirName) = makeTempDir();
+  }
+
 
   # copying input fasta & adding copyID to each (if multi-copy genes)
   my ($fasta_file, $taxon_index) = 
-    copyRenameFasta($infile, $tmpdirName);
+    copyRenameFasta($infile, $tmpdirName, $delim);
 
   # editing count file to multi copy & missing genes
   my $count_file = copyEditCount( $count_in, $taxon_index, $tmpdirName );
@@ -178,9 +207,10 @@ foreach my $infile (@ARGV){
   my $edit_count_r = load_count($count_file);
   my ($edit_totals_r) = sample_totals($edit_count_r);
 
+
   # applying min
   unless( applyMin($edit_totals_r, \@min) ){
-    print STDERR "$infile\tDid_not_pass_-min\n";
+    print STDERR "WARNING: $infile\tDid not pass -min. Skipping.\n";
     chdir $cwd or die $!;
     $pm->finish(0);
   }
@@ -195,7 +225,7 @@ foreach my $infile (@ARGV){
 
        
   # loading fasta #
-  my $fasta_r = load_fasta($mthr_fasta, $delim);
+  my $fasta_r = load_fasta($mthr_fasta); #, $delim);
   
   ## writing arp ##
   # arp header, body, structure_portion #
@@ -210,7 +240,6 @@ foreach my $infile (@ARGV){
   # calling arlecore & parsing Fst values #
   call_arlecore($arp_file, $ars_in);
   my $arlecore_out = make_arlecore_out($arp_file);
-  #(my $arlecore_out = $arp_file) =~ s/(.+)\.[^\.]+$|(.+)/$1.res\/$1.htm/;
   my ($fst_mtx_r, $fstp_mtx_r, $pop_names_r) = get_fst($arlecore_out, $infile);
   
   # loading Fst values into a hash #
@@ -402,8 +431,6 @@ sub copyEditCount{
   my $taxon_index_r = shift || die "Provide taxon_index\n";
   my $tmpdirName = shift || die "Provide tmpdirName\n";
 
-
-
   # outfile
   my @parts = File::Spec->splitpath($count_in);
   my $outfile = File::Spec->catfile($tmpdirName, $parts[2]);
@@ -427,8 +454,9 @@ sub copyEditCount{
       }
     }
   }
-  close IN;
-  close OUT;
+  close IN or die $!;
+  close OUT or die $!;
+
 
   return $outfile;   # new count file in tempdir
 }
@@ -443,6 +471,7 @@ to temp directory.
 sub copyRenameFasta{
   my $infile = shift || die "Provide infile\n";
   my $tmpdir = shift || die "Proivide tmpdir\n";
+  my $delim = shift || die "Provide delim\n";
 
   # making output file name
   my @parts = File::Spec->splitpath($infile);
@@ -456,23 +485,32 @@ sub copyRenameFasta{
   while(<IN>){
     chomp;
     if(/^\s*>(.+)/){
-      $copies{$_}++;
       my $orig = $1;
       
-      (my $new = $orig) =~ s/$/__$copies{$_}/;
+      # parse out just taxon name using delim
+      my @p = split /$delim/, $orig;
+
+      # counting copies
+      $copies{$p[0]}++;
+      my $copy_num = $copies{$p[0]};
+
+      # making new taxon name
+      (my $new = $p[0]) =~ s/$/__$copy_num/;
       print OUT ">$new\n";
 
-      push @{$taxon_index{$orig}}, $new;
+      # saving new taxon_name
+      push @{$taxon_index{$p[0]}}, $new;
     }
     else{
       print OUT $_, "\n";
     }
   }
 
-  close IN; 
-  close OUT;
+  close IN or die $!;
+  close OUT or die $!;
 
-  return ($outfile, \%taxon_index);
+  #print Dumper %taxon_index;
+  return $outfile, \%taxon_index;
 }
 
 =head2 makeTempDir
@@ -488,6 +526,26 @@ sub makeTempDir{
   chdir $tmpdirName or die $!;
   return $tmpdir, $tmpdirName;
 }
+
+=head2 makePersisDir
+
+Making a directory that will persist upon exiting.
+Directory named by input file.
+
+=cut
+
+sub makePersistDir{
+  my $infile = shift or die "Provide infile\n";
+  
+  (my $dirName = $infile) =~ s/\.[^\.]+$|$/_arlecore/;
+
+  rmtree($dirName) if -d $dirName;
+  mkdir $dirName or die "ERROR: cannot make directory: $dirName\n";
+  chdir $dirName or die $!;
+
+  return $dirName, $dirName;
+}
+
 
 sub make_arlecore_out{
 # getting correct directory for arlecore output #
@@ -622,7 +680,10 @@ sub write_arp_header{
 
 sub load_fasta{
 # loading fasta alignment #
-  my ($fasta_in, $delim) = @_;
+# delim is optional 
+  my $fasta_in = shift or die $!;
+  my %h = @_;
+  my $delim = $h{-delim} if exists $h{-delim};
   
   open IN, $fasta_in or die $!;
   my (%fasta, $tmpkey);
@@ -631,8 +692,10 @@ sub load_fasta{
     $_ =~ s/#.+//;
     next if  $_ =~ /^\s*$/;	
     if($_ =~ /^\s*>/){
-      my @parts = split /$delim/;		# parsing out taxon name from gene annotation
-      $_ = $parts[0];
+      if (defined $delim){
+	my @parts = split /$delim/;		# parsing out taxon name from gene annotation
+	$_ = $parts[0];
+      }
       $_ =~ s/^>//;
       $fasta{$_} = "";
       $tmpkey = $_;	# changing key
@@ -659,6 +722,7 @@ sub load_count{
 ### loading count data as %@% ###
 # count file in mothur format #
   my $infile = shift;
+
   open(IN, $infile) or die $!;
   my (%index, @header);
   while(<IN>){
@@ -678,9 +742,9 @@ sub load_count{
       }
     }
   }
-  close IN;
+  close IN or die $!;
   
-  #print Dumper(%index); exit;
+  #print Dumper %index;
   return \%index;
 }
 
