@@ -34,9 +34,9 @@ GetOptions(
 #die " ERROR: provide a group file in Mothur format!\n" unless $group_in;
 can_run($SNAP_exec) or die "ERROR: cannot find $SNAP_exec in \$PATH\n";
 foreach my $infile (@ARGV){
-	die " ERROR: $infile not found!\n" unless -e $infile;
-	$infile = File::Spec->rel2abs($infile);
-	}
+  die " ERROR: $infile not found!\n" unless -e $infile;
+  $infile = File::Spec->rel2abs($infile);
+}
 
 ### MAIN
 my $group_r = load_group($group_in) if $group_in;
@@ -424,8 +424,8 @@ match the fasta names.
 
 =head2 WARNINGS
 
-Currently, only single-copy genes can be used. The sequence names
-in each alignment file must match the names provided in the group file.
+Multi-copy genes should produce and output, but the usefulness of 
+such output is questionable.
 
 =head2 Output files
 
