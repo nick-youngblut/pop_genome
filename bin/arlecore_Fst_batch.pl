@@ -92,6 +92,14 @@ Columns: file, pop1__pop2, Fst, Fst-pvalue_low, Fst-pvalue_high
 
 The deimiter string provided will be converted to a regular expression.
 
+=head2 WARNINGS
+
+Test with ARLECORE v 3.5.1.3 (17.09.11). Other versions may
+not work with default *ars and *arp file produced. You can
+use the -keep flag to try to debug what changes to these files
+need to be made in order to get a different version of Arlecore
+to work.
+
 =head1 EXAMPLES
 
 =head2 Usage:
@@ -119,6 +127,7 @@ use Getopt::Long;
 use File::Spec;
 use File::Path qw/rmtree/;
 use File::Temp;
+use File::Path qw/rmtree/;
 use Parallel::ForkManager;
 use IPC::Cmd qw/can_run run/;
 
@@ -202,9 +211,10 @@ foreach my $infile (@ARGV){
   my $edit_count_r = load_count($count_file);
   my $edit_totals_r = sample_totals($edit_count_r);
 
+
   # applying min
   unless( applyMin($edit_totals_r, \@min) ){
-    print STDERR "$infile\tDid_not_pass_-min\n";
+    print STDERR "WARNING: $infile\tDid not pass -min. Skipping.\n";
     chdir $cwd or die $!;
     $pm->finish(0);
   }
@@ -219,7 +229,7 @@ foreach my $infile (@ARGV){
 
        
   # loading fasta #
-  my $fasta_r = load_fasta($mthr_fasta, $delim);
+  my $fasta_r = load_fasta($mthr_fasta); #, $delim);
   
   ## writing arp ##
   # arp header, body, structure_portion #
@@ -448,8 +458,9 @@ sub copyEditCount{
       }
     }
   }
-  close IN;
-  close OUT;
+  close IN or die $!;
+  close OUT or die $!;
+
 
   return $outfile;   # new count file in tempdir
 }
@@ -478,16 +489,20 @@ sub copyRenameFasta{
   while(<IN>){
     chomp;
     if(/^\s*>(.+)/){
-      $copies{$_}++;
       my $orig = $1;
-
-      # applying delimiter
+      
+      # parse out just taxon name using delim
       my @p = split /$delim/, $orig;
 
-      # adding copies
-      (my $new = $p[0]) =~ s/$/__$copies{$_}/;
+      # counting copies
+      $copies{$p[0]}++;
+      my $copy_num = $copies{$p[0]};
+
+      # making new taxon name
+      (my $new = $p[0]) =~ s/$/__$copy_num/;
       print OUT ">$new\n";
 
+      # saving new taxon_name
       push @{$taxon_index{$p[0]}}, $new;
     }
     else{
@@ -495,10 +510,11 @@ sub copyRenameFasta{
     }
   }
 
-  close IN; 
-  close OUT;
+  close IN or die $!;
+  close OUT or die $!;
 
-  return ($outfile, \%taxon_index);
+  #print Dumper %taxon_index;
+  return $outfile, \%taxon_index;
 }
 
 =head2 makeTempDir
@@ -668,7 +684,10 @@ sub write_arp_header{
 
 sub load_fasta{
 # loading fasta alignment #
-  my ($fasta_in, $delim) = @_;
+# delim is optional 
+  my $fasta_in = shift or die $!;
+  my %h = @_;
+  my $delim = $h{-delim} if exists $h{-delim};
   
   open IN, $fasta_in or die $!;
   my (%fasta, $tmpkey);
@@ -677,8 +696,10 @@ sub load_fasta{
     $_ =~ s/#.+//;
     next if  $_ =~ /^\s*$/;	
     if($_ =~ /^\s*>/){
-      my @parts = split /$delim/;		# parsing out taxon name from gene annotation
-      $_ = $parts[0];
+      if (defined $delim){
+	my @parts = split /$delim/;		# parsing out taxon name from gene annotation
+	$_ = $parts[0];
+      }
       $_ =~ s/^>//;
       $fasta{$_} = "";
       $tmpkey = $_;	# changing key
@@ -705,6 +726,7 @@ sub load_count{
 ### loading count data as %@% ###
 # count file in mothur format #
   my $infile = shift;
+
   open(IN, $infile) or die $!;
   
   my (%index, @header);
@@ -727,7 +749,7 @@ sub load_count{
   }
   close IN or die $!;
   
-  #print Dumper(%index); exit;
+  #print Dumper %index;
   return \%index;
 }
 

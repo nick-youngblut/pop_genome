@@ -14,16 +14,16 @@ SNAP_batch.pl [options] alignment(s).fna
 
 =over
 
-=item -group  <str>
+=item -group  <char>
 
 Group file in Mothur format (2 column: 1st=taxon, 2nd=group; no header).
 This is required to summarize dn/ds between groups.
 
-=item -prefix  <str>
+=item -prefix  <char>
 
 Prefix of output files. ["SNAP_batch"]
 
-=item -exe  <str>
+=item -exe  <char>
 
 SNAP executable. ["SNAP.pl"]
 
@@ -54,6 +54,11 @@ One or more fasta files (nucleotide) can be provided as input.
 
 If a group file is provided, the group file names (1st column) must
 match the fasta names.
+
+=head2 WARNINGS
+
+Multi-copy genes should produce and output, but the usefulness of 
+such output is questionable.
 
 =head2 Output files
 

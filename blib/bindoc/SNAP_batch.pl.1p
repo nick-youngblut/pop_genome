@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "SNAP_BATCH 1"
-.TH SNAP_BATCH 1 "2013-12-08" "perl v5.14.2" "User Contributed Perl Documentation"
+.TH SNAP_BATCH 1 "2014-09-18" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -136,22 +136,24 @@ SNAP_batch.pl \-\- run SNAP.pl on many alignments and parse output
 SNAP_batch.pl [options] alignment(s).fna
 .SS "options"
 .IX Subsection "options"
-.IP "\-group" 4
-.IX Item "-group"
+.IP "\-group  <char>" 4
+.IX Item "-group  <char>"
 Group file in Mothur format (2 column: 1st=taxon, 2nd=group).
 This is required to summarize dn/ds between groups.
-.IP "\-prefix" 4
-.IX Item "-prefix"
+.IP "\-prefix  <char>" 4
+.IX Item "-prefix  <char>"
 Prefix of output files. [\*(L"SNAP_batch\*(R"]
-.IP "\-directory" 4
-.IX Item "-directory"
+.IP "\-directory  <char>" 4
+.IX Item "-directory  <char>"
 Temporary file directory. [\*(L"SNAP_batch_tmp\*(R"]
 .IP "\-fork  <int>" 4
 .IX Item "-fork  <int>"
 Number of parallel \s-1SNAP\s0 calls. [1]
+.IP "\-SNAP_exec  <char>" 4
+.IX Item "-SNAP_exec  <char>"
+.PD 0
 .IP "\-v	Verbose output" 4
 .IX Item "-v	Verbose output"
-.PD 0
 .IP "\-h	This help message" 4
 .IX Item "-h	This help message"
 .PD
@@ -167,6 +169,10 @@ One or more fasta files (nucleotide) can be provided as input.
 .PP
 If a group file is provided, the group file names (1st column) must
 match the fasta names.
+.SS "\s-1WARNINGS\s0"
+.IX Subsection "WARNINGS"
+Currently, only single-copy genes can be used. The sequence names
+in each alignment file must match the names provided in the group file.
 .SS "Output files"
 .IX Subsection "Output files"
 \fIPREFIX_summary.txt\fR

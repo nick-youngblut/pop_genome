@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "ARLECORE_FST_BATCH 1"
-.TH ARLECORE_FST_BATCH 1 "2014-05-31" "perl v5.14.2" "User Contributed Perl Documentation"
+.TH ARLECORE_FST_BATCH 1 "2014-09-18" "perl v5.14.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -133,37 +133,40 @@
 arlecore_Fst_batch.pl \-\- batch runs of arlecore to get Fst values from >= alignments
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-arlecore_Fst_batch.pl [flags] aln(s).fna > Fst_res.txt
+arlecore_Fst_batch.pl [flags] *aligned.fna > Fst_res.txt
 .SS "flags"
 .IX Subsection "flags"
 \fIRequired\fR
 .IX Subsection "Required"
-.IP "\-count" 4
-.IX Item "-count"
+.IP "\-count  <char>" 4
+.IX Item "-count  <char>"
 Count file in Mothur format.
 .PP
 \fIOptional\fR
 .IX Subsection "Optional"
-.IP "\-ars" 4
-.IX Item "-ars"
+.IP "\-ars  <char>" 4
+.IX Item "-ars  <char>"
 *ars file used for arelcore. A default ars file will be written if not
 provided.
-.IP "\-min" 4
-.IX Item "-min"
+.IP "\-min  <int> <int>" 4
+.IX Item "-min  <int> <int>"
 The minimum number of populations and taxa in each population.
 Two values required (min_populations min_taxa_per_population). [2 3]
-.IP "\-delimiter" 4
-.IX Item "-delimiter"
+.IP "\-delimiter  <char>" 4
+.IX Item "-delimiter  <char>"
 Delimiter separating taxon name from gene ID/annotation in fasta files (taxon name must come 1st). [\*(L" \*(R"]
-.IP "\-forks" 4
-.IX Item "-forks"
+.IP "\-forks  <int>" 4
+.IX Item "-forks  <int>"
 Number of fasta files to process in parallel. [1]
-.IP "\-v	Verbose output" 4
-.IX Item "-v	Verbose output"
-.PD 0
-.IP "\-h	This help message" 4
-.IX Item "-h	This help message"
-.PD
+.IP "\-keep  <bool>" 4
+.IX Item "-keep  <bool>"
+Keep the arlecore input and output for each alignment?
+.IP "\-verbose  <bool>" 4
+.IX Item "-verbose  <bool>"
+Verbose output
+.IP "\-help  <bool>" 4
+.IX Item "-help  <bool>"
+This help message
 .SS "For more information:"
 .IX Subsection "For more information:"
 perldoc arlecore_Fst_batch.pl
@@ -173,16 +176,26 @@ Perform batch runs of arlecore with many alignment files.
 Mothur de-uniques sequences to make the *arp file.
 The Fst and p values are parsed from the htm output of arlecore.
 .PP
-The count file should be used to designate population structure.
-Names in the count file and fasta files must match!
-.PP
 Multi-copy genes and genes absent in members of a population
 can be used (must meet '\-min' cutoffs), but the results
 might not be reliable.
+.SS "Count File"
+.IX Subsection "Count File"
+The count file should be used to designate population structure.
+Names in the count file and fasta files must match 
+(you can use the \-delimiter flag to make the fasta file sequence
+names match the names in the count file)!
 .SS "Output"
 .IX Subsection "Output"
 tab-delimited table.
 Columns: file, pop1_\|_pop2, Fst, Fst\-pvalue_low, Fst\-pvalue_high
+.SS "\s-1WARNINGS\s0"
+.IX Subsection "WARNINGS"
+Test with \s-1ARLECORE\s0 v 3.5.1.3 (17.09.11). Other versions may
+not work with default *ars and *arp file produced. You can
+use the \-keep flag to try to debug what changes to these files
+need to be made in order to get a different version of Arlecore
+to work
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
 .SS "Usage:"
@@ -223,3 +236,7 @@ to temp directory.
 .SS "makeTempDir"
 .IX Subsection "makeTempDir"
 Making a temporary directory for system calls.
+.SS "makePersisDir"
+.IX Subsection "makePersisDir"
+Making a directory that will persist upon exiting.
+Directory named by input file.
