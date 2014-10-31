@@ -71,17 +71,26 @@ Perform batch runs of arlecore with many alignment files.
 Mothur de-uniques sequences to make the *arp file.
 The Fst and p values are parsed from the htm output of arlecore.
 
-The count file should be used to designate population structure.
-Names in the count file and fasta files must match!
 
 Multi-copy genes and genes absent in members of a population
 can be used (must meet '-min' cutoffs), but the results
 might not be reliable.
 
+=head2 Count file (Mothur format: http://www.mothur.org/wiki/Count_File)
+
+The count file should be used to designate population structure.
+Names in the count file and fasta files must match 
+(the -delimiter flag can be used to make the fasta file sequence names
+match the count file names)!
+
 =head2 Output
 
 tab-delimited table.
 Columns: file, pop1__pop2, Fst, Fst-pvalue_low, Fst-pvalue_high
+
+=head2 -delimiter
+
+The deimiter string provided will be converted to a regular expression.
 
 =head1 EXAMPLES
 
@@ -108,7 +117,7 @@ use Pod::Usage;
 use Data::Dumper;
 use Getopt::Long;
 use File::Spec;
-use File::Path;
+use File::Path qw/rmtree/;
 use File::Temp;
 use Parallel::ForkManager;
 use IPC::Cmd qw/can_run run/;
@@ -183,16 +192,15 @@ foreach my $infile (@ARGV){
     ($tmpdir, $tmpdirName) = makeTempDir();
   }
 
-
   # copying input fasta & adding copyID to each (if multi-copy genes)
   my ($fasta_file, $taxon_index) = 
-    copyRenameFasta($infile, $tmpdirName);
+    copyRenameFasta($infile, $tmpdirName, $delim);
 
   # editing count file to multi copy & missing genes
   my $count_file = copyEditCount( $count_in, $taxon_index, $tmpdirName );
   
   my $edit_count_r = load_count($count_file);
-  my ($edit_totals_r) = sample_totals($edit_count_r);
+  my $edit_totals_r = sample_totals($edit_count_r);
 
   # applying min
   unless( applyMin($edit_totals_r, \@min) ){
@@ -201,7 +209,7 @@ foreach my $infile (@ARGV){
     $pm->finish(0);
   }
 
-  # getting unique sequences with mothur #
+  # getting unique sequences with mothur#
   #($infile, $count_in) = symlink_files($outdir, $infile, $count_in);
   my ($mthr_fasta, $mthr_count) = Mothur_unique_seqs($fasta_file, $count_file);
 
@@ -417,13 +425,11 @@ sub copyEditCount{
   my $taxon_index_r = shift || die "Provide taxon_index\n";
   my $tmpdirName = shift || die "Provide tmpdirName\n";
 
-
-
   # outfile
   my @parts = File::Spec->splitpath($count_in);
   my $outfile = File::Spec->catfile($tmpdirName, $parts[2]);
-  open OUT, ">$outfile" or die $!;
 
+  open OUT, ">$outfile" or die $!;
   open IN, $count_in or die $!;
   while(<IN>){
     chomp;
@@ -458,6 +464,7 @@ to temp directory.
 sub copyRenameFasta{
   my $infile = shift || die "Provide infile\n";
   my $tmpdir = shift || die "Proivide tmpdir\n";
+  my $delim = shift || die "Provide delim\n";
 
   # making output file name
   my @parts = File::Spec->splitpath($infile);
@@ -473,11 +480,15 @@ sub copyRenameFasta{
     if(/^\s*>(.+)/){
       $copies{$_}++;
       my $orig = $1;
-      
-      (my $new = $orig) =~ s/$/__$copies{$_}/;
+
+      # applying delimiter
+      my @p = split /$delim/, $orig;
+
+      # adding copies
+      (my $new = $p[0]) =~ s/$/__$copies{$_}/;
       print OUT ">$new\n";
 
-      push @{$taxon_index{$orig}}, $new;
+      push @{$taxon_index{$p[0]}}, $new;
     }
     else{
       print OUT $_, "\n";
@@ -516,6 +527,7 @@ sub makePersistDir{
   
   (my $dirName = $infile) =~ s/\.[^\.]+$|$/_arlecore/;
 
+  rmtree($dirName) if -d $dirName;
   mkdir $dirName or die "ERROR: cannot make directory: $dirName\n";
   chdir $dirName or die $!;
 
@@ -694,17 +706,18 @@ sub load_count{
 # count file in mothur format #
   my $infile = shift;
   open(IN, $infile) or die $!;
+  
   my (%index, @header);
   while(<IN>){
     chomp;
-    $_ =~ s/#.+//;
-    next if $_ =~ /^\s*$/;
+    s/#.+//;
+    next if /^\s*$/;
     
     if($. == 1){ # if header
       @header = split(/\t/);
     }
     else{	# loading %% (sample -> seq -> count)
-      my @tmp = split(/\t/);
+      my @tmp = split(/ *\t */);
       die " ERROR: the count file should have >= 3 columns\n"
 	unless scalar @tmp >= 3;
       for(my $i=2; $i<=$#tmp; $i++){		# skippign rownames & total
@@ -712,7 +725,7 @@ sub load_count{
       }
     }
   }
-  close IN;
+  close IN or die $!;
   
   #print Dumper(%index); exit;
   return \%index;
